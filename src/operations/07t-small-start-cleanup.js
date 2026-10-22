@@ -1,6 +1,6 @@
 /* v3.8.3 — only for small-company careers. Existing large-company saves are unchanged. */
 const SMALL_START_POSITIONS=[
- ['Управление','Директор предприятия',.55],['Производство','Мастер участка',.42],
+ ['Управление','Генеральный директор',.55],['Производство','Мастер участка',.42],
  ['Производство','Оператор добычи (вахта 1)',.29],['Производство','Оператор добычи (вахта 2)',.29],
  ['Ремонт','Слесарь-ремонтник',.28],['Энергетика','Электромонтёр',.31],
  ['Диспетчеризация','Диспетчер',.26],['Логистика','Водитель',.25],
@@ -15,7 +15,7 @@ function v43setup(){
  // Replace the fictional large company's staff list, instead of just changing its total.
  let e=ensureEnterprise();e.staff=g.staff;e.target=300;
  e.dept=[{name:'Малый производственный участок',headcount:7,chief:'Мастер участка'},
- {name:'Управление и обеспечение',headcount:3,chief:'Директор предприятия'},
+ {name:'Управление и обеспечение',headcount:3,chief:'Генеральный директор'},
  {name:'Безопасность и экология',headcount:2,chief:'Ответственные специалисты'}];
  let employees=[],positions=[];
  SMALL_START_POSITIONS.forEach(([dept,role,salary],i)=>{
@@ -47,7 +47,7 @@ function v43setup(){
  Object.assign(nodes['ЦППН'],{capacity:55,desc:'Модуль подготовки нефти'});
  Object.assign(nodes['ПС-1'],{capacity:80,desc:'Электропитание малого промысла'});
  Object.assign(nodes['ППД-1'],{capacity:55,desc:'Технологическое обеспечение'});
- let v=v8init();v.rankCity=[{name:employees[0].name,job:'Директор предприятия',score:77}];
+ let v=v8init();v.rankCity=[{name:employees[0].name,job:'Генеральный директор',score:77}];
  v.rankField=[{name:employees[1].name,job:'Мастер участка',score:78}];
  // Discard old manager samples; they must not appear as additional payroll or people.
  s.v11={employees:[],marketDay:0,actions:[],inbox:[],hired:0};

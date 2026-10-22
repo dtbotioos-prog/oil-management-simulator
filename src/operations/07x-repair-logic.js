@@ -21,8 +21,8 @@ function repair87normalize(){
 function repair87needs(w){
  if(!w)return '';
  if(w.status==='Консервация')return 'Скважина в консервации';
- if(w.health<45)return 'Требуется диагностика и решение о КРС';
- if(w.health<70)return 'Рекомендуется диагностика / ПРС по результатам';
+ if(w.health<25)return 'Критическое состояние: диагностика и решение о КРС';
+ if(w.health<50)return 'Рекомендуется диагностика / ПРС по результатам';
  if(w.status==='Остановлена')return 'Установить причину остановки перед пуском';
  return 'Плановое наблюдение, ремонт не требуется';
 }
@@ -39,8 +39,10 @@ async function repair87start(id,type){
  krs:{name:'КРС',cost:105,days:28,delta:40}
  }[type];
  if(!params)return;
- if(type==='prs'&&w.health>=70&&w.status==='Работает')return uiAlert('ПРС не обоснован: состояние '+w.health+'%. Проведите плановое ТО при необходимости.');
- if(type==='krs'&&w.health>=45&&w.status==='Работает')return uiAlert('КРС не обоснован: состояние '+w.health+'%. Сначала проведите диагностику.');
+ if(type==='prs'||type==='krs'){
+  const r=w.repair87?.report;
+  if(!r||r.recommendation!==type.toUpperCase()||r.resolved)return uiAlert('Сначала проведите диагностику. Для '+type.toUpperCase()+' необходимо действующее заключение с обоснованием.');
+ }
  if(type==='service'&&w.health>=90&&w.status==='Работает')return uiAlert('Плановое ТО пока не требуется.');
  if(s.cash<params.cost)return uiAlert('Недостаточно средств: '+m(params.cost));
  if(!await uiConfirm('Начать '+params.name+' скважины №'+w.id+'?\n'+m(params.cost)+' · '+params.days+' игровых дней\nРезультат появится только после завершения работ.'))return;
@@ -62,12 +64,14 @@ function repair87day(){
   if(w){
    if(job.type==='diagnose'){
     w.repair87.diagnosedAt=v8init().daysElapsed;
-    w.repair87.diagnosis=w.health<45?'КРС':w.health<70?'ПРС':'ТО / наблюдение';
+    w.repair87.report=repair89report(w);
+    w.repair87.diagnosis=w.repair87.report.recommendation;
    }else{
     const improve={service:4,prs:20,krs:40}[job.type]||0;
     w.health=Math.min(98,Math.round(w.health+improve));
     w.equipment.condition=w.health;
     w.repair87.lastCompletedDay=v8init().daysElapsed;
+    if(w.repair87.report)w.repair87.report.resolved=true;
     // A stopped well stays stopped until the player explicitly confirms restart.
     w.status='Остановлена';
     w.repair87.readyForStart=true;
@@ -99,7 +103,7 @@ treeAction=async function(id,act){
   if(repair87active(id))return uiAlert('Скважина находится в ремонте');
   if(w.status==='Работает'){w.status='Остановлена';w.repair87||={};w.repair87.manualStop=true;save();render();return}
   if(w.status!=='Остановлена')return uiAlert('Пуск недоступен для статуса: '+w.status);
-  if(w.health<45)return uiAlert('Пуск запрещён: низкое техническое состояние. Необходима диагностика.');
+  if(w.health<25)return uiAlert('Пуск запрещён: техническое состояние ниже 25%. Необходима диагностика и устранение причин.');
   if(v8init().inspection.some(x=>x.well===w.id&&!x.closed))return uiAlert('Действует ограничение после происшествия.');
   if(!await uiConfirm('Подтвердить безопасную готовность скважины №'+w.id+' к пуску?'))return;
   w.status='Работает';w.repair87||={};w.repair87.readyForStart=false;save();render();return;
@@ -123,7 +127,8 @@ treeView=function(){
  '<button class="btn secondary compact" data-repair87="prs" data-well-id="'+w.id+'">ПРС · 28 млн ₸</button>'+
  '<button class="btn secondary compact" data-repair87="krs" data-well-id="'+w.id+'">КРС · 105 млн ₸</button>');
  let jobs=repair87state().jobs.filter(j=>j.well===w.id);
- let note='<div class="notice"><b>Оценка состояния:</b> '+esc(detail)+'. ПРС — текущие ремонтные работы; КРС — сложное восстановление скважины. Игровые критерии, не нормативы.</div>';
+ let note='<div class="notice"><b>Оценка состояния:</b> '+esc(detail)+'. Решение о ПРС или КРС принимается после диагностики.</div>';
+ if(w.repair87?.report){let r=w.repair87.report;note+='<div class="notice"><h3>Техническое заключение №'+w.id+'</h3><p><b>Дата:</b> '+esc(r.date)+'</p><p><b>Выявлено:</b> '+esc(r.defect)+'</p><p><b>Рекомендация:</b> '+esc(r.recommendation)+'</p><p><b>Обоснование:</b> '+esc(r.reason)+'</p><p><b>Предлагаемые работы:</b> '+esc(r.scope)+'</p><p><b>Ориентировочная стоимость:</b> '+m(r.cost)+'; <b>срок:</b> '+r.days+' дн.</p><p>'+ (r.resolved?'Мероприятие выполнено.':'Заключение действительно до выполнения рекомендованных работ.')+'</p></div>';} 
  if(jobs.length)note+='<div class="notice"><b>Последняя работа:</b> '+esc(jobs[0].name)+' · '+esc(jobs[0].status)+(jobs[0].status==='В работе'?' · '+jobs[0].remaining+' дн.':'')+'</div>';
  html=html.replace('<h3>Ремонты в работе</h3>',note+'<h3>Ремонты в работе</h3>');
  html=html.replace('<h3>История операций</h3>',repair87state().jobs.filter(j=>j.status==='В работе').map(j=>row('Скв. №'+j.well+' · '+j.name,j.remaining+' дн.')).join('')+'<h3>История операций</h3>');
@@ -135,3 +140,22 @@ v26requestRepair=async function(w){
  if(s?.small)return repair87start(w.id,'diagnose');
  return repair87oldRequest(w);
 };
+
+/* v3.8.9: diagnosis is an actual written recommendation, not a blind repair. */
+function repair89report(w){
+ const health=Number(w.health)||0, stopped=w.status==='Остановлена';
+ let recommendation='НЕ ТРЕБУЕТСЯ',defect='Дефект, требующий подземного ремонта, не установлен',reason='Текущее техническое состояние '+health+'%.',scope='Продолжить эксплуатационный контроль и наблюдение',cost=0,days=0;
+ if(health<25){
+  recommendation='КРС';defect='Признаки серьёзного ухудшения технического состояния скважины';
+  reason='Критическое состояние '+health+'%; необходима проверка герметичности колонны и состояния ствола. Предварительный игровой диагноз, а не подтверждённая причина.';
+  scope='Дополнительное обследование, дефектация, при подтверждении — изоляционно-восстановительные работы, испытание и приёмка';cost=105;days=28;
+ }else if(health<50){
+  recommendation='ПРС';defect='Признаки износа подземного насосного оборудования';
+  reason='Состояние '+health+'%; требуется проверить насос, штанги и НКТ. Предварительный игровой диагноз.';
+  scope='Подъём подземного оборудования, дефектация, замена неисправных элементов, спуск, испытание';cost=28;days=10;
+ }else if(stopped){
+  defect='Причина остановки не установлена';reason='Состояние '+health+'% само по себе не подтверждает необходимость ПРС/КРС.';
+  scope='Проверить причину остановки, готовность к безопасному пуску и ограничения';
+ }
+ return {date:v8date(),defect,recommendation,reason,scope,cost,days,resolved:false};
+}

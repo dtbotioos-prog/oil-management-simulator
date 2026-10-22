@@ -1,5 +1,5 @@
 {
-  "version": "3.8.7",
+  "version": "3.9.5",
   "entry": "js/core/game.js",
   "parts": [
     "src/core/01-foundation.js",
@@ -33,6 +33,11 @@
     "src/operations/07v-inspections-environment.js",
     "src/operations/07w-director-inbox-actions.js",
     "src/operations/07x-repair-logic.js",
+    "src/operations/07z-staff-effects.js",
+    "src/operations/07zz-candidate-resumes.js",
+    "src/operations/07zzz-facilities.js",
+    "src/operations/07zzzz-utilities.js",
+    "src/operations/07zzzzz-production-chain.js",
     "src/core/08-save-manager.js"
   ]
 }

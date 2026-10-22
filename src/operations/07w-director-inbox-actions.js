@@ -16,7 +16,7 @@ v14Sync=function(){
 };
 function mail86deleteAll(){
  let db=mail86db();
- if(!confirm('Удалить все письма директора? Это не отменит уже выполненные ремонты и расходы.'))return;
+ if(!confirm('Удалить все письма генерального директора? Это не отменит уже выполненные ремонты и расходы.'))return;
  db.deletedIds=[...new Set([...db.deletedIds,...db.items.map(x=>x.id)])].slice(-3000);
  db.items=[];v11init().inbox=[];v8init().notifications=[];
  v14Selected=null;save();render();
@@ -29,7 +29,7 @@ function mail86readAll(){
 function mail86postpone(id){
  let x=mail86db().items.find(q=>q.id===id);
  if(!x||x.choice)return;
- x.status='pending';x.postponedAt=v8date();x.outcome='Отложено директором, исполнение не начиналось.';
+ x.status='pending';x.postponedAt=v8date();x.outcome='Отложено генеральным директором, исполнение не начиналось.';
  v14Selected=null;save();render();
 }
 const mail86oldInbox=v11inbox;
@@ -74,7 +74,7 @@ v8advance=function(){
    if(w){w.health=Math.min(100,w.health+3);t.description+='; диагностика скважины №'+w.id+' завершена, состояние '+w.health+'%';}
   }else if(t.apply==='coaching'){v8init().morale=cl(v8init().morale+2,0,100);}
   if(item){item.status='done';item.outcome='Фактически выполнено '+v8date()+': '+t.description;item.resolvedAt=v8date();}
-  s.events.unshift('Исполнено поручение директора: '+t.description);
+  s.events.unshift('Исполнено поручение генерального директора: '+t.description);
  }
 };
 v14Choose=async function(i){
@@ -99,7 +99,7 @@ v14Choose=async function(i){
  }else if(kind==='ack'){
   item.choice=kind;item.status='done';item.outcome='Принято к сведению '+v8date()+'.';
  }else{
-  if(cost){s.cash-=cost;v25post(kind==='diagnose'?'maintenance':'opex',cost,{description:'Решение директора: '+opt[0],mailId:item.id});}
+  if(cost){s.cash-=cost;v25post(kind==='diagnose'?'maintenance':'opex',cost,{description:'Решение генерального директора: '+opt[0],mailId:item.id});}
   item.choice=kind;
   if(kind==='fund'){item.status='done';item.outcome='Резерв на обеспечение выделен: '+m(cost)+'. Поставка не произведена, требуется договор и закупка.';}
   else if(kind==='diagnose'){let id=mail86task(item,kind,'Диагностика '+(well?'скважины №'+well.id:'оборудования'),2,'diagnose');db.tasks.find(t=>t.id===id).well=well?.id;}
