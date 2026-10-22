@@ -1,0 +1,6 @@
+
+.v22header-right{display:flex;align-items:center;gap:15px;flex-wrap:wrap;justify-content:flex-end}
+.v22weather{display:flex;align-items:center;gap:9px;background:rgba(33,69,87,.8);border:1px solid #36596b;padding:7px 12px;border-radius:12px;white-space:nowrap}
+.v22weather-icon{font-size:25px}.v22weather strong{font-size:13px;display:block}.v22weather small{font-size:11px;color:#a9c4d3;display:block;margin-top:2px}
+@media(max-width:800px){.v11content>header{padding-right:53px}.v22header-right{gap:4px}.v22weather{padding:5px 7px;gap:5px}.v22weather-icon{font-size:20px}.v22weather strong{font-size:11px}.v22weather small{font-size:10px}.v22header-right>.good{display:none}}
+@media(max-width:440px){.v11content>header>div:first-child .muted{font-size:10px}.v22weather{max-width:160px;white-space:normal}}

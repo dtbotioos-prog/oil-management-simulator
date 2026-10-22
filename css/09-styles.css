@@ -1,0 +1,35 @@
+
+/* Mobile: prevent double-tap zoom on controls while retaining pinch accessibility. */
+html{width:100%;max-width:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-padding-top:12px}
+body{width:100%;max-width:100%;overflow-x:hidden;overscroll-behavior-x:none}
+button,a,[role="button"],input[type="button"],input[type="submit"],select{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button{user-select:none;-webkit-user-select:none}
+.v11shell,.v11content,.card,.v11panel,.v14letter,.v14case{min-width:0;max-width:100%}
+.v13overlay{overflow-y:auto;overscroll-behavior:contain;align-items:center}
+.v13dialog{max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain}
+@media(max-width:800px){
+  .v11shell{width:100%;max-width:100%;align-items:stretch}
+  .v11sidebar{width:52px;min-width:52px;flex:0 0 52px;height:100dvh;max-height:100dvh;overflow-y:auto;overscroll-behavior:contain;position:sticky;top:0;padding:7px 3px}
+  .v11sidebtn{min-height:44px;touch-action:manipulation}
+  .v11content{width:calc(100% - 52px);min-width:0;flex:1 1 0;padding:8px!important;margin:0!important}
+  .v11content header{gap:7px;flex-wrap:wrap}
+  .v11content h1{font-size:21px;overflow-wrap:anywhere}
+  .card{padding:12px;margin:9px 0}
+  .grid,.dispatch-kpis,.hr-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat,.hr-kpi{min-width:0;padding:10px}
+  .stat b,.hr-kpi b{overflow-wrap:anywhere;font-size:16px}
+  .v11time{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .v11time button{min-height:43px;white-space:normal;overflow-wrap:anywhere}
+  .v13bar{max-width:100%;gap:6px}
+  .v13bar input{min-width:0;max-width:100%;flex:1 1 100%}
+  .v13metric{min-width:0;flex:1 1 130px}
+  .v14choices{grid-template-columns:minmax(0,1fr)}
+  .v14lettertop{flex-wrap:wrap}
+  .table-scroll{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom}
+  .v13overlay{padding:10px}
+  .v13dialog{width:100%;padding:15px}
+  #save-manager{position:relative!important;inset:auto!important;max-width:100%!important;width:auto!important;margin:14px 8px 12px!important;z-index:5!important}
+  #save-manager button{min-height:42px}
+  input,select,textarea{font-size:16px!important;min-width:0;max-width:100%}
+}
+@media(max-width:380px){.v11sidebar{width:46px;min-width:46px;flex-basis:46px}.v11content{width:calc(100% - 46px)}.v11content{padding:6px!important}.card{padding:9px}.v11time button{font-size:12px}}

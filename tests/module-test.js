@@ -1,0 +1,10 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto'),cp=require('node:child_process');
+const root=path.resolve(__dirname,'..'),m=JSON.parse(fs.readFileSync(path.join(root,'build.json'),'utf8'));
+const merged=m.parts.map(x=>fs.readFileSync(path.join(root,x),'utf8')).join('');
+const built=fs.readFileSync(path.join(root,m.entry),'utf8');
+assert.equal(merged,built,'Built game.js differs from module sources');
+assert(m.parts.length>=9);
+for(const token of ['function v19init','function v20init','function v21calc','function v22weather','function save','function render'])assert(built.includes(token),'Missing '+token);
+const check=cp.spawnSync(process.execPath,['--check',path.join(root,m.entry)],{encoding:'utf8'});
+assert.equal(check.status,0,check.stderr);
+console.log('PASS: source modules = runtime bundle, core systems found, syntax valid');

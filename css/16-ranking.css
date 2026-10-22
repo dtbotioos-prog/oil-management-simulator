@@ -1,0 +1,14 @@
+.v37-league{margin:22px 0}.v37-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:15px 0}.v37-summary>div{border:1px solid #64748b55;padding:14px;border-radius:12px}.v37-summary small{display:block;opacity:.75}.v37-summary strong{display:block;font-size:25px;margin-top:5px}.v37-aspects{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.v37-aspect{border:1px solid #64748b55;padding:12px;border-radius:10px;font-size:13px}.v37-aspect b{float:right}.v37-track{height:7px;border-radius:7px;background:#64748b35;overflow:hidden;margin-top:12px}.v37-track i{display:block;height:100%;background:#269f96}.v37-table{white-space:nowrap}.v37-player{background:#269f9620;font-weight:700}.v37-league select{padding:7px;border-radius:8px}
+.v37-motion{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:14px;border-radius:12px;background:#269f9618;margin:12px 0;font-size:13px}.v37-motion-value{font-weight:800;font-size:18px}.v37-chart{display:flex;gap:12px;padding:14px;border:1px solid #64748b55;border-radius:12px;align-items:stretch}.v37-chart-labels{display:flex;flex-direction:column;justify-content:space-between;white-space:nowrap;font-size:11px;opacity:.8}.v37-chart svg{width:100%;height:150px;overflow:visible}
+
+/* Persistent top-right league position */
+.v11content > header{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+#v37-top-holder{margin-left:auto;flex:0 0 auto}
+.v37-top-rank{display:flex;align-items:center;gap:9px;border:1px solid #2b7e85;background:linear-gradient(125deg,#103b47,#17555c);color:#fff;border-radius:12px;padding:7px 12px;cursor:pointer;min-width:162px;box-shadow:0 4px 15px #0002;text-align:left}
+.v37-top-rank:hover{filter:brightness(1.15)}.v37-top-rank:focus-visible{outline:3px solid #eabf50;outline-offset:3px}
+.v37-top-icon{font-size:22px}.v37-top-content{display:flex;flex-direction:column;gap:1px}
+.v37-top-label{font-size:9px;letter-spacing:.65px;opacity:.8;white-space:nowrap}
+.v37-top-number{font-weight:850;font-size:23px;line-height:1.05;font-variant-numeric:tabular-nums}
+.v37-top-number small{font-size:12px;opacity:.75}.v37-top-change{font-weight:800;font-size:12px;margin-left:4px;white-space:nowrap}
+.v37-top-rank.up .v37-top-change{color:#6bf1a8}.v37-top-rank.down .v37-top-change{color:#ff9d91}
+@media(max-width:620px){#v37-top-holder{width:100%;margin-left:0}.v37-top-rank{width:100%;justify-content:center}.v37-top-change{margin-left:14px}}
