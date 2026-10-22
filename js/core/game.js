@@ -553,14 +553,18 @@ function v28migrateNames(){
  d.namesV28=true;return d;
 }
 function v27bids(type,seed){let t=V27_TYPES[type];return V27_SUPPLIERS.map((a,i)=>({id:i,name:a[0],quality:a[2],price:Math.round(t.base*a[3]*(.97+((seed+i*7)%9)*.008)*10)/10,days:Math.max(2,Math.round(t.days*(1.20-a[2]/420)+((seed+i*3)%9)-4)),capacity:a[4],reliability:a[5],crew:t.crew})).filter(b=>V27_SUPPLIERS[b.id][1].includes(type)).sort((a,b)=>a.price-b.price)}
-function v27newTender(type,well){let d=v28migrateNames(),t=V27_TYPES[type];if(!t)return uiAlert('Неизвестный вид работ');if(well&&d.contracts.some(c=>c.well===well&&c.status==='Исполняется'))return uiAlert('По этой скважине уже идёт работа подрядчика');let objectName=well?'Скважина №'+well:prompt('Укажите объект работ (например, РВС-5000 №3, АБК, насосная станция)','');if(objectName===null)return;if(!objectName.trim())return uiAlert('Укажите название объекта работ');objectName=objectName.trim().slice(0,120);let x={id:++d.seq,type,well:well||null,objectName,created:v8date(),status:'Приём заявок',bids:v27bids(type,d.seq)};d.tenders.unshift(x);log('Объявлен тендер №'+x.id+': '+t.label+(well?' · скважина №'+well:''));save();render()}
-function v27award(id,bidId){let d=v28migrateNames(),t=d.tenders.find(x=>x.id===id);if(!t||t.status!=='Приём заявок')return uiAlert('Тендер закрыт');let b=t.bids.find(x=>x.id===bidId);if(!b)return;let active=d.contracts.filter(x=>x.supplier===b.name&&x.status==='Исполняется').length;if(active>=b.capacity)return uiAlert('Бригады подрядчика заняты. Выберите другого исполнителя.');if(s.cash<b.price)return uiAlert('Недостаточно средств для заключения договора: '+m(b.price));
+function v27newTender(type,well){
+ let d=v28migrateNames(),t=V27_TYPES[type];if(!t)return uiAlert('Неизвестный вид работ');
+ if(well){let a=v40assets().find(x=>x.key==='well:'+well);if(!a)return uiAlert('Скважина не найдена');return v40createTender(type,a)}
+ v40openPicker(type);
+}
+function v27award(id,bidId){let d=v28migrateNames(),t=d.tenders.find(x=>x.id===id);if(!t||t.status!=='Приём заявок')return uiAlert('Тендер закрыт');let b=t.bids.find(x=>x.id===bidId);if(!b)return;let active=d.contracts.filter(x=>x.supplier===b.name&&x.status==='Исполняется').length;if(active>=b.capacity)return uiAlert('Бригады подрядчика заняты. Выберите другого исполнителя.');if(s.cash<b.price)return uiAlert('Недостаточно средств для заключения договора: '+m(b.price));if(t.assetKey&&d.contracts.some(c=>c.assetKey===t.assetKey&&c.status==='Исполняется'))return uiAlert('По объекту уже выполняются подрядные работы');
 let w=null,materials=[];if(t.well){ensureAssets();w=s.assets.wellList.find(x=>x.id===t.well);if(!w)return uiAlert('Скважина не найдена');if(w.status==='Ремонт'||w.status==='Ремонт подрядчика')return uiAlert('Скважина уже ремонтируется');let stock=ensurePlant().stock;materials=[{id:6,qty:2},{id:7,qty:2},{id:9,qty:1}];let miss=materials.filter(x=>(stock.find(z=>z.id===x.id)?.qty||0)<x.qty);if(miss.length)return uiAlert('Недостаточно материалов на складе: '+miss.map(x=>stock.find(z=>z.id===x.id)?.name||x.id).join(', '));}
 let advance=Math.round(b.price*.3*10)/10;
 if(!confirm('Заключить договор с «'+b.name+'»?\n\nЦена: '+m(b.price)+'\nСрок: '+b.days+' игровых дней\nБригада: '+b.crew+' чел.\nАванс: '+m(advance)+'\nОстаток: '+m(b.price-advance)+'\n\nОбщая сумма резервируется в момент заключения.'))return;
 if(w){let stock=ensurePlant().stock;for(let a of materials){let item=stock.find(z=>z.id===a.id);item.qty-=a.qty;item.consumed=(item.consumed||0)+a.qty;}w.status='Ремонт подрядчика';}
 s.cash-=b.price;v25post('maintenance',b.price,{description:'Договор подряда',supplier:b.name,tender:id,well:t.well});
-let c={id:++d.contractSeq,tender:id,type:t.type,well:t.well,objectName:t.objectName||'',supplier:b.name,price:b.price,advance,remaining:b.days,initialDays:b.days,quality:b.quality,reliability:b.reliability,crew:b.crew,status:'Исполняется',started:v8date(),endDate:'',penalty:0,warranty:Math.max(30,Math.round(b.quality*1.8)),progress:0};
+let c={id:++d.contractSeq,tender:id,type:t.type,well:t.well,assetKey:t.assetKey||null,assetHealthBefore:t.assetHealthBefore??null,objectName:t.objectName||'',supplier:b.name,price:b.price,advance,remaining:b.days,initialDays:b.days,quality:b.quality,reliability:b.reliability,crew:b.crew,status:'Исполняется',started:v8date(),endDate:'',penalty:0,warranty:Math.max(30,Math.round(b.quality*1.8)),progress:0};
 d.contracts.unshift(c);t.status='Договор заключён';t.winner=b.id;t.contract=c.id;log('Договор №'+c.id+' с '+b.name+' на '+m(c.price)+'; срок '+c.remaining+' дн.');save();render()}
 function v27day(){let d=v28migrateNames();for(let c of d.contracts){if(c.status!=='Исполняется')continue;let weather=typeof v22weather==='function'?v22weather():null;let severe=(weather?.severity||0)>=3;let delay=severe&&c.type==='drill'&&c.remaining%5===0;if(!delay)c.remaining--;c.progress=Math.min(100,Math.round((1-c.remaining/c.initialDays)*100));if(c.remaining>0)continue;c.status='Завершён';c.endDate=v8date();let q=c.quality;
 if(c.well){let w=s.assets.wellList.find(x=>x.id===c.well);if(w){w.status='Работает';w.health=Math.min(100,(w.health||60)+Math.round(q*.32));w.rate=Math.round((w.rate||10)*(1+(q-70)/500)*10)/10;}}
@@ -1279,7 +1283,7 @@ function v37view(){
  }
  out+='<h3>Оценка вашей компании по направлениям</h3><div class="v37-aspects">';
  for(let a of V37_ASPECTS){let score=mine?.aspects[a[0]]||0;out+='<div class="v37-aspect"><span>'+a[1]+' · вес '+a[2]+'%</span><b>'+score+'/100</b><div class="v37-track"><i style="width:'+score+'%"></i></div></div>'}
- out+='</div><h3>Турнирная таблица · 100 компаний</h3><div class="table-scroll"><table class="v37-table"><thead><tr><th>Место</th><th>Компания</th><th>Общий балл</th>'+V37_ASPECTS.map(a=>'<th title="'+a[1]+'">'+a[1]+'</th>').join('')+'</tr></thead><tbody>';
+ out+='</div><h3>Рейтинг нефтяных компаний · 100 участников</h3><div class="table-scroll"><table class="v37-table"><thead><tr><th>Место</th><th>Компания</th><th>Общий балл</th>'+V37_ASPECTS.map(a=>'<th title="'+a[1]+'">'+a[1]+'</th>').join('')+'</tr></thead><tbody>';
  for(let c of list)out+='<tr'+(c.player?' class="v37-player"':'')+'><td>'+c.rank+'</td><td>'+esc(c.name)+(c.player?' ★':'')+'</td><td><b>'+c.score+'</b></td>'+V37_ASPECTS.map(a=>'<td>'+c.aspects[a[0]]+'</td>').join('')+'</tr>';
  out+='</tbody></table></div><p class="muted">Весовая формула: добыча 20%, финансы 20%, безопасность 18%, экология 10%, оборудование 10%, персонал 8%, посёлок 7%, инвестиции 7%. Это не официальный рейтинг реальных компаний. История итоговых лет хранится в сохранении игры.</p></section>';return out;
 }
@@ -1297,7 +1301,7 @@ v8advance=function(){
  }else v37tick();
 };
 const v37oldRender=render;
-render=function(){v37oldRender();if(['overview','people','finance'].includes(tab)){let el=document.getElementById('body');if(el){el.insertAdjacentHTML('beforeend',v37view());v37bind()}}};
+render=function(){v37oldRender();if(tab==='people'){let el=document.getElementById('body');if(el){el.insertAdjacentHTML('beforeend',v37view());v37bind()}}};
 
 /* v3.6.3: persistent rank in the top bar on every gameplay screen. */
 function v37topRank(){
@@ -1318,6 +1322,316 @@ render=function(){
  let button=document.getElementById('v37-top-rank');
  if(button)button.onclick=()=>{tab='overview';v37init().selectedYear=v8init().year;render();let section=document.querySelector('.v37-league');if(section)section.scrollIntoView({behavior:'smooth',block:'start'})};
 };
+
+/* v3.7: annual production targets, workshop monthly fact, monthly mail, personnel decisions. */
+function v38init(){
+ if(!s.v38)s.v38={year:v8init().year,annual:0,shops:{},closed:[],decisions:[],reportIds:[]};
+ let x=s.v38;x.shops||={};x.closed||=[];x.decisions||=[];x.reportIds||=[];
+ if(x.year!==v8init().year){x.year=v8init().year;x.annual=0}
+ if(!x.annual)x.annual=v8init().plans.reduce((a,b)=>a+b,0);
+ return x;
+}
+function v38shops(){
+ let v=v8init(),d=v38init(),shops=TREE_SHOPS||[];
+ let wells=s.assets.wellList||[],weights=shops.map((_,i)=>wells.filter(w=>w.shop===i&&w.status==='Работает').reduce((a,w)=>a+Math.max(0,w.rate*(1-w.water/100)),0));
+ let sum=weights.reduce((a,b)=>a+b,0);
+ if(!sum)weights=shops.map(()=>1),sum=shops.length;
+ return shops.map((name,i)=>({id:i,name,weight:weights[i]/sum}));
+}
+function v38month(i){
+ let d=v38init(),k=v8init().year+'-'+i;
+ if(!d.shops[k]){
+  let shop=v38shops(),plan=v8init().plans[i];
+  d.shops[k]={rows:shop.map(x=>({id:x.id,name:x.name,plan:Math.round(plan*x.weight),actual:0})),locked:false};
+  let rows=d.shops[k].rows;if(rows.length)rows[rows.length-1].plan+=plan-rows.reduce((a,x)=>a+x.plan,0);
+ }
+ return d.shops[k];
+}
+function v38allocate(dayOil,i){
+ let d=v38month(i),shop=v38shops();
+ for(let x of d.rows){let w=shop.find(y=>y.id===x.id)?.weight||0;x.actual+=dayOil*w}
+}
+function v38report(year,i){
+ let d=v38init(),v=v8init(),h=v.monthHistory.find(x=>x.year===year&&x.month===i),data=d.shops[year+'-'+i];
+ if(!h||!data)return;
+ data.locked=true;
+ let rows=data.rows.map(x=>({...x,rate:x.plan?100*x.actual/x.plan:100})),met=rows.filter(x=>x.rate>=100),miss=rows.filter(x=>x.rate<100);
+ let id='monthly-'+year+'-'+i;
+ if(d.reportIds.includes(id))return;
+ let lines=rows.map(x=>x.name+': '+f(x.actual)+' / '+f(x.plan)+' т ('+f(x.rate)+'%)');
+ let text='ЕЖЕМЕСЯЧНАЯ СВОДКА ПО ДОБЫЧЕ — '+V8_MONTHS[i]+' '+year+
+ '\nПлан предприятия: '+f(h.plan)+' т; факт: '+f(h.actual)+' т; выполнение: '+f(h.rate)+'%; отклонение: '+f(h.actual-h.plan)+' т.'+
+ '\nЦеха, выполнившие план: '+met.length+'; не выполнившие: '+miss.length+'.\n'+lines.join('\n')+
+ '\nПричины отклонений необходимо проверить по фонду работающих скважин, простоям и обводнённости. Данные цехов рассчитаны по игровой модели.';
+ let db=v14Sync();
+ db.items.unshift({id,text,category:'production',created:v8date(),status:'new',choice:null,outcome:'',readAt:null});
+ d.reportIds.push(id);d.closed.unshift({year,month:i,plan:h.plan,actual:h.actual,rows});
+ if(d.closed.length>60)d.closed.length=60;
+}
+const v38oldAdvance=v8advance;
+v8advance=function(){
+ let v=v8init(),year=v.year,i=v8idx(),before=v.monthHistory.length;
+ let weights=v38shops();
+ let prior=v.monthActual;
+ v38month(i);
+ v38oldAdvance();
+ let actual=v.year!==year||v8idx()!==i?(v.monthHistory[v.monthHistory.length-1]?.actual||prior)-prior:v.monthActual-prior;
+ // Allocation uses real recorded daily produced oil, not theoretical well rates.
+ let data=v38init().shops[year+'-'+i];
+ if(data){let total=weights.reduce((a,x)=>a+x.weight,0)||1;for(let r of data.rows)r.actual+=Math.max(0,actual)*(weights.find(x=>x.id===r.id)?.weight||0)/total}
+ if(v.monthHistory.length>before){
+  // On December transition v38init resets year but old shop record remains.
+  v38report(year,i);
+ }
+};
+function v38setAnnual(){
+ let d=v38init(),v=v8init(),n=prompt('Годовой план добычи, тонн:',String(Math.round(d.annual)));if(n===null)return;
+ let total=Number(n);if(!Number.isFinite(total)||total<12000||total>100000000)return uiAlert('Укажите годовой план от 12 000 до 100 000 000 т');
+ let reason=prompt('Основание корректировки годового плана:');if(!reason?.trim())return;
+ let old=v.plans.slice(),start=v8idx(),fixed=old.slice(0,start).reduce((a,b)=>a+b,0);
+ if(total<fixed)return uiAlert('Годовой план меньше уже утверждённых закрытых месяцев');
+ let remaining=total-fixed,weights=old.slice(start).map((n,j)=>new Date(v.year,start+j+1,0).getDate());
+ let sum=weights.reduce((a,b)=>a+b,0);
+ for(let j=start;j<12;j++)v.plans[j]=Math.round(remaining*weights[j-start]/sum);
+ v.plans[11]+=total-v.plans.reduce((a,b)=>a+b,0);
+ d.annual=v.plans.reduce((a,b)=>a+b,0);
+ for(let j=start;j<12;j++)delete d.shops[v.year+'-'+j];
+ d.decisions.unshift(v8date()+': годовой план '+f(d.annual)+' т; '+reason.trim());
+ v11init().inbox.unshift('Утверждена корректировка годового плана: '+f(d.annual)+' т. Основание: '+reason.trim());
+ save();render();
+}
+function v38setShop(i){
+ let v=v8init(),m=v8idx(),data=v38month(m),r=data.rows.find(x=>x.id===i);if(!r)return;
+ let raw=prompt('План цеха '+r.name+' на '+V8_MONTHS[m]+', т:',String(r.plan));if(raw===null)return;
+ let n=Number(raw);if(!Number.isFinite(n)||n<0||n>v.plans[m])return uiAlert('Некорректный план цеха');
+ let reason=prompt('Основание перераспределения:');if(!reason?.trim())return;
+ let other=data.rows.filter(x=>x!==r),rest=v.plans[m]-n,prev=other.reduce((a,x)=>a+x.plan,0);
+ r.plan=n;let assigned=0;other.forEach((x,j)=>{x.plan=j===other.length-1?rest-assigned:Math.round(rest*(prev?x.plan/prev:1/other.length));assigned+=x.plan});
+ v38init().decisions.unshift(v8date()+': план '+r.name+' = '+f(n)+' т; '+reason.trim());save();render();
+}
+function v38plansView(){
+ let v=v8init(),d=v38init(),m=v8idx(),data=v38month(m),yearPlan=v.plans.reduce((a,b)=>a+b,0);
+ let closed=v.monthHistory.filter(x=>x.year===v.year).reduce((a,x)=>a+x.actual,0),annualActual=closed+v.monthActual;
+ let out='<section class="v38-panel"><h2>Годовой план добычи и выполнение по цехам</h2><div class="v38-stats"><div><small>Годовой план</small><strong>'+f(yearPlan)+' т</strong></div><div><small>Добыто с начала года</small><strong>'+f(annualActual)+' т</strong></div><div><small>Выполнение годового плана</small><strong>'+f(yearPlan?annualActual/yearPlan*100:0)+'%</strong></div></div>';
+ out+='<button class="mini-btn" data-v38-annual>Утвердить / изменить годовой план</button><p class="muted">Годовой план распределяется по месяцам с учётом количества календарных дней. Месячный план распределяется по добывающим цехам пропорционально текущему фонду скважин. Корректировки требуют основания, общий план месяца сохраняется.</p>';
+ out+='<h3>Цеха добычи — '+V8_MONTHS[m]+' '+v.year+'</h3><div class="table-scroll"><table class="v8table"><thead><tr><th>Цех</th><th>План, т</th><th>Факт, т</th><th>Выполнение</th><th>Решение</th></tr></thead><tbody>';
+ for(let r of data.rows)out+='<tr><td>'+esc(r.name)+'</td><td>'+f(r.plan)+'</td><td>'+f(r.actual)+'</td><td>'+f(r.plan?r.actual/r.plan*100:100)+'%</td><td><button class="mini-btn" data-v38-shop="'+r.id+'">Изменить план</button></td></tr>';
+ out+='</tbody></table></div><h3>Закрытые месяцы · разбор по цехам</h3>';
+ for(let x of d.closed.slice(0,12)){
+  let good=x.rows.filter(r=>r.plan===0||r.actual>=r.plan),bad=x.rows.filter(r=>r.plan>0&&r.actual<r.plan);
+  out+='<details class="v38-closed"><summary><b>'+V8_MONTHS[x.month]+' '+x.year+'</b> · '+f(x.actual)+' / '+f(x.plan)+' т · выполнили '+good.length+', не выполнили '+bad.length+'</summary>';
+  out+='<p><b>Выполнили:</b> '+(good.map(r=>esc(r.name)).join(', ')||'нет')+'</p><p><b>Не выполнили:</b> '+(bad.map(r=>esc(r.name)).join(', ')||'нет')+'</p>';
+  for(let r of x.rows)out+=row(esc(r.name),f(r.actual)+' / '+f(r.plan)+' т · '+f(r.plan?r.actual/r.plan*100:100)+'%');
+  out+='</details>';
+ }
+ return out+'</section>';
+}
+function v38leaderAct(name,act){
+ let p=[...v8init().rankCity,...v8init().rankField].find(x=>x.name===name);if(!p)return;
+ if(act==='promote'){
+  let reason=prompt('Новая должность / основание повышения '+name+':');if(!reason?.trim())return;
+  p.job=reason.trim();p.score=cl(p.score+2,0,100);
+  v38init().decisions.unshift(v8date()+': повышен '+name+' — '+p.job);
+ }else if(act==='dismiss'){
+  let reason=prompt('Основание для кадровой проверки по '+name+':');if(!reason?.trim())return;
+  v11init().inbox.unshift('Кадровое поручение: проверить основания для увольнения '+name+'. '+reason.trim());
+  v38init().decisions.unshift(v8date()+': инициирована процедура проверки по '+name);
+  uiAlert('Поручение создано. Увольнение без проверки оснований не выполняется.');
+ }
+ save();render();
+}
+function v38leadersView(){
+ let v=v8init(),a=[...v.rankCity,...v.rankField].sort((a,b)=>b.score-a.score).slice(0,5);
+ return '<section class="v38-panel"><h2>ТОП-5 работников · кадровые решения</h2>'+a.map(p=>'<div class="v38-person"><div><b>'+esc(p.name)+'</b><small>'+esc(p.job)+' · KPI '+p.score+'/100</small></div><div><button class="mini-btn" data-v38-promote="'+esc(p.name)+'">Повысить</button> <button class="mini-btn" data-v38-dismiss="'+esc(p.name)+'">Начать увольнение</button></div></div>').join('')+'<p class="muted">Повышение меняет должность в рейтинге руководителей. Увольнение начинается с кадровой проверки, не производится автоматически.</p></section>';
+}
+const v38oldHire=v11hire;
+v11hire=async function(i){let z=v11init(),before=z.employees.length;await v38oldHire(i);if(z.employees.length>before){let p=z.employees[z.employees.length-1];v8init().salaryFund+=p.salary/1e6;v38init().decisions.unshift(v8date()+': нанят '+p.name+' · оклад '+f(p.salary)+' ₸');save();render()}};
+const v38oldPersonAction=v11personAction;
+v11personAction=async function(id,act){
+ let p=v11init().employees.find(x=>x.id===id),before=p?.salary||0;
+ await v38oldPersonAction(id,act);
+ if(p&&act==='raise'&&p.salary!==before){v8init().salaryFund+=(p.salary-before)/1e6;save()}
+};
+const v38oldRender=render;
+render=function(){
+ v38oldRender();
+ let el=document.getElementById('body');if(!el||!s)return;
+ if(tab==='daily'){el.insertAdjacentHTML('beforeend',v38plansView());}
+ if(tab==='people'){el.insertAdjacentHTML('beforeend',v38leadersView());}
+ el.querySelectorAll('[data-v38-annual]').forEach(b=>b.onclick=v38setAnnual);
+ el.querySelectorAll('[data-v38-shop]').forEach(b=>b.onclick=()=>v38setShop(Number(b.dataset.v38Shop)));
+ el.querySelectorAll('[data-v38-promote]').forEach(b=>b.onclick=()=>v38leaderAct(b.dataset.v38Promote,'promote'));
+ el.querySelectorAll('[data-v38-dismiss]').forEach(b=>b.onclick=()=>v38leaderAct(b.dataset.v38Dismiss,'dismiss'));
+};
+
+const v38oldScenario=v14Scenario;
+v14Scenario=function(item){
+ if(item.id&&item.id.startsWith('monthly-')){
+  let text=item.text;
+  return {detail:'ОТЧЁТ О ВЫПОЛНЕНИИ ПРОИЗВОДСТВЕННОГО ПЛАНА\n'+text+'\n\nДействия должны учитывать конкретные отстающие цеха, фактический фонд скважин и причины недобора. Пересмотр плана не заменяет восстановление добычи.',options:[
+   ['Поручить анализ отклонений по цехам','Проверить простои, обводнённость, фактические дебиты и технические ограничения','investigate'],
+   ['Утвердить корректирующие мероприятия','Подготовить адресный план повышения добычи и контроль сроков','coaching'],
+   ['Запросить уточнённые производственные данные','Оставить письмо открытым до получения обоснований','clarify']
+  ]};
+ }
+ return v38oldScenario(item);
+};
+
+/* v3.7.1: one consolidated monthly maintenance letter, monthly automatic catering */
+function v39init(){
+ if(!s.v39)s.v39={mailKeys:[],cateringKeys:[],cateringLog:[],mealPrice:0.002,alerts:[]};
+ let x=s.v39;x.mailKeys||=[];x.cateringKeys||=[];x.cateringLog||=[];x.alerts||=[];return x;
+}
+function v39key(){let v=v8init();return v.year+'-'+(v8idx()+1)}
+function v39mail(key,category,title,body){
+ let x=v39init(),id='v39-'+category+'-'+key;
+ if(x.mailKeys.includes(id))return;
+ let db=v14Sync();
+ db.items.unshift({id,text:title+'\n\n'+body,category:category==='equipment'?'technical':'production',created:v8date(),status:'new',choice:null,outcome:'',readAt:null});
+ x.mailKeys.push(id);
+ if(x.mailKeys.length>120)x.mailKeys.shift();
+}
+function v39catering(){
+ let x=v39init(),c=v36init().camp,key=v39key();
+ if(x.cateringKeys.includes(key))return;
+ x.cateringKeys.push(key);
+ let v=v8init(),days=v8days(),portions=c.residents*3*days,price=+(portions*x.mealPrice).toFixed(3);
+ // Monthly procurement for the current month. Do not double-charge food already in storage.
+ let shortage=Math.max(0,portions-c.mealStock),charge=+(shortage*x.mealPrice).toFixed(3);
+ if(charge<=0){x.cateringLog.unshift({date:v8date(),key,portions:0,paid:0,status:'Запас достаточен'});return}
+ if(s.cash>=charge){
+  s.cash-=charge;c.mealStock+=shortage;c.mealQuality=v30safe(c.mealQuality+2);
+  v25post('opex',charge,{description:'Автоматическая ежемесячная закупка питания',portions:shortage,period:key});
+  x.cateringLog.unshift({date:v8date(),key,portions:shortage,paid:charge,status:'Оплачено'});
+  v39mail(key,'catering','Столовая · ежемесячное обеспечение питания','На '+days+' суток закуплено '+shortage+' порций для '+c.residents+' проживающих. Стоимость '+m(charge)+'. Списание выполнено автоматически. Остаток склада: '+Math.floor(c.mealStock)+' порций.');
+ }else{
+  x.cateringLog.unshift({date:v8date(),key,portions:0,paid:0,status:'Не оплачено · недостаточно средств'});
+  v39mail(key,'catering','Срочно: не профинансировано питание вахтового посёлка','Для обеспечения '+c.residents+' работников на '+days+' суток требуется '+shortage+' порций, стоимость '+m(charge)+'. Доступно '+m(s.cash)+'. Автоматическое списание не выполнено. Необходимо обеспечить финансирование и пополнить склад.');
+ }
+ if(x.cateringLog.length>36)x.cateringLog.length=36;
+}
+function v39equipment(){
+ let key=v39key(),wells=s.assets?.wellList||[],groups=new Map();
+ // Health is the game's equipment-condition indicator.
+ for(let w of wells){
+  let health=Number(w.health);
+  if(!Number.isFinite(health)||health>75)continue;
+  let shop=String(w.shop??'Без цеха'),g=groups.get(shop)||{low:[],critical:[],stopped:[],total:0};
+  g.total++;
+  let label='Скв. №'+w.id+' · состояние '+Math.round(health)+'% · '+(w.status||'статус не указан');
+  if(health<=55)g.critical.push(label);else g.low.push(label);
+  if(w.status!=='Работает')g.stopped.push(label);
+  groups.set(shop,g);
+ }
+ let stopped=wells.filter(w=>w.status!=='Работает');
+ let text='Единая производственно-техническая сводка по всем добывающим цехам на '+v8date()+'.\n'+
+ 'Всего скважин: '+wells.length+'; остановлено/не в работе: '+stopped.length+
+ '; оборудование 56–75%: '+[...groups.values()].reduce((a,g)=>a+g.low.length,0)+
+ '; оборудование 55% и ниже: '+[...groups.values()].reduce((a,g)=>a+g.critical.length,0)+'.\n\n';
+ let names=(typeof TREE_SHOPS!=='undefined'&&Array.isArray(TREE_SHOPS))?TREE_SHOPS:[];
+ if(!groups.size)text+='На дату отчёта скважин с техническим состоянием 75% и ниже не выявлено.\n';
+ for(let [k,g] of groups){
+  let name=names[Number(k)]||'Цех '+k;
+  text+='ЦЕХ: '+name+'\n';
+  if(g.critical.length)text+='СРОЧНЫЙ РЕМОНТ (≤55%):\n'+g.critical.join('\n')+'\n';
+  if(g.low.length)text+='ПЛАНОВЫЙ РЕМОНТ (56–75%):\n'+g.low.join('\n')+'\n';
+  text+='Не в работе среди перечисленных: '+g.stopped.length+'\n\n';
+ }
+ let otherStops=stopped.filter(w=>Number(w.health)>75);
+ if(otherStops.length)text+='ОСТАНОВКИ ПРИ СОСТОЯНИИ ВЫШЕ 75%:\n'+otherStops.map(w=>'Скв. №'+w.id+' · '+w.status).join('\n')+'\n';
+ text+='\nРекомендуемое решение: поручить ответственным цехов диагностику, подтвердить причины остановок, приоритизировать критическое оборудование, оформить заявки на ремонт и проверить безопасную готовность к пуску. Состояние 75% и 55% — игровые пороги, не нормативные требования.';
+ v39mail(key,'equipment','Ежемесячная сводка · остановки и ремонты по всем цехам',text);
+}
+const v39oldCampDay=v36daily;
+v36daily=function(){
+ v39catering();
+ v39oldCampDay();
+};
+const v39oldV26=v26day;
+v26day=function(){
+ v39oldV26();
+ // First active day and each new calendar month, a single report covers every shop.
+ v39equipment();
+};
+const v39oldCampView=v36campView;
+v36campView=function(){
+ let html=v39oldCampView(),x=v39init(),latest=x.cateringLog[0];
+ let info='<section class="v39-catering"><h3>Автоматическое питание · ежемесячное списание</h3>'+
+ '<p class="muted">В начале каждого игрового месяца закупается недостающий объём порций из расчёта три приёма пищи в день. Цена игровой порции — '+m(x.mealPrice)+'. Если средств недостаточно, списания нет и во «Входящие» поступает предупреждение.</p>'+
+ (latest?row('Последняя закупка',latest.date+' · '+latest.status+' · '+m(latest.paid)+' · '+latest.portions+' порций'):'')+'</section>';
+ return html+info;
+};
+/* v3.7.2 — live asset registry, searchable tender selector, acceptance updates. */
+function v40assets(){
+ ensureAssets();let a=[];
+ for(let w of s.assets.wellList)a.push({key:'well:'+w.id,name:'Скважина №'+w.id,area:w.unit||'Фонд скважин',kind:'Скважины',health:Number(w.health)||0,status:w.status||'Не указан',ref:w});
+ for(let o of s.assets.infrastructure)a.push({key:'infra:'+o.id,name:o.id,area:o.type||'Инфраструктура',kind:'Инфраструктура',health:Number(o.health)||0,ref:o});
+ let n=v20init();for(let [name,o] of Object.entries(n))a.push({key:'gu:'+name,name:name+' · оборудование',area:'Групповая установка',kind:'Оборудование',health:Number(o.health)||0,ref:o});
+ let p=ensurePlant();for(let o of p.types)a.push({key:'plant:'+o.id,name:o.name,area:'Производственное оборудование',kind:'Оборудование',health:Number(o.condition)||0,ref:o});
+ let d=v30init();for(let o of d.tanks)a.push({key:'tank:'+o.id,name:o.name,area:'ЦППН · резервуарный парк',kind:'Резервуары',health:Number(o.health)||0,ref:o});
+ for(let i=0;i<d.facilities.length;i++){let o=d.facilities[i];a.push({key:'building:'+i,name:o.name,area:'Здания и сооружения',kind:'Здания',health:Number(o.health)||0,ref:o})}
+ let extra=v40init();for(let o of extra.assets)a.push({key:'extra:'+o.id,name:o.name,area:o.area,kind:o.kind,health:Number(o.health)||0,ref:o});
+ return a;
+}
+function v40init(){if(!s.v40)s.v40={assets:[],next:0,acceptance:[]};s.v40.assets||=[];s.v40.acceptance||=[];return s.v40}
+function v40allowed(type){
+ if(['prs','krs'].includes(type))return ['Скважины'];
+ if(['rvs_repair','rvs_clean','anticorrosion'].includes(type))return ['Резервуары'];
+ if(['building_repair','painting'].includes(type))return ['Здания','Резервуары','Оборудование','Инфраструктура'];
+ if(['maint','automation','electrical','inspection'].includes(type))return ['Оборудование','Инфраструктура','Резервуары','Здания'];
+ if(['roads','fencing','pipeline','lighting','foundation','earthworks'].includes(type))return ['Инфраструктура','Здания'];
+ return ['Скважины','Резервуары','Оборудование','Здания','Инфраструктура'];
+}
+function v40createTender(type,asset,customName){
+ let d=v28migrateNames(),t=V27_TYPES[type];if(!t)return;
+ let name=asset?asset.name:customName;
+ if(!name)return uiAlert('Выберите объект');
+ if(asset&&(d.contracts.some(c=>c.assetKey===asset.key&&c.status==='Исполняется')||d.tenders.some(x=>x.assetKey===asset.key&&x.status==='Приём заявок')))return uiAlert('По объекту уже есть активный договор или тендер');
+ let w=asset?.key.startsWith('well:')?Number(asset.key.split(':')[1]):null;
+ let x={id:++d.seq,type,well:w,assetKey:asset?.key||null,assetHealthBefore:asset?.health??null,objectName:name,created:v8date(),status:'Приём заявок',bids:v27bids(type,d.seq)};
+ d.tenders.unshift(x);log('Объявлен тендер №'+x.id+': '+t.label+' · '+name);save();v40close();render();
+}
+function v40close(){document.getElementById('v40picker')?.remove()}
+function v40openPicker(type){
+ v40close();let kinds=v40allowed(type),newBuild=['building','rvs_build','drill','design','survey'].includes(type);
+ let modal=document.createElement('div');modal.id='v40picker';modal.className='v40-overlay';modal.innerHTML='<div class="v40-dialog" role="dialog" aria-modal="true" aria-label="Выбор объекта работ"><div class="v40-top"><h2>Выбор объекта · '+esc(V27_TYPES[type].label)+'</h2><button type="button" id="v40close">✕ Закрыть</button></div><p class="muted">Состояние берётся из реестров действующей игры. Выберите объект — название и состояние заполнятся автоматически.</p><div class="v40-filters"><input id="v40search" placeholder="Поиск по номеру, названию, цеху"><select id="v40kind"><option value="">Все категории</option>'+kinds.map(k=>'<option>'+esc(k)+'</option>').join('')+'</select><select id="v40sort"><option value="health">Сначала проблемные</option><option value="name">По названию</option></select></div><div id="v40results" class="v40-results"></div>'+(newBuild?'<div class="v40-new"><label>Новый объект / проект строительства</label><input id="v40new" placeholder="Название нового объекта"><button id="v40add">Создать тендер на новый объект</button></div>':'')+'</div>';
+ document.body.appendChild(modal);
+ const update=()=>{
+  let q=modal.querySelector('#v40search').value.toLowerCase(),k=modal.querySelector('#v40kind').value,sort=modal.querySelector('#v40sort').value;
+  let list=v40assets().filter(a=>kinds.includes(a.kind)&&(!k||a.kind===k)&&(a.name+' '+a.area).toLowerCase().includes(q));
+  list.sort((a,b)=>sort==='health'?a.health-b.health:a.name.localeCompare(b.name,'ru'));
+  let busy=v28migrateNames();modal.querySelector('#v40results').innerHTML=list.slice(0,180).map(a=>{
+   let locked=busy.contracts.some(c=>c.assetKey===a.key&&c.status==='Исполняется')||busy.tenders.some(t=>t.assetKey===a.key&&t.status==='Приём заявок');
+   let color=a.health<=55?'#e56767':a.health<=75?'#f0b54e':'#56c894';
+   return '<button type="button" class="v40-item" data-key="'+esc(a.key)+'" '+(locked?'disabled':'')+'><span><b>'+esc(a.name)+'</b><small>'+esc(a.area)+' · '+esc(a.kind)+' · '+esc(a.status||'')+(locked?' · УЖЕ В РАБОТЕ':'')+'</small></span><span class="v40-meter"><b style="color:'+color+'">'+Math.round(a.health)+'%</b><i><em style="width:'+Math.max(0,Math.min(100,a.health))+'%;background:'+color+'"></em></i></span></button>';
+  }).join('')||'<p class="muted">Объекты не найдены</p>';
+  modal.querySelectorAll('[data-key]').forEach(b=>b.onclick=()=>v40createTender(type,v40assets().find(a=>a.key===b.dataset.key)));
+ };
+ for(let id of ['v40search','v40kind','v40sort'])modal.querySelector('#'+id).addEventListener(id==='v40search'?'input':'change',update);
+ modal.querySelector('#v40close').onclick=v40close;
+ modal.addEventListener('click',e=>{if(e.target===modal)v40close()});
+ if(newBuild)modal.querySelector('#v40add').onclick=()=>{let name=modal.querySelector('#v40new').value.trim().slice(0,120);if(!name)return uiAlert('Введите название нового объекта');v40createTender(type,null,name)};
+ update();modal.querySelector('#v40search').focus();
+}
+function v40acceptRepair(c){
+ if(!c.assetKey||v40init().acceptance.includes(c.id))return;
+ let asset=v40assets().find(a=>a.key===c.assetKey);if(!asset)return;
+ let x=v36contract(c);if(!x.acceptedAt)return;
+ let value=asset.ref,quality=Math.max(0,Math.min(100,Number(c.quality)||70));
+ let target=Math.min(100,Math.round(75+quality*.25));
+ if(['rvs_repair','building_repair','maint','prs','krs','pipeline','electrical','automation','inspection'].includes(c.type)){
+  if('health' in value)value.health=Math.max(Number(value.health)||0,target);
+  if('condition' in value)value.condition=Math.max(Number(value.condition)||0,target);
+ }
+ if(['painting','anticorrosion'].includes(c.type)&&'paint' in value)value.paint=Math.max(Number(value.paint)||0,target);
+ if(c.type==='rvs_clean'&&'health' in value)value.health=Math.min(100,(Number(value.health)||0)+12);
+ v40init().acceptance.push(c.id);
+ log('Приняты работы по объекту '+asset.name+' · договор №'+c.id+' · состояние обновлено');
+}
+const v40oldAccept=v36accept;
+v36accept=function(id,index){v40oldAccept(id,index);if(index===2){let c=v28migrateNames().contracts.find(c=>c.id===id);if(c)v40acceptRepair(c)}save()};
+const v40oldContractsView=v27view;
+v27view=function(){let out=v40oldContractsView();return '<p class="v40-hint">Для тендера выберите объект из реестра: скважины, насосы, оборудование, РВС, здания и инфраструктура. Состояние и местоположение заполняются автоматически. Для нового строительства доступен ввод названия проекта.</p>'+out};
 const BACKUP_KEY=KEY+'-backup';
 const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='.json,application/json';fileInput.style.display='none';document.body.appendChild(fileInput);
 const saveBar=document.createElement('div');saveBar.id='save-manager';

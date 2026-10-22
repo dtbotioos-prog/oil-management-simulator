@@ -85,7 +85,7 @@ function v37view(){
  }
  out+='<h3>Оценка вашей компании по направлениям</h3><div class="v37-aspects">';
  for(let a of V37_ASPECTS){let score=mine?.aspects[a[0]]||0;out+='<div class="v37-aspect"><span>'+a[1]+' · вес '+a[2]+'%</span><b>'+score+'/100</b><div class="v37-track"><i style="width:'+score+'%"></i></div></div>'}
- out+='</div><h3>Турнирная таблица · 100 компаний</h3><div class="table-scroll"><table class="v37-table"><thead><tr><th>Место</th><th>Компания</th><th>Общий балл</th>'+V37_ASPECTS.map(a=>'<th title="'+a[1]+'">'+a[1]+'</th>').join('')+'</tr></thead><tbody>';
+ out+='</div><h3>Рейтинг нефтяных компаний · 100 участников</h3><div class="table-scroll"><table class="v37-table"><thead><tr><th>Место</th><th>Компания</th><th>Общий балл</th>'+V37_ASPECTS.map(a=>'<th title="'+a[1]+'">'+a[1]+'</th>').join('')+'</tr></thead><tbody>';
  for(let c of list)out+='<tr'+(c.player?' class="v37-player"':'')+'><td>'+c.rank+'</td><td>'+esc(c.name)+(c.player?' ★':'')+'</td><td><b>'+c.score+'</b></td>'+V37_ASPECTS.map(a=>'<td>'+c.aspects[a[0]]+'</td>').join('')+'</tr>';
  out+='</tbody></table></div><p class="muted">Весовая формула: добыча 20%, финансы 20%, безопасность 18%, экология 10%, оборудование 10%, персонал 8%, посёлок 7%, инвестиции 7%. Это не официальный рейтинг реальных компаний. История итоговых лет хранится в сохранении игры.</p></section>';return out;
 }
@@ -103,7 +103,7 @@ v8advance=function(){
  }else v37tick();
 };
 const v37oldRender=render;
-render=function(){v37oldRender();if(['overview','people','finance'].includes(tab)){let el=document.getElementById('body');if(el){el.insertAdjacentHTML('beforeend',v37view());v37bind()}}};
+render=function(){v37oldRender();if(tab==='people'){let el=document.getElementById('body');if(el){el.insertAdjacentHTML('beforeend',v37view());v37bind()}}};
 
 /* v3.6.3: persistent rank in the top bar on every gameplay screen. */
 function v37topRank(){
