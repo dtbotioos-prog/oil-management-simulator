@@ -2109,6 +2109,272 @@ document.addEventListener('click',e=>{
  if(b.dataset.comply==='fix')complyFix(+b.dataset.id);
  if(b.dataset.comply==='inspect'){complyInit().inspections++;complyFinding(b.dataset.agency);render()}
 });
+
+/* v3.8.6: director inbox management and actions backed by actual game state. */
+function mail86db(){
+ let db=v14Sync();
+ db.deletedIds||=[];
+ db.tasks||=[];
+ return db;
+}
+const mail86oldSync=v14Sync;
+v14Sync=function(){
+ let db=mail86oldSync();
+ db.deletedIds||=[];
+ db.tasks||=[];
+ if(db.deletedIds.length)db.items=db.items.filter(x=>!db.deletedIds.includes(x.id));
+ return db;
+};
+function mail86deleteAll(){
+ let db=mail86db();
+ if(!confirm('Удалить все письма директора? Это не отменит уже выполненные ремонты и расходы.'))return;
+ db.deletedIds=[...new Set([...db.deletedIds,...db.items.map(x=>x.id)])].slice(-3000);
+ db.items=[];v11init().inbox=[];v8init().notifications=[];
+ v14Selected=null;save();render();
+}
+function mail86readAll(){
+ let db=mail86db();
+ for(let x of db.items)if(x.status==='new'){x.status='read';x.readAt=v8date();}
+ save();render();
+}
+function mail86postpone(id){
+ let x=mail86db().items.find(q=>q.id===id);
+ if(!x||x.choice)return;
+ x.status='pending';x.postponedAt=v8date();x.outcome='Отложено директором, исполнение не начиналось.';
+ v14Selected=null;save();render();
+}
+const mail86oldInbox=v11inbox;
+v11inbox=function(){
+ let h=mail86oldInbox();
+ const controls='<div class="v14tools mail86tools"><button data-mail86="readall">✓ Пометить все прочитанными</button><button data-mail86="deleteall">🗑 Удалить все письма</button></div>';
+ const count=mail86db().items.filter(x=>x.status==='pending').length;
+ const note='<p class="muted">Отложено: '+count+'. Ремонт и поручения меняют реальные игровые объекты; незавершённые задачи видны в письмах.</p>';
+ if(v14Selected){
+  const item=mail86db().items.find(x=>x.id===v14Selected);
+  if(item&&item.status==='pending'&&!item.choice)h=h.replace('Варианты управленческого решения','Варианты управленческого решения (ранее отложено)');
+  if(item?.taskId){
+   const t=mail86db().tasks.find(z=>z.id===item.taskId);
+   if(t)h+='<div class="notice">Исполнение: '+esc(t.status)+'; осталось '+t.days+' дн. '+esc(t.description)+'</div>';
+  }
+ }
+ return h.replace('<h2>✉ Входящие директора</h2>','<h2>✉ Входящие директора</h2>'+controls+note);
+};
+function mail86target(item){
+ let match=item.text.match(/(?:скважин[аые]?\s*№?\s*|№\s*)(\d{3,6})/i);
+ let wells=s.assets?.wellList||[];
+ return (match&&wells.find(w=>String(w.id)===match[1]))||wells.find(w=>w.status==='Остановлена'||w.health<75)||wells[0];
+}
+function mail86task(item,type,description,days,apply){
+ let db=mail86db(),id=1+Math.max(0,...db.tasks.map(t=>t.id));
+ db.tasks.push({id,mailId:item.id,type,description,days,status:'В работе',apply});
+ item.taskId=id;item.status='pending';item.outcome='Поручение принято: '+description+'. Осталось '+days+' игровых дней.';
+ return id;
+}
+const mail86oldAdvance=v8advance;
+v8advance=function(){
+ mail86oldAdvance();
+ if(!s?.mailbox?.tasks)return;
+ let db=s.mailbox;
+ for(let t of db.tasks){
+  if(t.status!=='В работе')continue;
+  if(--t.days>0)continue;
+  t.days=0;t.status='Выполнено';
+  let item=db.items.find(x=>x.id===t.mailId);
+  if(t.apply==='diagnose'){
+   let w=s.assets?.wellList?.find(w=>w.id===t.well);
+   if(w){w.health=Math.min(100,w.health+3);t.description+='; диагностика скважины №'+w.id+' завершена, состояние '+w.health+'%';}
+  }else if(t.apply==='coaching'){v8init().morale=cl(v8init().morale+2,0,100);}
+  if(item){item.status='done';item.outcome='Фактически выполнено '+v8date()+': '+t.description;item.resolvedAt=v8date();}
+  s.events.unshift('Исполнено поручение директора: '+t.description);
+ }
+};
+v14Choose=async function(i){
+ let db=mail86db(),item=db.items.find(x=>x.id===v14Selected);
+ if(!item||item.choice)return;
+ let opt=v14Scenario(item).options[i];if(!opt)return;
+ let kind=opt[2],well=mail86target(item),cost=kind==='repair'?42:kind==='diagnose'?8:kind==='fund'?12:0;
+ if(kind==='repair'&&!well)return uiAlert('В фонде нет скважины для ремонта.');
+ if(cost>s.cash)return uiAlert('Недостаточно средств: '+m(cost));
+ if(kind==='clarify'){mail86postpone(item.id);return;}
+ if(!await uiConfirm('Подтвердить решение?\n'+opt[0]+(cost?'\nБюджет: '+m(cost):'')))return;
+ if(kind==='repair'){
+  let before=v26init().orders.length;
+  await v26requestRepair(well);
+  let order=v26init().orders.length>before?v26init().orders[v26init().orders.length-1]:null;
+  if(!order)return; // No money or spares, or user cancelled: do not mark executed.
+  item.choice=kind;item.status='pending';item.outcome='Заказ-наряд №'+order.id+' оформлен, скважина №'+well.id+' остановлена на ремонт. Осталось '+order.days+' дн.';
+  item.repairOrderId=order.id;
+ }else if(kind==='supply'){
+  let stock=ensurePlant().stock||[];
+  item.choice=kind;item.status='done';item.outcome='Сверка склада выполнена '+v8date()+'. Номенклатур: '+stock.length+'. Дефицит: '+stock.filter(x=>x.qty<=0).length+'. Закупка не оформлена.';
+ }else if(kind==='ack'){
+  item.choice=kind;item.status='done';item.outcome='Принято к сведению '+v8date()+'.';
+ }else{
+  if(cost){s.cash-=cost;v25post(kind==='diagnose'?'maintenance':'opex',cost,{description:'Решение директора: '+opt[0],mailId:item.id});}
+  item.choice=kind;
+  if(kind==='fund'){item.status='done';item.outcome='Резерв на обеспечение выделен: '+m(cost)+'. Поставка не произведена, требуется договор и закупка.';}
+  else if(kind==='diagnose'){let id=mail86task(item,kind,'Диагностика '+(well?'скважины №'+well.id:'оборудования'),2,'diagnose');db.tasks.find(t=>t.id===id).well=well?.id;}
+  else if(kind==='coaching')mail86task(item,kind,'Беседа и план улучшений персонала',3,'coaching');
+  else mail86task(item,kind,'Проверка документов и подготовка заключения',2,'investigate');
+ }
+ s.v11.actions.unshift(v8date()+': '+opt[0]+' — '+item.text);
+ save();render();
+};
+const mail86oldRender=render;
+render=function(){
+ if(s?.mailbox?.items){
+  for(let x of s.mailbox.items.filter(x=>x.repairOrderId&&x.status==='pending')){
+   let order=v26init().orders.find(o=>o.id===x.repairOrderId);
+   if(order?.status==='Завершён'){
+    x.status='done';x.resolvedAt=v8date();
+    x.outcome='Ремонт фактически завершён '+v8date()+'. Скважина №'+order.well+' восстановлена; стоимость '+m(order.cost)+'.';
+   }else if(order)x.outcome='Ремонт в работе: скважина №'+order.well+', осталось '+order.days+' дн.';
+  }
+ }
+ mail86oldRender();
+};
+const mail86oldBind=v14Bind;
+v14Bind=function(){
+ mail86oldBind();
+ document.querySelectorAll('[data-mail86]').forEach(b=>b.onclick=()=>b.dataset.mail86==='readall'?mail86readAll():mail86deleteAll());
+};
+
+/* v3.8.7 — repairs are condition-driven, not random recurring jobs. */
+function repair87state(){if(!s.repair87)s.repair87={jobs:[],seq:0,history:[],lastWearMonth:null};return s.repair87}
+function repair87well(id){return (s.assets?.wellList||[]).find(w=>Number(w.id)===Number(id))}
+function repair87active(id){
+ return repair87state().jobs.some(j=>j.well===Number(id)&&j.status==='В работе')||
+ v26init().orders.some(j=>j.well===Number(id)&&j.status==='В работе')||
+ ensureTree().workorders.some(j=>j.well===Number(id)&&j.status==='В работе')||
+ v27init().contracts.some(j=>j.well===Number(id)&&j.status==='Исполняется');
+}
+function repair87normalize(){
+ if(!s?.small)return;
+ for(let w of s.assets?.wellList||[]){
+  w.equipment||={type:'ШГН'};
+  if(!Number.isFinite(+w.equipment.life)||+w.equipment.life<=0)w.equipment.life=12;
+  if(!Number.isFinite(+w.equipment.age)||+w.equipment.age<0)w.equipment.age=1.3;
+  w.equipment.condition=w.health;
+  if(!w.repair87)w.repair87={lastCompletedDay:-9999,failures:0};
+ }
+}
+function repair87needs(w){
+ if(!w)return '';
+ if(w.status==='Консервация')return 'Скважина в консервации';
+ if(w.health<45)return 'Требуется диагностика и решение о КРС';
+ if(w.health<70)return 'Рекомендуется диагностика / ПРС по результатам';
+ if(w.status==='Остановлена')return 'Установить причину остановки перед пуском';
+ return 'Плановое наблюдение, ремонт не требуется';
+}
+async function repair87start(id,type){
+ repair87normalize();
+ let w=repair87well(id),d=repair87state();
+ if(!w)return uiAlert('Скважина не найдена');
+ if(repair87active(id))return uiAlert('На скважине уже выполняются работы. Повторный ремонт запрещён.');
+ if(w.status==='Консервация')return uiAlert('Скважина законсервирована. Нужна отдельная процедура вывода.');
+ let params={
+ diagnose:{name:'Диагностика',cost:2,days:2,delta:0},
+ service:{name:'Плановое ТО ШГН',cost:3,days:1,delta:4},
+ prs:{name:'ПРС',cost:28,days:10,delta:20},
+ krs:{name:'КРС',cost:105,days:28,delta:40}
+ }[type];
+ if(!params)return;
+ if(type==='prs'&&w.health>=70&&w.status==='Работает')return uiAlert('ПРС не обоснован: состояние '+w.health+'%. Проведите плановое ТО при необходимости.');
+ if(type==='krs'&&w.health>=45&&w.status==='Работает')return uiAlert('КРС не обоснован: состояние '+w.health+'%. Сначала проведите диагностику.');
+ if(type==='service'&&w.health>=90&&w.status==='Работает')return uiAlert('Плановое ТО пока не требуется.');
+ if(s.cash<params.cost)return uiAlert('Недостаточно средств: '+m(params.cost));
+ if(!await uiConfirm('Начать '+params.name+' скважины №'+w.id+'?\n'+m(params.cost)+' · '+params.days+' игровых дней\nРезультат появится только после завершения работ.'))return;
+ s.cash-=params.cost;v25post('maintenance',params.cost,{description:params.name+' скважины №'+w.id,well:w.id,type});
+ d.jobs.unshift({id:++d.seq,well:w.id,type,name:params.name,cost:params.cost,remaining:params.days,days:params.days,status:'В работе',before:w.health,wasStopped:w.status!=='Работает'});
+ if(type!=='diagnose')w.status='Ремонт';
+ d.history.unshift(v8date()+': '+params.name+' №'+w.id+' начат, '+m(params.cost));
+ save();render();
+}
+function repair87day(){
+ if(!s?.small)return;
+ repair87normalize();
+ let d=repair87state();
+ for(let job of d.jobs){
+  if(job.status!=='В работе')continue;
+  job.remaining--;
+  if(job.remaining>0)continue;
+  let w=repair87well(job.well);job.status='Завершён';job.remaining=0;job.completed=v8date();
+  if(w){
+   if(job.type==='diagnose'){
+    w.repair87.diagnosedAt=v8init().daysElapsed;
+    w.repair87.diagnosis=w.health<45?'КРС':w.health<70?'ПРС':'ТО / наблюдение';
+   }else{
+    const improve={service:4,prs:20,krs:40}[job.type]||0;
+    w.health=Math.min(98,Math.round(w.health+improve));
+    w.equipment.condition=w.health;
+    w.repair87.lastCompletedDay=v8init().daysElapsed;
+    // A stopped well stays stopped until the player explicitly confirms restart.
+    w.status='Остановлена';
+    w.repair87.readyForStart=true;
+   }
+  }
+  d.history.unshift(v8date()+': '+job.name+' №'+job.well+' завершён'+(w?'; состояние '+w.health+'%':''));
+  if(typeof v19notify==='function')v19notify('Завершено: '+job.name+' скважины №'+job.well);
+ }
+ // Wear only once per calendar month; the old large-field engine already models other effects.
+ let v=v8init(),key=v.year+'-'+v8idx();
+ if(d.lastWearMonth!==key){
+  d.lastWearMonth=key;
+  for(let w of s.assets.wellList){
+   if(w.status==='Работает'){
+    w.health=Math.max(20,Math.round((w.health-.3)*10)/10);
+    w.equipment.condition=w.health;
+   }
+  }
+ }
+}
+const repair87oldAdvance=v8advance;
+v8advance=function(){repair87oldAdvance();repair87day()};
+const repair87oldTreeAction=treeAction;
+treeAction=async function(id,act){
+ if(!s?.small)return repair87oldTreeAction(id,act);
+ if(act==='open'){treeWell=Number(id);render();return}
+ let w=repair87well(id);if(!w)return;
+ if(act==='stop'){
+  if(repair87active(id))return uiAlert('Скважина находится в ремонте');
+  if(w.status==='Работает'){w.status='Остановлена';w.repair87||={};w.repair87.manualStop=true;save();render();return}
+  if(w.status!=='Остановлена')return uiAlert('Пуск недоступен для статуса: '+w.status);
+  if(w.health<45)return uiAlert('Пуск запрещён: низкое техническое состояние. Необходима диагностика.');
+  if(v8init().inspection.some(x=>x.well===w.id&&!x.closed))return uiAlert('Действует ограничение после происшествия.');
+  if(!await uiConfirm('Подтвердить безопасную готовность скважины №'+w.id+' к пуску?'))return;
+  w.status='Работает';w.repair87||={};w.repair87.readyForStart=false;save();render();return;
+ }
+ if(act==='prs'||act==='krs')return repair87start(id,act);
+ if(act==='replace')return repair87start(id,'krs');
+ return repair87oldTreeAction(id,act);
+};
+const repair87oldTreeView=treeView;
+treeView=function(){
+ if(!s?.small)return repair87oldTreeView();
+ repair87normalize();
+ let html=repair87oldTreeView(),w=repair87well(treeWell);
+ html=html.replace(/undefined лет/g,'12 лет');
+ if(!w)return html;
+ let detail=repair87needs(w);
+ // Replace legacy buttons in the well passport with explicit condition-driven actions.
+ html=html.replace(/<button class="btn secondary compact" data-tree-action="prs"[\s\S]*?<button class="btn secondary compact" data-tree-action="replace"[^>]*>[\s\S]*?<\/button>/,
+ '<button class="btn secondary compact" data-repair87="diagnose" data-well-id="'+w.id+'">Диагностика · 2 млн ₸</button>'+
+ '<button class="btn secondary compact" data-repair87="service" data-well-id="'+w.id+'">ТО · 3 млн ₸</button>'+
+ '<button class="btn secondary compact" data-repair87="prs" data-well-id="'+w.id+'">ПРС · 28 млн ₸</button>'+
+ '<button class="btn secondary compact" data-repair87="krs" data-well-id="'+w.id+'">КРС · 105 млн ₸</button>');
+ let jobs=repair87state().jobs.filter(j=>j.well===w.id);
+ let note='<div class="notice"><b>Оценка состояния:</b> '+esc(detail)+'. ПРС — текущие ремонтные работы; КРС — сложное восстановление скважины. Игровые критерии, не нормативы.</div>';
+ if(jobs.length)note+='<div class="notice"><b>Последняя работа:</b> '+esc(jobs[0].name)+' · '+esc(jobs[0].status)+(jobs[0].status==='В работе'?' · '+jobs[0].remaining+' дн.':'')+'</div>';
+ html=html.replace('<h3>Ремонты в работе</h3>',note+'<h3>Ремонты в работе</h3>');
+ html=html.replace('<h3>История операций</h3>',repair87state().jobs.filter(j=>j.status==='В работе').map(j=>row('Скв. №'+j.well+' · '+j.name,j.remaining+' дн.')).join('')+'<h3>История операций</h3>');
+ return html;
+};
+document.addEventListener('click',e=>{let b=e.target.closest('[data-repair87]');if(b)repair87start(Number(b.dataset.wellId),b.dataset.repair87)});
+const repair87oldRequest=v26requestRepair;
+v26requestRepair=async function(w){
+ if(s?.small)return repair87start(w.id,'diagnose');
+ return repair87oldRequest(w);
+};
 const BACKUP_KEY=KEY+'-backup';
 const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='.json,application/json';fileInput.style.display='none';document.body.appendChild(fileInput);
 const saveBar=document.createElement('div');saveBar.id='save-manager';
