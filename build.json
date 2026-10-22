@@ -1,0 +1,25 @@
+{
+  "version": "3.6.3",
+  "entry": "js/core/game.js",
+  "parts": [
+    "src/core/01-foundation.js",
+    "src/core/02-calendar-and-events.js",
+    "src/weather/03-weather.js",
+    "src/production/04-well-register.js",
+    "src/production/05-production-chain.js",
+    "src/production/06-infrastructure.js",
+    "src/economics/07-ledger.js",
+    "src/core/07-ui-and-actions.js",
+    "src/contracts/07b-tenders.js",
+    "src/core/07c-ui-boot.js",
+    "src/production/07d-cppn-fire-dashboard.js",
+    "src/production/07e-cppn-process.js",
+    "src/economics/07g-sales-contracts.js",
+    "src/production/07f-production-balance.js",
+    "src/economics/07h-receivables.js",
+    "src/economics/07i-capex-treasury.js",
+    "src/operations/07j-camp-security-contracts.js",
+    "src/operations/07k-company-ranking.js",
+    "src/core/08-save-manager.js"
+  ]
+}
