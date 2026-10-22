@@ -133,7 +133,7 @@ render=function(){
  v38oldRender();
  let el=document.getElementById('body');if(!el||!s)return;
  if(tab==='daily'){el.insertAdjacentHTML('beforeend',v38plansView());}
- if(tab==='people'){el.insertAdjacentHTML('beforeend',v38leadersView());}
+ 
  el.querySelectorAll('[data-v38-annual]').forEach(b=>b.onclick=v38setAnnual);
  el.querySelectorAll('[data-v38-shop]').forEach(b=>b.onclick=()=>v38setShop(Number(b.dataset.v38Shop)));
  el.querySelectorAll('[data-v38-promote]').forEach(b=>b.onclick=()=>v38leaderAct(b.dataset.v38Promote,'promote'));
