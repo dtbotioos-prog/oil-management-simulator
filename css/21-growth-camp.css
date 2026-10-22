@@ -1,0 +1,1 @@
+.grow-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:12px 0}.grow-actions>div{padding:12px;border:1px solid var(--line,#334155);border-radius:10px}.grow-actions small{display:block;opacity:.7;margin:7px 0}.grow-actions button{margin-top:6px}.small-panel{margin-bottom:16px}

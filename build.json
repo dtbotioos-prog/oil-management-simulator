@@ -1,5 +1,5 @@
 {
-  "version": "4.0.0-greenfield-alpha",
+  "version": "3.8.5",
   "entry": "js/core/game.js",
   "parts": [
     "src/core/01-foundation.js",
@@ -25,6 +25,12 @@
     "src/contracts/07n-asset-picker.js",
     "src/operations/07o-realism-mobile-personnel.js",
     "src/operations/07p-plan-consistency.js",
+    "src/operations/07q-small-company.js",
+    "src/operations/07r-start-economy.js",
+    "src/operations/07s-growth-camp.js",
+    "src/operations/07t-small-start-cleanup.js",
+    "src/operations/07u-small-reports-rating.js",
+    "src/operations/07v-inspections-environment.js",
     "src/core/08-save-manager.js"
   ]
 }

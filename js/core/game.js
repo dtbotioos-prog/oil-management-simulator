@@ -1779,6 +1779,336 @@ v38plansView=function(){
  }
  return v41oldPlansView();
 };
+/* Small active company: one existing well, staged development, legacy saves preserved. */
+const SMALL_STEPS=[['Геологическое обоснование',12,28],['Проектирование и согласования',20,42],['Подготовка площадки',15,65],['Тендер и договор на бурение',10,90],['Бурение',45,600],['Испытание и освоение',12,75],['Обустройство и подключение',20,145],['Приёмка и ввод',7,30]];
+function smallInit(){return s.small|| (s.small={projects:[],seq:0,events:[],tankCapacity:1000})}
+function smallNew(){s.wells=1;s.rate=16;s.water=23;s.pending=[];s.assets={wellList:[{id:1001,unit:'ГУ-1',shop:0,status:'Работает',rate:16,water:23,health:87,equipment:{type:'ШГН'}}],infrastructure:[{id:'РВС-1',type:'Резервуар',health:90},{id:'ВЛ-1',type:'Выкидная линия',health:91},{id:'УУН-1',type:'Узел учёта',health:90},{id:'ВАГ-1',type:'Вагончик',health:92}]};s.small={projects:[],seq:0,events:['Старт: одна действующая скважина, один РВС и минимальная инфраструктура'],tankCapacity:1000};s.v8=null;s.v21=null;s.v38=null;save()}
+function smallStart(){let d=smallInit();if(d.projects.some(x=>x.status==='В работе'))return uiAlert('Завершите текущий проект');let well=Math.max(1000,...s.assets.wellList.map(x=>+x.id||0))+1;d.projects.push({id:++d.seq,well,phase:0,days:0,status:'В работе'});save();render()}
+function smallPhase(id){let p=smallInit().projects.find(x=>x.id===id);if(!p||p.days||p.status!=='В работе')return;let [name,days,cost]=SMALL_STEPS[p.phase];if(s.cash<cost)return uiAlert('Недостаточно средств');s.cash-=cost;p.days=days;smallInit().events.unshift('Скважина №'+p.well+': '+name+' · '+days+' дн. · '+cost+' млн ₸');save();render()}
+function smallDay(){if(!s?.small)return;for(let p of s.small.projects){if(p.status!=='В работе'||p.days<=0)continue;if(--p.days>0)continue;if(p.phase===5){p.rate=Math.random()<.78?Math.round((7+Math.random()*15)*10)/10:0;if(!p.rate){p.status='Без притока';s.small.events.unshift('Скважина №'+p.well+': промышленный приток не получен');continue}}p.phase++;if(p.phase===SMALL_STEPS.length){p.status='Введена';s.wells++;s.assets.wellList.push({id:p.well,unit:'ГУ-1',shop:0,status:'Работает',rate:p.rate,water:25,health:96,equipment:{type:'ШГН'}});s.small.events.unshift('Введена новая скважина №'+p.well)}}}
+function smallView(){let d=smallInit();return '<section class="small-panel"><h2>Поэтапное развитие скважин</h2><p class="muted">На старте одна действующая скважина и один РВС. Следующие скважины вводятся только после выполнения восьми этапов.</p><p><b>Фонд скважин: '+s.assets.wellList.length+'</b> · РВС-1: '+d.tankCapacity+' т</p>'+(d.projects.some(p=>p.status==='В работе')?'':'<button class="btn" data-small="new">Начать проект новой скважины</button>')+d.projects.map(p=>'<div class="small-project"><b>Скважина №'+p.well+' · '+p.status+'</b><p>'+(p.phase<8?'Этап '+(p.phase+1)+'/8: '+SMALL_STEPS[p.phase][0]:'Проект завершён')+'</p>'+(p.status==='В работе'?(p.days>0?'<span>Осталось '+p.days+' дней</span>':'<button class="btn secondary" data-small="phase" data-id="'+p.id+'">Начать этап · '+SMALL_STEPS[p.phase][2]+' млн ₸</button>'):'')+'</div>').join('')+'</section>'}
+const smallOldAction=action;action=function(t){if(s?.small&&t==='drill')return uiAlert('Новые скважины вводятся через раздел «Поэтапное развитие скважин»');return smallOldAction(t)};
+const smallOldAdvance=v8advance;v8advance=function(){smallOldAdvance();smallDay()};
+const smallOldRender=render;render=function(){smallOldRender();if(!s||tab!=='overview')return;let el=document.querySelector('#body');if(el){let box=document.createElement('div');box.innerHTML=smallView();el.prepend(box)}};
+document.addEventListener('click',e=>{let b=e.target.closest('[data-small]');if(!b)return;if(b.dataset.small==='new')smallStart();if(b.dataset.small==='phase')smallPhase(+b.dataset.id)});
+const smallOldNew=$('new').onclick;$('new').onclick=async()=>{await smallOldNew();if(s?.wells===240){smallNew();render()}};
+/* v3.8.1: economy of one producing well; old careers unchanged. */
+function v41init(){if(!s?.small)return null;return s.small.economy||(s.small.economy={monthlyFixed:.9,notes:[]})}
+function v41bootstrap(){if(!s?.small)return;let e=v41init();if(e.bootstrapped)return;
+ let v=v8init();v.salaryFund=3.6;v.plans=Array(12).fill(300);v.originalPlans=[...v.plans];if(s.enterprise){s.enterprise.staff=12;s.enterprise.target=300}
+ s.v30=null;v30init().tanks=[{id:1,name:'РВС-1000 №1',capacity:1000,level:0,health:90,paint:90,fire:90}];
+ s.v33=null;let c=v33init();c.seq=1;c.contracts=[{id:1,buyer:'Каспийский Нефтетрейдер',daily:35,remaining:10000,fulfilled:0,status:'Действует',created:'Стартовый договор',priceMultiplier:1,terms:7,advancePct:0}];c.shipments=[];s.v32=null;
+ e.bootstrapped=true;e.notes.unshift('Стартовый баланс: 1 скважина, РВС 1000 т, договор 35 т/сут, ФОТ 3,6 млн ₸/мес.');}
+const v41oldSmallNew=smallNew;smallNew=function(){v41oldSmallNew();v41bootstrap();save()};
+const v41oldSmallDay=smallDay;smallDay=function(){v41oldSmallDay();if(!s?.small)return;let e=v41init(),t=v30init().tanks[0],d=v32init(),last=d.days[d.days.length-1];if(!last)return;
+ let fixed=e.monthlyFixed/v8days();s.cash-=fixed;v25post('opex',fixed,{description:'Содержание промысла и обязательные договоры'});
+ if(t.level>=t.capacity*.9&&!e.warned){e.warned=true;e.notes.unshift('РВС заполнен более чем на 90%. Проверьте договор отгрузки.')}if(t.level<t.capacity*.75)e.warned=false;
+ if(s.cash<0&&!s.dead){s.dead=true;log('Недостаточно средств для содержания предприятия')}};
+const v41oldSmallView=smallView;smallView=function(){if(!s?.small)return '';let e=v41init(),t=v30init().tanks[0],d=v32init(),last=d.days[d.days.length-1],v=v8init(),c=v33init().contracts.filter(x=>x.status==='Действует');
+ let items=[['Работающих скважин',s.assets.wellList.filter(x=>x.status==='Работает').length],['Добыто за сутки',f(last?.produced||0)+' т'],['План месяца',f(v8plan())+' т'],['РВС',f(t.level)+' / '+f(t.capacity)+' т'],['Отгружено за сутки',f(last?.sold||0)+' т'],['Договоры реализации',c.length],['ФОТ в месяц',m(v.salaryFund)],['Содержание в месяц',m(e.monthlyFixed)]];
+ return '<section class="small-panel"><h2>Экономика малого промысла</h2><p class="muted">Добыча → подготовка → РВС → договорная отгрузка → оплата. Добыча не равна продаже.</p><div class="small-economy-grid">'+items.map(x=>'<div><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('')+'</div><div class="v41tank">Заполнение РВС: '+f(t.level/t.capacity*100)+'%<div><i style="width:'+Math.min(100,t.level/t.capacity*100)+'%"></i></div></div>'+(c.length?'':'<p class="notice bad">Нет действующего договора продажи. Нефть накапливается.</p>')+(e.notes.length?'<p class="muted">'+esc(e.notes[0])+'</p>':'')+'</section>'+v41oldSmallView()};
+/* v3.8.2 — incremental staffing, real cash movement, gated shift-camp construction. */
+const GROW_ROLES=[['Оператор добычи',2,.55,8],['Слесарь-ремонтник',2,.62,9],['Электромонтёр',1,.68,11],['Мастер участка',1,.88,15],['Инженер по промышленной безопасности',1,.78,13],['Инженер-эколог',1,.72,12],['Специалист по пожарной безопасности',1,.72,12],['Лаборант',1,.52,10],['Водитель',2,.5,8],['Работники обеспечения',5,.43,8]];
+const GROW_BUILD=[['Проектирование вахтового посёлка',30,85],['Подготовка территории и коммуникаций',45,180],['Строительство жилого корпуса на 60 мест',75,550],['Столовая и санитарно-бытовой корпус',50,300],['Противопожарное оснащение и приёмка',20,125]];
+function growInit(){if(!s?.small)return null;return s.small.growth||(s.small.growth={staff:12,roster:[],hiring:null,building:null,campReady:false,stage:0,log:[],costs:0,buildings:[]})}
+function growBootstrap(){if(!s?.small)return;let g=growInit();if(g.ready)return;g.ready=true;g.staff=12;g.roster=[{job:'Минимальная производственная смена и управление',count:12,salary:3.6}];g.log.unshift('Старт: 12 работников, отдельного вахтового посёлка нет. Временный бытовой вагончик уже действует.');let c=v36init().camp;c.residents=0;c.beds=0;c.guards=0;c.mealStock=0;c.housing=85;c.cleanliness=85;c.security=85;v8init().salaryFund=3.6;}
+function growStaffCount(){let g=growInit();return g?g.staff:0}
+function growHire(i){let g=growInit();if(!g||g.hiring||g.building)return uiAlert('Сначала завершите текущее кадровое или строительное мероприятие.');let r=GROW_ROLES[i];if(!r)return;let [job,count,salary,days]=r,fee=Math.round(count*salary*.3*100)/100;if(s.cash<fee)return uiAlert('Недостаточно средств для подбора персонала.');s.cash-=fee;v25post('opex',fee,{description:'Подбор персонала: '+job});g.hiring={job,count,salary,days,fee};g.log.unshift('Открыт подбор: '+job+' ('+count+' чел.), срок '+days+' дней.');save();render()}
+function growBuild(){let g=growInit();if(!g||g.building)return;if(g.staff<50)return uiAlert('Вахтовый посёлок доступен после достижения штата 50 работников.');if(g.stage>=GROW_BUILD.length)return;let [name,days,cost]=GROW_BUILD[g.stage];if(s.cash<cost)return uiAlert('Недостаточно денег: требуется '+m(cost));s.cash-=cost;v25post('maintenance',cost,{description:'Строительство вахтового посёлка: '+name});g.costs+=cost;g.building={name,days,cost};g.log.unshift('Начаты работы: '+name+', '+days+' дней.');save();render()}
+function growDay(){if(!s?.small)return;let g=growInit();if(!g.ready)growBootstrap();if(g.hiring&&--g.hiring.days<=0){let h=g.hiring;g.staff+=h.count;g.roster.push({job:h.job,count:h.count,salary:h.count*h.salary});v8init().salaryFund=Math.round(g.roster.reduce((a,r)=>a+r.salary,0)*100)/100;if(s.enterprise)s.enterprise.staff=g.staff;g.log.unshift('Приняты '+h.count+' чел.: '+h.job+'. Штат '+g.staff+', ФОТ '+m(v8init().salaryFund)+'/мес.');g.hiring=null;}
+ if(g.building&&--g.building.days<=0){let b=g.building;g.buildings.push(b.name);g.stage++;g.log.unshift('Принят этап: '+b.name);g.building=null;if(g.stage===GROW_BUILD.length){g.campReady=true;let c=v36init().camp;c.beds=60;c.guards=3;c.mealStock=60*3*10;c.residents=Math.min(g.staff,60);g.log.unshift('Вахтовый посёлок введён: 60 мест. Начались расходы на питание, охрану и содержание.')}}
+ if(g.campReady){let c=v36init().camp;c.residents=Math.min(g.staff,c.beds)}
+ if(g.log.length>100)g.log.length=100;
+}
+function growView(){let g=growInit();if(!g)return '';let e=s.small.economy||{},cash=Number(s.cash)||0;let pct=g.staff/50*100;let html='<section class="small-panel"><h2>Развитие штата и вахтового посёлка</h2><p class="muted">Работники принимаются после подбора; ФОТ увеличивается только после оформления. До 50 работников используются существующие бытовые помещения и подрядные услуги. Посёлок не появляется автоматически.</p><div class="small-economy-grid">'+[['Штат',g.staff+' чел.'],['До порога посёлка',Math.max(0,50-g.staff)+' чел.'],['ФОТ за месяц',m(v8init().salaryFund)],['Денежные средства',m(cash)],['Этап посёлка',g.stage+'/5'],['Капвложения в посёлок',m(g.costs)]].map(x=>'<div><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('')+'</div>';
+ if(g.hiring)html+='<p class="notice">Подбор: '+esc(g.hiring.job)+' · осталось '+g.hiring.days+' дн.</p>';
+ html+='<h3>Поэтапный набор персонала</h3><div class="grow-actions">'+GROW_ROLES.map((r,i)=>'<div><b>'+esc(r[0])+'</b><small>'+r[1]+' чел. · +'+m(r[1]*r[2])+'/мес. · '+r[3]+' дн.</small><button class="mini-btn" data-grow-hire="'+i+'" '+(g.hiring||g.building?'disabled':'')+'>Начать подбор</button></div>').join('')+'</div>';
+ html+='<h3>Вахтовый посёлок · после 50 работников</h3>';
+ if(g.staff<50)html+='<p class="notice">Строительство пока недоступно: требуется штат не менее 50 человек. Осталось '+(50-g.staff)+' чел.</p>';
+ else if(g.campReady)html+='<p class="notice">Посёлок введён в эксплуатацию: 60 мест. Проживание, питание и охрана учитываются в расходах.</p>';
+ else{let b=GROW_BUILD[g.stage];html+='<p class="muted">'+(g.building?'Выполняется '+esc(g.building.name)+', осталось '+g.building.days+' дн.':'Следующий этап: '+esc(b[0])+' · '+b[1]+' дн. · '+m(b[2]))+'</p>'+(g.building?'':'<button class="btn" data-grow-build="1" '+(cash<b[2]?'disabled':'')+'>Начать строительный этап</button>')}
+ html+='<h3>Принятый персонал</h3>'+g.roster.map(r=>'<div class="row"><span>'+esc(r.job)+' · '+r.count+' чел.</span><b>'+m(r.salary)+'/мес.</b></div>').join('')+'<h3>История решений</h3>'+g.log.slice(0,6).map(x=>'<p class="muted">'+esc(x)+'</p>').join('')+'</section>';return html}
+const growOldBootstrap=v41bootstrap;v41bootstrap=function(){growOldBootstrap();growBootstrap()};
+const growOldDay=smallDay;smallDay=function(){growOldDay();growDay()};
+const growOldView=smallView;smallView=function(){return growOldView()+growView()};
+const growOldCampDaily=v36daily;v36daily=function(){if(s?.small){let g=growInit();if(!g?.campReady){let c=v36init().camp;c.residents=0;c.guards=0;c.beds=0;c.mealStock=0;} }return growOldCampDaily()};
+const growOldCampView=v36campView;v36campView=function(){if(s?.small&&!growInit()?.campReady)return '<section class="small-panel"><h3>Вахтовый посёлок</h3><p class="muted">Посёлок ещё не построен. Доступен после достижения штата 50 человек и завершения пяти строительных этапов.</p></section>';return growOldCampView()};
+document.addEventListener('click',e=>{let b=e.target.closest('[data-grow-hire],[data-grow-build]');if(!b)return;if(b.hasAttribute('data-grow-hire'))growHire(+b.dataset.growHire);else growBuild()});
+/* v3.8.3 — only for small-company careers. Existing large-company saves are unchanged. */
+const SMALL_START_POSITIONS=[
+ ['Управление','Директор предприятия',.55],['Производство','Мастер участка',.42],
+ ['Производство','Оператор добычи (вахта 1)',.29],['Производство','Оператор добычи (вахта 2)',.29],
+ ['Ремонт','Слесарь-ремонтник',.28],['Энергетика','Электромонтёр',.31],
+ ['Диспетчеризация','Диспетчер',.26],['Логистика','Водитель',.25],
+ ['Безопасность','Специалист по БиОТ и промышленной безопасности',.35],
+ ['Экология','Инженер-эколог',.27],['Учёт','Бухгалтер',.22],
+ ['Обеспечение','Работник хозяйственного обеспечения',.12]
+];
+function v43setup(){
+ if(!s?.small)return;
+ let x=s.small;if(x.cleaned)return;
+ const g=growInit();if(!g.ready)growBootstrap();
+ // Replace the fictional large company's staff list, instead of just changing its total.
+ let e=ensureEnterprise();e.staff=g.staff;e.target=300;
+ e.dept=[{name:'Малый производственный участок',headcount:7,chief:'Мастер участка'},
+ {name:'Управление и обеспечение',headcount:3,chief:'Директор предприятия'},
+ {name:'Безопасность и экология',headcount:2,chief:'Ответственные специалисты'}];
+ let employees=[],positions=[];
+ SMALL_START_POSITIONS.forEach(([dept,role,salary],i)=>{
+  let id='S'+(i+1),eid='SE'+(i+1);
+  positions.push({id,dept,role,salary,employeeId:eid});
+  employees.push({id:eid,name:hrName(i+1),positionId:id,experience:3+i%8,performance:72+i%16,training:78,status:'Работает'});
+ });
+ e.hr={positions,employees,history:[],seq:12,initial:12,baseStaff:0,selected:'Управление',uniqueSurnameV18:true};
+ // Reconcile payroll once. The growth module remains the only source for future hiring.
+ g.roster=[{job:'Стартовый штат (12 должностей)',count:12,salary:3.6}];
+ v8init().salaryFund=3.6;
+ // Remove automatically generated company-wide warehouses and hundreds of equipment units.
+ s.plant={types:[{id:0,name:'Станок-качалка',qty:1,expired:0,extended:0,price:5,condition:87,maintenance:0,renewed:0},
+ {id:1,name:'Узел учёта',qty:1,expired:0,extended:0,price:4,condition:90,maintenance:0,renewed:0}],
+ stock:[{id:0,name:'ЗИП и расходные материалы',qty:12,minimum:4,price:.2,consumed:0}],
+ history:[],investment:0,warehouseSpend:0,selected:0,warning:'Стартовый склад малого нефтепромысла; дополнительные активы приобретаются по мере развития.'};
+ // Only one collection point; no fictional second field or PPD complex.
+ s.operations={shops:[{id:0,name:'Производственный участок №1',kind:'Добыча',plan:300,efficiency:86,discipline:85,chief:'Мастер участка',history:[],warnings:0,invested:0,review:0}],cases:[],closed:[],sequence:0,logs:[],selected:0,losses:0,prevented:0,issued:0};
+ s.assets.infrastructure=[{id:'ГУ-1',type:'Малая групповая установка',health:91},
+ {id:'РВС-1',type:'Резервуар 1000 т',health:90},
+ {id:'ВЛ-1',type:'Выкидная линия',health:91},
+ {id:'УУН-1',type:'Узел учёта',health:90},
+ {id:'ВАГ-1',type:'Бытовой вагончик',health:92}];
+ s.v21=null;
+ let nodes=v21init().nodes;
+ for(let id of Object.keys(nodes))if(!['ГУ-1','ДНС-1','ЦППН','ППД-1','ПС-1'].includes(id))delete nodes[id];
+ Object.assign(nodes['ГУ-1'],{capacity:55,desc:'Малый сборный узел'});
+ Object.assign(nodes['ДНС-1'],{capacity:55,desc:'Малая перекачка'});
+ Object.assign(nodes['ЦППН'],{capacity:55,desc:'Модуль подготовки нефти'});
+ Object.assign(nodes['ПС-1'],{capacity:80,desc:'Электропитание малого промысла'});
+ Object.assign(nodes['ППД-1'],{capacity:55,desc:'Технологическое обеспечение'});
+ let v=v8init();v.rankCity=[{name:employees[0].name,job:'Директор предприятия',score:77}];
+ v.rankField=[{name:employees[1].name,job:'Мастер участка',score:78}];
+ // Discard old manager samples; they must not appear as additional payroll or people.
+ s.v11={employees:[],marketDay:0,actions:[],inbox:[],hired:0};
+ x.cleaned=true;
+ x.events.unshift('Стартовые подразделения, активы и кадровые реестры приведены к одной скважине.');
+}
+const v43oldBootstrap=v41bootstrap;
+v41bootstrap=function(){v43oldBootstrap();v43setup()};
+const v43oldHrView=hrView;
+hrView=function(){
+ if(!s?.small)return v43oldHrView();
+ let g=growInit(),h=ensureHR();
+ let total=g.staff,filled=h.positions.filter(p=>p.employeeId).length;
+ return '<section class="small-panel"><h2>Штат малого промысла</h2><p class="muted">Начальный реестр — 12 работников. Новые должности появляются по мере найма в блоке развития штата; крупные департаменты отсутствуют.</p>'+row('Фактический штат',total+' чел.')+row('Первоначальные должности',filled+' / 12')+row('Единый ФОТ',m(v8init().salaryFund)+'/мес.')+
+ '<div class="table-scroll"><table><thead><tr><th>Подразделение</th><th>Должность</th><th>Работник</th></tr></thead><tbody>'+h.positions.map(p=>{let person=h.employees.find(e=>e.id===p.employeeId);return '<tr><td>'+esc(p.dept)+'</td><td>'+esc(p.role)+'</td><td>'+esc(person?.name||'Вакансия')+'</td></tr>'}).join('')+'</tbody></table></div><p class="muted">Новые сотрудники, сроки подбора и затраты учитываются в разделе развития штата на главном экране.</p></section>';
+};
+const v43oldOrgView=enterpriseView;
+enterpriseView=function(){
+ if(!s?.small)return v43oldOrgView();
+ if(tab==='org')return '<section class="small-panel"><h2>Структура малого предприятия</h2>'+ensureEnterprise().dept.map(d=>row(esc(d.name),d.headcount+' чел.')).join('')+'<p class="muted">Большие департаменты создаются по мере роста производства и численности.</p></section>';
+ if(tab==='staff')return hrView();
+ return v43oldOrgView();
+};
+// Prevent the generic HR subsystem from changing the total to a phantom 240-person base.
+const v43oldHrSync=hrSync;
+hrSync=function(){if(s?.small){ensureEnterprise().staff=growInit().staff;return}v43oldHrSync()};
+// Ensure future saves and existing small-company careers are migrated without affecting other modes.
+const v43oldRender=render;
+render=function(){if(s?.small&&!s.small.cleaned)v43setup();v43oldRender()};
+// A successful staged hire creates real roster entries rather than an invisible headcount.
+const v43oldGrowDay=growDay;
+growDay=function(){
+ let before=s?.small?growInit().staff:0;
+ v43oldGrowDay();
+ if(!s?.small)return;
+ let g=growInit(),h=ensureHR();
+ if(g.staff<=before)return;
+ let newest=g.roster[g.roster.length-1],count=g.staff-before;
+ for(let i=0;i<count;i++){
+  let seq=++h.seq,id='S'+seq,eid='SE'+seq;
+  h.positions.push({id,dept:'Расширение производства',role:newest.job,salary:newest.salary/newest.count,employeeId:eid});
+  h.employees.push({id:eid,name:hrName(seq),positionId:id,experience:2+seq%7,performance:70,training:75,status:'Работает'});
+ }
+ ensureEnterprise().staff=g.staff;
+};
+/* v3.8.4 — small-field reports and size-neutral company rating. Legacy saves unchanged. */
+function small44active(){return !!s?.small}
+function small44wells(){return (s.assets?.wellList||[]).filter(w=>w.status==='Работает')}
+function small44shops(){
+ let wells=small44wells(),names=[...new Set(wells.map(w=>w.unit||'ГУ-1'))];
+ if(!names.length)names=['ГУ-1'];
+ let total=names.map(n=>wells.filter(w=>(w.unit||'ГУ-1')===n).reduce((a,w)=>a+Math.max(0,(+w.rate||0)*(1-(+w.water||0)/100)),0));
+ let sum=total.reduce((a,b)=>a+b,0);
+ return names.map((name,i)=>({id:i,name,weight:sum?total[i]/sum:1/names.length}));
+}
+const small44oldShops=v38shops;
+v38shops=function(){return small44active()?small44shops():small44oldShops()};
+const small44OldMonth=v38month;
+v38month=function(i){
+ if(!small44active())return small44OldMonth(i);
+ let d=v38init(),v=v8init(),key=v.year+'-'+i,entry=d.shops[key],shops=small44shops();
+ if(!entry||(!entry.locked&&(entry.rows.length!==shops.length||entry.rows.some((r,j)=>r.name!==shops[j].name)))){
+  let plan=Number(v.plans[i])||0,allocated=0,rows=shops.map((sh,j)=>{
+   let p=j===shops.length-1?plan-allocated:Math.round(plan*sh.weight);
+   allocated+=p;
+   return {id:sh.id,name:sh.name,plan:p,actual:0};
+  });
+  // Preserve recorded production if the operating unit was renamed mid-month.
+  let actual=entry?.rows?.reduce((a,r)=>a+(Number(r.actual)||0),0)||0;
+  let assigned=0;rows.forEach((r,j)=>{r.actual=j===rows.length-1?actual-assigned:Math.round(actual*shops[j].weight*10)/10;assigned+=r.actual});
+  d.shops[key]={rows,locked:false};
+ }
+ return d.shops[key];
+};
+const small44OldAnnual=v38setAnnual;
+v38setAnnual=function(){
+ if(!small44active())return small44OldAnnual();
+ let d=v38init(),v=v8init(),current=v.plans.reduce((a,b)=>a+b,0);
+ let raw=prompt('Годовой план малого промысла, тонн:',String(Math.round(current)));
+ if(raw===null)return;
+ let total=Number(raw),idx=v8idx(),closed=v.plans.slice(0,idx).reduce((a,b)=>a+b,0);
+ if(!Number.isFinite(total)||total<0||total>1000000||total<closed)return uiAlert('План должен быть не меньше утверждённых закрытых месяцев и не более 1 000 000 т.');
+ let reason=prompt('Основание изменения плана:');if(!reason?.trim())return;
+ let days=Array.from({length:12-idx},(_,i)=>new Date(v.year,idx+i+1,0).getDate());
+ let remaining=total-closed,den=days.reduce((a,b)=>a+b,0),assigned=0;
+ for(let j=idx;j<12;j++){let n=j===11?remaining-assigned:Math.round(remaining*days[j-idx]/den);v.plans[j]=n;assigned+=n;delete d.shops[v.year+'-'+j]}
+ d.annual=v.plans.reduce((a,b)=>a+b,0);
+ d.decisions.unshift(v8date()+': скорректирован план малого промысла до '+d.annual+' т. '+reason.trim());
+ save();render();
+};
+const small44OldPlans=v38plansView;
+v38plansView=function(){
+ if(!small44active())return small44OldPlans();
+ let v=v8init(),d=v38init(),idx=v8idx(),entry=v38month(idx);
+ let yearPlan=v.plans.reduce((a,b)=>a+(Number(b)||0),0);
+ let fact=v.monthHistory.filter(h=>h.year===v.year).reduce((a,h)=>a+(Number(h.actual)||0),0)+(Number(v.monthActual)||0);
+ let pct=(p,a)=>p>0?f(a/p*100)+'%':(a>0?'Вне плана':'—');
+ let out='<section class="v38-panel"><h2>План и факт малого нефтепромысла</h2><p class="muted">Отчёт показывает только существующие производственные узлы и действующие скважины. Добыча не приравнивается к реализации.</p>';
+ out+='<div class="v38-stats"><div><small>Годовой план</small><strong>'+f(yearPlan)+' т</strong></div><div><small>Добыто с начала года</small><strong>'+f(fact)+' т</strong></div><div><small>Выполнение</small><strong>'+pct(yearPlan,fact)+'</strong></div></div>';
+ out+='<button class="mini-btn" data-v38-annual>Изменить годовой план</button>';
+ out+='<h3>Действующие производственные узлы · '+V8_MONTHS[idx]+'</h3><div class="table-scroll"><table class="v8table"><thead><tr><th>Узел</th><th>План, т</th><th>Факт, т</th><th>Выполнение</th></tr></thead><tbody>';
+ for(let r of entry.rows)out+='<tr><td>'+esc(r.name)+'</td><td>'+f(r.plan)+'</td><td>'+f(r.actual)+'</td><td>'+pct(r.plan,r.actual)+'</td></tr>';
+ out+='</tbody></table></div><h3>Закрытые месяцы</h3>';
+ for(let h of v.monthHistory.filter(x=>x.year===v.year).slice(-12).reverse()){
+  let rows=d.closed.find(x=>x.year===h.year&&x.month===h.month)?.rows||[];
+  out+='<details class="v38-closed"><summary>'+V8_MONTHS[h.month]+': '+f(h.actual)+' / '+f(h.plan)+' т · '+pct(h.plan,h.actual)+'</summary>';
+  for(let r of rows)out+=row(esc(r.name),f(r.actual)+' / '+f(r.plan)+' т · '+pct(r.plan,r.actual));
+  out+='</details>';
+ }
+ return out+'</section>';
+};
+const small44OldPlayer=v37player;
+v37player=function(year){
+ let result=small44OldPlayer(year);
+ if(!small44active())return result;
+ let v=v8init(),hist=v.monthHistory.filter(h=>h.year===year);
+ let plan=hist.reduce((a,h)=>a+(+h.plan||0),0)+(v.year===year?(+v.plans[v8idx()]||0):0);
+ let actual=hist.reduce((a,h)=>a+(+h.actual||0),0)+(v.year===year?(+v.monthActual||0):0);
+ let clamp=x=>Math.max(0,Math.min(100,Math.round(x)));
+ // Evaluate efficiency against the company's own plan, never absolute large-field output.
+ result.aspects.production=clamp(plan>0?Math.min(100,actual/Math.max(1,plan)*100):50);
+ let g=growInit(),campReady=!!g?.campReady;
+ // A camp is not mandatory for a 12-person field. No phantom penalties or bonuses.
+ result.aspects.camp=campReady?result.aspects.camp:70;
+ result.aspects.staff=clamp((v.morale||70)*.5+(v.conditions||70)*.5);
+ result.aspects.investment=clamp(55+Math.min(25,(s.small.projects||[]).filter(p=>p.status==='Введена').length*12));
+ result.score=v37score(result.aspects);
+ return result;
+};
+const small44OldEquip=v39equipment;
+v39equipment=function(){
+ if(!small44active())return small44OldEquip();
+ let key=v39key(),wells=s.assets?.wellList||[],problem=wells.filter(w=>+w.health<=75||w.status!=='Работает');
+ let text='ЕЖЕМЕСЯЧНАЯ ТЕХНИЧЕСКАЯ СВОДКА МАЛОГО ПРОМЫСЛА\nДата: '+v8date()+
+ '\nВсего скважин: '+wells.length+'; действующих: '+small44wells().length+
+ '\nРВС: '+(v30init().tanks||[]).length+'; производственные узлы: '+small44shops().length+'.\n';
+ if(!problem.length)text+='Остановленных скважин и скважин с состоянием 75% и ниже не выявлено.';
+ else text+=problem.map(w=>'Скв. №'+w.id+' · '+(w.unit||'ГУ-1')+' · '+w.status+' · состояние '+w.health+'%').join('\n');
+ text+='\nИгровые пороги состояния оборудования не являются нормативными требованиями.';
+ v39mail(key,'equipment','Техническая сводка малого промысла',text);
+};
+const small44OldCampView=v36campView;
+v36campView=function(){
+ if(!small44active()||growInit()?.campReady)return small44OldCampView();
+ return '<section class="small-panel"><h3>Бытовое обеспечение</h3><p class="muted">Используется бытовой вагончик и подрядные услуги. Вахтовый посёлок отсутствует; показатели общежитий и столовой не применяются.</p></section>';
+};
+/* v3.8.5: state inspector findings and environmental penalties; fictional game values, mln KZT. */
+const COMPLY_CASES=[
+ {agency:'ДЧС',name:'Отсутствует актуальный акт проверки предохранительного устройства',cost:2.4,days:6,weight:3},
+ {agency:'ДЧС',name:'Неисправное ограждение опасного участка',cost:1.8,days:4,weight:2},
+ {agency:'ДЧС',name:'Не проведена проверка технического состояния оборудования',cost:3.2,days:9,weight:3},
+ {agency:'Экология',name:'Нарушение порядка обращения с производственными отходами',cost:1.6,days:5,weight:2},
+ {agency:'Экология',name:'Утечка нефтесодержащей жидкости на площадке',cost:4.8,days:12,weight:4},
+ {agency:'Экология',name:'Не выполнено мероприятие экологического контроля',cost:1.2,days:4,weight:2}
+];
+function complyInit(){
+ if(!s.comply)s.comply={cases:[],seq:0,inspections:0,events:[],lastMonth:-1};
+ return s.comply;
+}
+function complyFinding(kind){
+ let c=complyInit(),pool=COMPLY_CASES.filter(x=>x.agency===kind);
+ let base=pool[Math.floor(Math.random()*pool.length)],id=++c.seq;
+ let x={id,agency:kind,name:base.name,repairCost:base.cost,repairDays:base.days,
+  fine:kind==='Экология'?+(base.cost*(.4+Math.random()*.9)).toFixed(2):0,
+  finePaid:false,status:'Выявлено',remaining:0,created:v8date(),weight:base.weight};
+ c.cases.unshift(x);c.events.unshift(kind+': выявлено несоответствие №'+id+' — '+x.name);
+ if(kind==='Экология'&&x.fine>0){s.cash-=x.fine;v25post('incident',x.fine,{description:'Игровой экологический штраф: '+x.name,agency:kind,caseId:id});x.finePaid=true;c.events.unshift('Оплачен экологический штраф '+m(x.fine)+' по №'+id)}
+ log('Проверка '+kind+': '+x.name);save();return x;
+}
+function complyFix(id){
+ let x=complyInit().cases.find(z=>z.id===id);
+ if(!x||x.status!=='Выявлено')return;
+ if(s.cash<x.repairCost)return uiAlert('Недостаточно средств для устранения: '+m(x.repairCost));
+ s.cash-=x.repairCost;
+ v25post('maintenance',x.repairCost,{description:'Устранение предписания '+x.agency+' №'+x.id,agency:x.agency,caseId:x.id});
+ x.status='Устранение';x.remaining=x.repairDays;
+ complyInit().events.unshift('Начаты работы по предписанию №'+id+'; затраты '+m(x.repairCost));
+ save();render();
+}
+function complyDay(){
+ if(!s?.small)return;
+ let c=complyInit();
+ for(let x of c.cases){
+  if(x.status==='Устранение'&&x.remaining>0&&--x.remaining===0){
+   x.status='Устранено';c.events.unshift('Предписание '+x.agency+' №'+x.id+' исполнено');log('Устранено несоответствие №'+x.id);
+  }
+ }
+ // Inspect only occasionally; one check per three game months, with a small chance of finding a problem.
+ let v=v8init(),key=v.year*12+v8idx();
+ if(s.day!==1||key%3!==0||c.lastMonth===key)return;
+ c.lastMonth=key;c.inspections++;
+ let kind=(c.inspections%2?'ДЧС':'Экология');
+ if(Math.random()<.5)complyFinding(kind);
+ else c.events.unshift('Проверка '+kind+': новых несоответствий не выявлено');
+}
+function complyView(){
+ if(!s?.small)return '';
+ let c=complyInit(),open=c.cases.filter(x=>x.status!=='Устранено');
+ let spent=c.cases.reduce((a,x)=>a+(x.finePaid?x.fine:0)+(x.status!=='Выявлено'?x.repairCost:0),0);
+ let h='<section class="small-panel"><h2>Государственные проверки и экология</h2><p class="muted">ДЧС: предписания и расходы на устранение. Экология: устранение нарушений и игровые штрафы. Суммы условные, не являются расчётом штрафов по законодательству РК.</p>';
+ h+='<div class="small-economy-grid"><div><small>Открытые предписания</small><b>'+open.length+'</b></div><div><small>Всего проверок</small><b>'+c.inspections+'</b></div><div><small>Расходы и штрафы</small><b>'+m(spent)+'</b></div></div>';
+ h+='<div class="small-project"><b>Учебная проверка</b><p class="muted">Для тестирования механики; не влияет на реальную инспекционную периодичность.</p><button class="btn secondary" data-comply="inspect" data-agency="ДЧС">Проверка ДЧС</button> <button class="btn secondary" data-comply="inspect" data-agency="Экология">Проверка экологии</button></div>';
+ for(let x of c.cases.slice(0,15)){
+  h+='<div class="small-project"><b>'+esc(x.agency)+' · №'+x.id+' · '+esc(x.status)+'</b><p>'+esc(x.name)+'</p><p>Устранение: '+m(x.repairCost)+' / '+x.repairDays+' дней'+(x.agency==='Экология'?' · штраф: '+m(x.fine)+(x.finePaid?' (оплачен)':''):'')+'</p>';
+  if(x.status==='Выявлено')h+='<button class="btn secondary" data-comply="fix" data-id="'+x.id+'">Профинансировать устранение</button>';
+  if(x.status==='Устранение')h+='<p>Осталось '+x.remaining+' дней</p>';
+  h+='</div>';
+ }
+ h+='<h3>Журнал проверок</h3>'+c.events.slice(0,10).map(t=>'<p class="muted">'+esc(t)+'</p>').join('')+'</section>';
+ return h;
+}
+const complyOldAdvance=v8advance;
+v8advance=function(){complyOldAdvance();complyDay()};
+const complyOldRender=render;
+render=function(){
+ complyOldRender();
+ if(!s?.small||tab!=='overview')return;
+ let el=document.querySelector('#body');
+ if(el){let wrap=document.createElement('div');wrap.innerHTML=complyView();el.append(wrap)}
+};
+document.addEventListener('click',e=>{
+ let b=e.target.closest('[data-comply]');if(!b||!s?.small)return;
+ if(b.dataset.comply==='fix')complyFix(+b.dataset.id);
+ if(b.dataset.comply==='inspect'){complyInit().inspections++;complyFinding(b.dataset.agency);render()}
+});
 const BACKUP_KEY=KEY+'-backup';
 const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='.json,application/json';fileInput.style.display='none';document.body.appendChild(fileInput);
 const saveBar=document.createElement('div');saveBar.id='save-manager';
