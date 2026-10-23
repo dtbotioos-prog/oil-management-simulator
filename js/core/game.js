@@ -217,13 +217,13 @@ async function v8bind(){document.querySelectorAll('[data-v8-plan]').forEach(b=>b
 
 
 /* v1.1: integrated daily calendar, personnel careers, inbox, quick actions, sounds, visual scene */
-const V11_MENU=[['overview','🏠','Кабинет генерального директора'],['inbox','✉','Входящие'],['daily','📅','Добыча · планы'],['dispatch','📡','Диспетчерская'],['assetsTree','🛢','Скважины · ГУ'],['workshops','🏭','Цеха · KPI'],['people','🏆','Рейтинг'],['career','👥','Кадры · найм'],['staff','🪪','Штатное расписание'],['finance','₸','Финансы'],['market','📈','Рынок нефти'],['incidents','🚨','Происшествия'],['equipment','⚙','Оборудование'],['warehouse','📦','Склад'],['contracts','🤝','Подрядчики'],['hse','🛡','Охрана труда'],['decisions','⚡','Решения'],['events','📜','Журнал']];
+const V11_MENU=[['overview','🏠','Кабинет генерального директора'],['daily','📅','Добыча · планы'],['dispatch','📡','Диспетчерская'],['assetsTree','🛢','Скважины · ГУ'],['workshops','🏭','Цеха · KPI'],['people','🏆','Рейтинг'],['career','👥','Кадры · найм'],['staff','🪪','Штатное расписание'],['finance','₸','Финансы'],['market','📈','Рынок нефти'],['incidents','🚨','Происшествия'],['equipment','⚙','Оборудование'],['warehouse','📦','Склад'],['contracts','🤝','Подрядчики'],['hse','🛡','Охрана труда'],['decisions','⚡','Решения'],['events','📜','Журнал']];
 let v11sound=true,v11busy=false,v11focus=null;
 function v11beep(type='click'){if(!v11sound)return;try{let C=window.AudioContext||window.webkitAudioContext;if(!C)return;let c=new C(),o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=type==='alarm'?440:type==='success'?740:520;g.gain.setValueAtTime(.045,c.currentTime);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.13);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.14);setTimeout(()=>c.close(),300)}catch(e){}}
 function v11init(){let v=v8init();if(!s.v11)s.v11={employees:[],marketDay:0,actions:[],inbox:[],hired:0};let z=s.v11;z.employees||=[];z.inbox||=[];z.actions||=[];if(!z.employees.length){let names=['Ерлан Серикович Нурланов','Болат Маратович Смагулов','Нуржан Ермекович Бекетов','Алия Кайратовна Омарова','Мадина Сериковна Жумабаева','Руслан Талгатович Ахметов'];z.employees=names.map((name,i)=>({id:100+i,name,sex:i===3||i===4?'Ж':'М',birth:1969+i*5,experience:Math.max(1,27-i*3),job:i<3?'Начальник производственного участка':'Руководитель службы',salary:750000+i*90000,skills:cl(75+i*3,0,100),discipline:cl(92-i*5,0,100),leadership:cl(76+i*2,0,100),weak:i%2?'Сложности с делегированием':'Нуждается в развитии цифровых навыков',strong:i%2?'Техническая экспертиза':'Организованность',status:'Работает'}))}return z}
 function v11age(p){return Math.max(18,s.v8.year-p.birth)}
 function v11market(){let v=v8init(),z=v11init(),n=(v.year-2022)*365+v.daysElapsed;let ref={2022:100.9,2023:82.5,2024:80.5,2025:69.1,2026:70};let yr=ref[v.year]||Math.max(38,75+15*Math.sin((v.year-2026)*.41));let oil=cl(yr+7*Math.sin(n/31)+3*Math.sin(n/9),28,180);let fx=cl((v.year===2022?461:v.year===2023?456:v.year===2024?469:v.year===2025?521:510+(v.year-2026)*3)+15*Math.sin(n/27)+6*Math.sin(n/7),330,950);s.oil=oil;s.usd=fx;return {oil,fx}}
-function v11step(n){if(v11busy||s.dead)return;v11busy=true;let limit=typeof n==='number'?n:n==='month'?new Date(s.v8.year,v8idx()+1,0).getDate()-s.v8.day+1:(new Date(s.v8.year+1,0,1)-new Date(s.v8.year,v8idx(),s.v8.day))/86400000;limit=Math.min(366,Math.max(1,Math.round(limit)));let count=0;function tick(){if(count>=limit||s.dead){v11busy=false;v11beep('success');render();return}let old=s.v8.incidents.length;v11market();v8advance();v19day();save();count++;let v=s.v8;if(v.incidents.length>old){v11busy=false;v11beep('alarm');tab='inbox';render();uiAlert('Критическое событие: переход времени остановлен. Проверьте входящие и происшествия.');return}if(count%25===0)setTimeout(tick,0);else tick()}tick()}
+function v11step(n){if(v11busy||s.dead)return;v11busy=true;let limit=typeof n==='number'?n:n==='month'?new Date(s.v8.year,v8idx()+1,0).getDate()-s.v8.day+1:(new Date(s.v8.year+1,0,1)-new Date(s.v8.year,v8idx(),s.v8.day))/86400000;limit=Math.min(366,Math.max(1,Math.round(limit)));let count=0;function tick(){if(count>=limit||s.dead){v11busy=false;v11beep('success');render();return}let old=s.v8.incidents.length;v11market();v8advance();v19day();save();count++;let v=s.v8;if(v.incidents.length>old){v11busy=false;v11beep('alarm');tab='incidents';render();uiAlert('Критическое событие: переход времени остановлен. Проверьте раздел происшествий.');return}if(count%25===0)setTimeout(tick,0);else tick()}tick()}
 function v11sidebar(){let el=$('v11side');el.classList.toggle('hide',!s);if(!s)return;$('v11sideitems').innerHTML=V11_MENU.map(([id,ico,label])=>'<button class="v11sidebtn '+(tab===id?'active':'')+'" data-v11-tab="'+id+'"><span class="ico">'+ico+'</span><span class="txt">'+label+'</span></button>').join('')}
 function v11hero(){let label=V11_MENU.find(x=>x[0]===tab)?.[2]||'Управление компанией';return '<div class="v11hero"><div><h2>'+esc(label)+'</h2><p>'+esc(s.name)+' · '+esc(s.field)+' · '+v8date()+'</p><span class="v11pill">Brent $'+f(s.oil)+' · USD/KZT '+f(s.usd)+'</span></div><svg viewBox="0 0 460 180" aria-hidden="true"><circle cx="355" cy="50" r="33" fill="#edc67d"/><path d="M0 180L60 155 130 162 195 133 260 154 325 115 460 155V180" fill="#29536a"/><path d="M90 170V70m-35 28h125m-112-28h44l40 28m-63-28l-34 28m34-28l48 28m-48-28v95M325 172V48m-38 45h77m-39-45l-38 45m38-45l39 45M270 175h100" stroke="#b3d0d4" stroke-width="7" fill="none"/><path d="M210 180V125h65v55M390 180V110h42v70" fill="#527c87"/></svg></div>'}
 function v11status(x){return '<span class="v11status '+(x>=80?'green':x>=60?'yellow':'red')+'">'+f(x)+'/100</span>'}
@@ -266,7 +266,7 @@ function v13Dialog(message,mode='alert',defaultValue=''){
  });
 }
 const uiAlert=msg=>v13Dialog(msg,'alert'),uiConfirm=msg=>v13Dialog(msg,'confirm'),uiPrompt=(msg,def='')=>v13Dialog(msg,'prompt',def);
-function v13Bar(){if(!s)return '';let a=v13PumpStats(),on=a.installed;let v=s.v8;let progress=v?cl(v.monthActual/Math.max(1,v8plan())*100,0,150):0;let readiness=s.assets.wellList.length?s.assets.wellList.reduce((q,w)=>q+w.health,0)/s.assets.wellList.length:0;let cls=(n,reverse=false)=>reverse?(n<35?'v13green':n<65?'v13yellow':'v13red'):(n>=95?'v13green':n>=75?'v13yellow':'v13red');let meter=(n,c)=>'<div class="v13meter"><i class="'+c+'" style="width:'+cl(n,0,100)+'%"></i></div>';return '<div class="v13bar"><button data-v13-go="overview">⌂ Главная</button><button data-v13-back="1">← Назад</button><input id="v13search" placeholder="Поиск: № скважины, ГУ, раздел…" aria-label="Поиск по игре"><button data-v13-go="inbox">✉ Входящие</button><button data-v13-go="assetsTree">ГУ / Скважины</button><button data-v13-go="equipment">Оборудование</button><div id="v13results" class="v13results hide"></div></div><div class="v13metrics"><div class="v13metric"><small>План добычи за месяц</small><strong>'+f(progress)+'%</strong>'+meter(progress,cls(progress))+'</div><div class="v13metric"><small>Техническая готовность</small><strong>'+f(readiness)+'%</strong>'+meter(readiness,cls(readiness))+'</div><div class="v13metric"><small>Скважины / станки-качалки</small><strong>'+a.total+' / '+on+'</strong>'+meter(on/Math.max(1,a.total)*100,'v13green')+'</div><div class="v13metric"><small>Индекс безопасности</small><strong>'+f(s.safety)+'%</strong>'+meter(s.safety,cls(s.safety))+'</div></div>'}
+function v13Bar(){if(!s)return '';let a=v13PumpStats(),on=a.installed;let v=s.v8;let progress=v?cl(v.monthActual/Math.max(1,v8plan())*100,0,150):0;let readiness=s.assets.wellList.length?s.assets.wellList.reduce((q,w)=>q+w.health,0)/s.assets.wellList.length:0;let cls=(n,reverse=false)=>reverse?(n<35?'v13green':n<65?'v13yellow':'v13red'):(n>=95?'v13green':n>=75?'v13yellow':'v13red');let meter=(n,c)=>'<div class="v13meter"><i class="'+c+'" style="width:'+cl(n,0,100)+'%"></i></div>';return '<div class="v13bar"><button data-v13-go="overview">⌂ Главная</button><button data-v13-back="1">← Назад</button><input id="v13search" placeholder="Поиск: № скважины, ГУ, раздел…" aria-label="Поиск по игре"><button data-v13-go="assetsTree">ГУ / Скважины</button><button data-v13-go="equipment">Оборудование</button><div id="v13results" class="v13results hide"></div></div><div class="v13metrics"><div class="v13metric"><small>План добычи за месяц</small><strong>'+f(progress)+'%</strong>'+meter(progress,cls(progress))+'</div><div class="v13metric"><small>Техническая готовность</small><strong>'+f(readiness)+'%</strong>'+meter(readiness,cls(readiness))+'</div><div class="v13metric"><small>Скважины / станки-качалки</small><strong>'+a.total+' / '+on+'</strong>'+meter(on/Math.max(1,a.total)*100,'v13green')+'</div><div class="v13metric"><small>Индекс безопасности</small><strong>'+f(s.safety)+'%</strong>'+meter(s.safety,cls(s.safety))+'</div></div>'}
 let v13History=[];
 function v13Go(t,well){if(tab!==t)v13History.push({tab,treeShop,treeUnit,treeWell});tab=t;if(well){ensureTree();let w=s.assets.wellList.find(x=>x.id===Number(well));if(w){treeShop=w.shop;treeUnit=w.unit;treeWell=w.id}}render()}
 function v13Bind(){document.querySelectorAll('[data-v13-go]').forEach(b=>b.onclick=()=>v13Go(b.dataset.v13Go));document.querySelectorAll('[data-v13-back]').forEach(b=>b.onclick=()=>{let old=v13History.pop();if(old){tab=old.tab;treeShop=old.treeShop;treeUnit=old.treeUnit;treeWell=old.treeWell;render()}});document.querySelectorAll('[data-v13-page]').forEach(b=>b.onclick=()=>{v13Page=Math.max(0,v13Page+(b.dataset.v13Page==='next'?1:-1));render()});let search=$('v13search'),res=$('v13results');if(search)search.oninput=()=>{let q=search.value.trim().toLowerCase();if(!q){res.classList.add('hide');return}let a=[];for(let w of s.assets.wellList){if(String(w.id).includes(q)||w.unit.toLowerCase().includes(q)){a.push({label:'Скважина №'+w.id+' · '+w.unit,tab:'assetsTree',well:w.id});if(a.length>=12)break}}for(let [id,ico,label] of V11_MENU){if(label.toLowerCase().includes(q))a.push({label,tab:id})}res.innerHTML=a.slice(0,15).map((x,i)=>'<button data-v13-result="'+i+'">'+esc(x.label)+'</button>').join('')||'<p class="muted">Совпадений нет</p>';res.classList.remove('hide');res.querySelectorAll('[data-v13-result]').forEach(b=>b.onclick=()=>v13Go(a[+b.dataset.v13Result].tab,a[+b.dataset.v13Result].well))};}
@@ -554,7 +554,7 @@ function v28migrateNames(){
 }
 function v27bids(type,seed){let t=V27_TYPES[type];return V27_SUPPLIERS.map((a,i)=>({id:i,name:a[0],quality:a[2],price:Math.round(t.base*a[3]*(.97+((seed+i*7)%9)*.008)*10)/10,days:Math.max(2,Math.round(t.days*(1.20-a[2]/420)+((seed+i*3)%9)-4)),capacity:a[4],reliability:a[5],crew:t.crew})).filter(b=>V27_SUPPLIERS[b.id][1].includes(type)).sort((a,b)=>a.price-b.price)}
 function v27newTender(type,well){
- let d=v28migrateNames(),t=V27_TYPES[type];if(!t)return uiAlert('Неизвестный вид работ');
+ let d=v28migrateNames(),t=V27_TYPES[type];if(!t)return uiAlert('Неизвестный вид работ');if(typeof cap418Allowed==='function'&&!cap418Allowed(type))return uiAlert('Новые заказы по этому направлению отключены: объект не изменяет производственные показатели. Ранее заключённые договоры сохраняются.');
  if(well){let a=v40assets().find(x=>x.key==='well:'+well);if(!a)return uiAlert('Скважина не найдена');return v40createTender(type,a)}
  v40openPicker(type);
 }
@@ -678,7 +678,7 @@ function v30view(){
  for(let [key,label] of Object.entries({pumps:'Пожарные насосы',hydrants:'Гидранты и водоснабжение',alarm:'Сигнализация и оповещение',foam:'Пенное пожаротушение',training:'Подготовка персонала'}))out+=row(label,Math.round(d.fire[key])+'%');
  out+='<div class="actions"><button class="btn secondary" data-v30-fire="inspect">Проверить системы · 8 млн ₸</button><button class="btn secondary" data-v30-fire="training">Провести учение · 4 млн ₸</button><button class="btn secondary" data-v30-fire="service">ТО противопожарных систем · 25 млн ₸</button></div>';
  if(d.alarms.length)out+='<div class="notice bad"><b>Сигналы диспетчера:</b> '+d.alarms.map(esc).join(' · ')+'</div>';
- out+='<h3>Строительство и модернизация</h3><div class="actions"><button class="btn secondary" data-v30-tender="rvs_build">Тендер на новый РВС</button><button class="btn secondary" data-v30-tender="building">Тендер на здание</button><button class="btn secondary" data-v30-tender="painting">Тендер на покраску</button></div>';
+ out+='<h3>Строительство и модернизация</h3><div class="actions"><button class="btn secondary" data-v30-tender="rvs_build">Тендер на новый РВС</button><button class="btn secondary" data-v30-tender="painting">Тендер на покраску</button></div>';
  return out;
 }
 async function v30fireAction(type){
@@ -2821,7 +2821,7 @@ render=function(){
 };
 /* v3.9.7 — collapsible topical navigation and sections, preserving bound actions. */
 const GROUP397=[
- ['Управление компанией',['overview','inbox','decisions','events']],
+ ['Управление компанией',['overview','decisions','events']],
  ['Производство и месторождение',['daily','field','dispatch','assetsTree','workshops']],
  ['Персонал и условия труда',['career','staff','people']],
  ['Экономика и договоры',['finance','market','contracts']],
@@ -2891,6 +2891,7 @@ function v398Start(id){
  let supplier=V27_SUPPLIERS[id];if(!supplier)return;
  let select=document.querySelector('#v398-select-'+id);
  let type=select?.value||v398Selected[id]||supplier[1][0];
+ if(!cap418Allowed(type))return uiAlert('Данный вид работ отключён: нет измеримого производственного эффекта.');
  if(!supplier[1].includes(type))return uiAlert('Подрядчик не выполняет данный вид работ.');
  v398Selected[id]=type;
  s.v398PreferredSupplier=supplier[0];
@@ -2909,7 +2910,8 @@ function v398View(){
  let q=v398Search.toLowerCase().trim(),listed=0;
  html+='<div class="v398-directory">';
  V27_SUPPLIERS.forEach((p,id)=>{
-  let types=p[1].filter(x=>V27_TYPES[x]);
+  let types=p[1].filter(x=>V27_TYPES[x]&&cap418Allowed(x));
+  if(!types.length)return;
   if(v398Group!=='Все'&&!types.some(x=>v398GroupFor(x)===v398Group))return;
   if(q&&!(p[0]+' '+types.map(x=>V27_TYPES[x].label).join(' ')).toLowerCase().includes(q))return;
   listed++;
@@ -3607,7 +3609,7 @@ if(p.contractTab==='repairs'){
  }else if(p.contractTab==='suppliers'){
  box+='<h3>Реестр подрядных организаций</h3><div class="table-scroll"><table><thead><tr><th>Компания</th><th>Завершено</th><th>В работе</th><th>Качество</th></tr></thead><tbody>'+v28rating().map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.completed+'</td><td>'+x.active+'</td><td>'+(x.score===null?'Нет истории':x.score+'/100')+'</td></tr>').join('')+'</tbody></table></div>';
  }else{
- box+='<h3>Прочие виды подрядных работ</h3><div class="actions">'+Object.entries(V27_TYPES).filter(([k])=>!['prs','krs'].includes(k)).map(([k,v])=>'<button class="btn secondary" data-v27-new="'+k+'">'+esc(v.label)+'</button>').join('')+'</div>';
+ box+='<h3>Прочие виды подрядных работ</h3><div class="actions">'+Object.entries(V27_TYPES).filter(([k])=>!['prs','krs'].includes(k)&&cap418Allowed(k)).map(([k,v])=>'<button class="btn secondary" data-v27-new="'+k+'">'+esc(v.label)+'</button>').join('')+'</div>';
  }
  return box+'</section>';
 }
@@ -3616,6 +3618,175 @@ const wf416OldSafetyView=safe402View;safe402View=function(){let p=wf416Init(),d=
 let entries=[...node.querySelectorAll('.safe402-event')];for(let el of entries){let m=el.querySelector('summary b')?.textContent.match(/№(\d+)/),id=m&&Number(m[1]),e=d.events.find(x=>x.id===id);if(!e)continue;let current=e.status==='Ожидает решения'||(all[id]&&all[id].stage!=='closed');if(p.safetyTab==='active'&&!current||p.safetyTab==='closed'&&current)el.remove();else if(current&&all[id])el.open=true}
 let visible=node.querySelectorAll('.safe402-event').length;if(!visible){let n=document.createElement('p');n.className='notice';n.textContent='В выбранной категории событий нет.';node.append(n)}return node.innerHTML};
 const wf416OldRender=render;render=function(){wf416OldRender();document.querySelectorAll('[data-wf416-tab]').forEach(b=>b.onclick=()=>wf416Set(b.dataset.wf416Area,b.dataset.wf416Tab));document.querySelectorAll('[data-wf416-goto]').forEach(b=>b.onclick=()=>{tab=b.dataset.wf416Goto;save();render()});if(tab==='contracts')v27bind();};
+/* v4.1.7: расследование выполняют службы; директор не заполняет формы. */
+function inv417Days(){return Number(v8init().daysElapsed)||0}
+function inv417Cause(e){let t=(e.title+' '+e.context).toLowerCase();if(/оборудован|неисправ|поврежден|резервуар|устьев/.test(t))return 'Техническая неисправность оборудования и недостаточный предупредительный контроль';if(/выброс|загрязнен|утеч/.test(t))return 'Нарушение герметичности и недостаточный контроль состояния оборудования';if(/транспорт|автоколон|дтп/.test(t))return 'Недостаточный контроль транспортных операций';return 'Недостатки организации и контроля безопасного выполнения работ'}
+function inv417Prepare(e,c){if(!c.startedDay)c.startedDay=inv417Days();if(!c.history)c.history=[];if(!c.findings)c.findings='Комиссия изучила обстоятельства события «'+e.title+'» на объекте «'+e.place+'». Установлена необходимость корректирующих мер.';if(!c.cause)c.cause=inv417Cause(e);if(!c.measures)c.measures='Провести внеочередную проверку оборудования и условий работ; устранить выявленные отклонения; провести инструктаж работников и контроль исполнения.';if(!c.deadline)c.deadline=c.startedDay+5;}
+function inv417Progress(){if(!s)return;let d=safe402init(),all=inv415Init(),now=inv417Days(),changed=false;for(const e of d.events){let c=all[e.id];if(!c||c.stage==='closed')continue;inv417Prepare(e,c);let elapsed=Math.max(0,now-c.startedDay);let next=elapsed>=5?'verification':elapsed>=3?'implementation':elapsed>=2?'planning':'investigation';if(c.stage!==next){c.stage=next;changed=true;c.history.push({date:v8date(),text:next==='planning'?'Комиссия представила заключение':next==='implementation'?'Утверждены корректирующие мероприятия':'Мероприятия представлены на проверку'});}let status=next==='investigation'?'Расследование':next==='planning'?'Заключение подготовлено':next==='implementation'?'Мероприятия в работе':'Ожидает утверждения ГД';if(e.status!==status){e.status=status;changed=true;}}if(changed)save()}
+function inv417Approve(id){let d=safe402init(),e=d.events.find(x=>x.id===id),c=inv415Init()[id];if(!e||!c||c.stage!=='verification')return;inv417Prepare(e,c);c.verification='Комиссия проверила исполнение мероприятий и подтвердила устранение выявленных отклонений.';c.stage='closed';c.closed=v8date();e.status='Закрыто';e.resolution='Заключение комиссии утверждено; мероприятия выполнены и проверены';c.history.push({date:v8date(),text:'Генеральный директор утвердил результаты расследования'});s.safety=cl(s.safety+Math.min(2,Number(e.impact)||1),0,100);save();render()}
+const inv417OldStart=inv415Start;
+inv415Start=function(id){inv417OldStart(id);let e=safe402init().events.find(x=>x.id===id),c=inv415Init()[id];if(e&&c){inv417Prepare(e,c);save()}};
+inv415Html=function(e,c){inv417Prepare(e,c);let closed=c.stage==='closed',ready=c.stage==='verification';let stage=closed?'Завершено':ready?'Ожидает решения директора':c.stage==='implementation'?'Исполнение мероприятий':c.stage==='planning'?'Заключение подготовлено':'Комиссия проводит расследование';let h='<div class="inv415-case" style="margin-top:12px;padding:14px;border:1px solid #406278;border-radius:12px"><b>Расследование №'+e.id+' · '+esc(stage)+'</b><p class="muted">Комиссия выполняет работу автоматически. Заполнять документы не требуется.</p><p><b>Обстоятельства:</b> '+esc(c.findings)+'</p><p><b>Причина:</b> '+esc(c.cause)+'</p><p><b>Мероприятия:</b> '+esc(c.measures)+'</p>';
+if(ready)h+='<p class="notice">Заключение и проверка подготовлены. Требуется только решение генерального директора.</p><button class="btn" data-inv417-approve="'+e.id+'">Утвердить результаты и закрыть</button>';
+else if(!closed)h+='<p class="muted">Ожидайте отчёт комиссии. Ход расследования обновляется при переходе игровых дней.</p>';
+else h+='<p class="good"><b>Закрыто:</b> '+esc(c.closed)+'</p><p><b>Результат:</b> '+esc(c.verification)+'</p>';
+h+='<details><summary>История расследования</summary>'+c.history.map(x=>'<p>'+esc(x.date)+' · '+esc(x.text)+'</p>').join('')+'</details></div>';return h};
+const inv417OldRender=render;
+render=function(){if(s)inv417Progress();inv417OldRender();document.querySelectorAll('[data-inv417-approve]').forEach(b=>b.onclick=()=>inv417Approve(Number(b.dataset.inv417Approve)));};
+/* v4.1.8 — capital investment effectiveness audit. Keep historic assets and contracts. */
+const CAP418_DISABLED=Object.freeze({
+ building:'Здание регистрировалось в перечне объектов, но не увеличивало добычу, мощность или обеспеченность персонала',
+ roads:'Новая дорога регистрировалась как объект без расчёта логистического эффекта',
+ earthworks:'Земляные работы не меняли характеристики производственного объекта',
+ foundation:'Фундамент не был связан с вводом действующей установки',
+ fencing:'Ограждение не изменяло риск, пропускную способность или показатели охраны',
+ design:'Проектирование не было связано с последующим вводом производственной мощности',
+ survey:'Изыскания не изменяли геологическую модель или вероятность успеха бурения',
+ lighting:'Освещение не изменяло безопасность или надёжность электроснабжения',
+ electrical:'Общий электромонтаж не увеличивал мощность ГТЭС/РП/КТП',
+ automation:'Общий тендер на КИПиА не менял автоматизацию оборудования',
+ pipeline:'Общий договор трубопровода не изменял пропускную способность нефтесбора'
+});
+function cap418Allowed(type){return !Object.prototype.hasOwnProperty.call(CAP418_DISABLED,type)}
+function cap418Audit(){
+ const d=v28migrateNames(),legacy=d.contracts.filter(c=>!cap418Allowed(c.type));
+ const active=legacy.filter(c=>c.status==='Исполняется').length;
+ return '<section class="small-panel"><h3>Проверка эффективности капитальных проектов</h3><p class="muted">Новые тендеры по '+Object.keys(CAP418_DISABLED).length+' направлениям без измеримого эффекта отключены. Ранее заключённые договоры продолжают исполняться, расходы и история сохранены.</p>'+
+ '<div class="small-economy-grid"><div><small>Исключено видов работ</small><b>'+Object.keys(CAP418_DISABLED).length+'</b></div><div><small>Исторические договоры</small><b>'+legacy.length+'</b></div><div><small>Действуют ранее</small><b>'+active+'</b></div></div>'+
+ '<details><summary>Почему эти работы исключены</summary>'+Object.entries(CAP418_DISABLED).map(([id,reason])=>'<p><b>'+esc(V27_TYPES[id]?.label||id)+'</b> — '+esc(reason)+'</p>').join('')+'</details><p class="muted">Работающие направления (ПРС/КРС, РВС, инфраструктура с расчётными мощностями, вспомогательные объекты с производственными коэффициентами) сохранены.</p></section>';
+}
+const cap418OldContractView=v27view;
+v27view=function(){return cap418OldContractView()+cap418Audit()};
+// Existing tenders can be inspected, but not awarded when the effect is disconnected.
+const cap418OldAward=v27award;
+v27award=async function(id,bid){let t=v28migrateNames().tenders.find(x=>x.id===id);if(t&&!cap418Allowed(t.type))return uiAlert('Заключение новых договоров этого вида приостановлено. Тендер сохранён для истории.');return cap418OldAward(id,bid)};
+/* v4.1.9: remove the obsolete inbox from all navigation surfaces. */
+const inbox419PreviousRender=render;
+render=function(){
+ if(tab==='inbox')tab='incidents';
+ inbox419PreviousRender();
+ document.querySelectorAll('[data-v11-tab="inbox"],[data-v13-go="inbox"],[data-v11-tab="inbox"],[data-tab="inbox"]').forEach(x=>x.remove());
+};
+/* v4.2.0 — observable CAPEX, actionable spares, and unread section signals. */
+function fx420state(){if(!s.fx420)s.fx420={projects:{},repairs:[],seq:0,alerts:{seen:{},unread:{},fingerprints:{}}};return s.fx420}
+function fx420metric(type,objectName){
+ const name=String(objectName||'').toLowerCase();
+ if(type==='rvs_build'||['rvs_repair','rvs_clean','anticorrosion'].includes(type)){
+  let tanks=v30init().tanks,t=tanks.find(x=>x.name.toLowerCase()===name);
+  if(type==='rvs_build')return {label:'Ёмкость резервуарного парка',value:tanks.reduce((n,x)=>n+(+x.capacity||0),0),unit:'м³'};
+  return {label:type==='anticorrosion'?'Состояние покрытия РВС':'Техсостояние РВС',value:t?+(type==='anticorrosion'?t.paint:t.health):null,unit:'%'};
+ }
+ if(type==='maint')return {label:'Общее техническое состояние',value:+s.condition||0,unit:'%'};
+ if(type==='env')return {label:'Экологический показатель',value:+ensureEnterprise().environment||0,unit:'%'};
+ if(type==='prs'||type==='krs'){
+  let w=(s.assets?.wellList||[]).find(w=>+w.id===+objectName);
+  return {label:'Состояние скважины',value:w?+w.health:null,unit:'%'};
+ }
+ return null;
+}
+function fx420forecast(type,objectName){
+ let m=fx420metric(type,objectName);
+ if(type==='rvs_build'){
+  let match=String(objectName||'').match(/рвс[-\s]*(\d+)/i),size=Math.max(100,Math.min(50000,match?+match[1]:5000));
+  return {label:'Резервуарный парк',text:'После ввода +'+size+' м³ хранения (при создании нового РВС)',metric:m};
+ }
+ if(type==='rvs_repair')return {label:'Надёжность хранения',text:'Состояние выбранного РВС до 100%; эффект только при совпадении с реестром',metric:m};
+ if(type==='rvs_clean')return {label:'Техническое состояние',text:'До +12 п.п. состояния выбранного РВС',metric:m};
+ if(type==='anticorrosion')return {label:'Антикоррозионная защита',text:'Покрытие выбранного РВС до 100%',metric:m};
+ if(type==='maint')return {label:'Надёжность оборудования',text:'Рост общего техсостояния примерно на 6–9 п.п.',metric:m};
+ if(type==='env')return {label:'Экологический показатель',text:'Рост показателя экологического контроля',metric:m};
+ if(type==='prs'||type==='krs')return {label:'Скважина',text:'Восстановление состояния и дебита по результатам ремонта; пуск отдельно',metric:m};
+ if(type==='drill')return {label:'Фонд скважин',text:'Пополнение фонда после завершения бурения',metric:{label:'Количество скважин',value:(s.assets?.wellList||[]).length,unit:'шт.'}};
+ return {label:'Вспомогательные работы',text:'Прямое изменение добычи и мощности в модели не предусмотрено; оценивайте только профильный результат',metric:null};
+}
+const fx420Award=v27award;
+v27award=async function(id,bid){
+ let tender=v28migrateNames().tenders.find(x=>x.id===id),d=v28migrateNames(),old=new Set(d.contracts.map(x=>x.id));
+ let forecast=tender?fx420forecast(tender.type,tender.well||tender.objectName):null;
+ await fx420Award(id,bid);
+ let c=d.contracts.find(x=>!old.has(x.id)&&x.tender===id);
+ if(c&&forecast){let state=fx420state();state.projects[c.id]={type:c.type,forecast:forecast.text,before:forecast.metric?.value??null,label:forecast.metric?.label||forecast.label,unit:forecast.metric?.unit||'',after:null,recorded:false};save();render();}
+};
+function fx420finish(){
+ let d=v28migrateNames();for(let c of d.contracts){if(c.status!=='Завершён')continue;
+  let p=fx420state().projects[c.id];if(!p||p.recorded)continue;
+  let metric=fx420metric(c.type,c.well||c.objectName);
+  if(c.type==='drill')metric={label:'Количество скважин',value:(s.assets?.wellList||[]).length,unit:'шт.'};
+  p.after=metric?.value??null;p.recorded=true;p.completed=v8date();
+ }
+}
+const fx420OldDay=v8advance;
+v8advance=function(){fx420OldDay();fx420finish();fx420SpareDay();};
+function fx420ProjectHtml(){
+ let d=v28migrateNames(),state=fx420state(),items=d.contracts.filter(c=>c.status==='Исполняется'||c.status==='Завершён').slice(0,35);
+ return '<section class="fx420-panel"><h3>Результат инвестиций · до и после</h3><p class="muted">Ожидаемый эффект показывается до договора; фактический — после завершения и отражения в реестрах. Прямого прироста добычи от резервуара нет: он расширяет хранение.</p>'+
+ items.map(c=>{let p=state.projects[c.id],fc=fx420forecast(c.type,c.well||c.objectName),label=p?.label||fc.label,forecast=p?.forecast||fc.text,before=p?.before,after=p?.after;
+  let status=c.status==='Исполняется'?'В работе · '+Math.max(0,c.remaining)+' дн.':(p?.recorded?'Результат учтён':'Завершено; ожидается учёт результата');
+  let result=p?.recorded?(before!==null&&before!==undefined&&after!==null&&after!==undefined?'Было '+f(before)+' → стало '+f(after)+' '+esc(p.unit||'')+' (Δ '+(after-before>=0?'+':'')+f(after-before)+')':'Прямой численный эффект не зарегистрирован'):'Ожидается ввод';
+  return '<div class="fx420-project"><b>Договор №'+c.id+' · '+esc(c.objectName||V27_TYPES[c.type]?.label||c.type)+'</b><small>'+esc(status)+'</small><p><b>План:</b> '+esc(forecast)+'</p><p><b>Факт:</b> '+result+'</p></div>';
+ }).join('')+(items.length?'':'<p class="muted">После заключения договора здесь появится прогноз и история результата.</p>')+'</section>';
+}
+const fx420OldContractView=v27view;
+v27view=function(){
+ let open=v28migrateNames().tenders.filter(t=>t.status==='Приём заявок');
+ let preview=open.map(t=>'<div class="fx420-project"><b>Тендер №'+t.id+' · '+esc(V27_TYPES[t.type]?.label||t.type)+'</b><p><b>Ожидаемый результат до вложения денег:</b> '+esc(fx420forecast(t.type,t.well||t.objectName).text)+'</p></div>').join('');
+ return (preview?'<section class="fx420-panel"><h3>До заключения договора · прогноз эффекта</h3>'+preview+'</section>':'')+fx420ProjectHtml()+fx420OldContractView();
+};
+
+/* Extra forecast at selection, without requiring user data entry. */
+if(typeof v398WorkflowView==='function'){
+ const fx420OldWorkflow=v398WorkflowView;
+ v398WorkflowView=function(){return fx420OldWorkflow()};
+}
+function fx420Spares(){return fx420state().repairs}
+async function fx420UseSpare(id){
+ let stock=ensurePlant().stock.find(x=>x.id===id);if(!stock||stock.qty<1)return uiAlert('Запасной части нет на складе. Сначала закупите её.');
+ let obj=null,desc='',days=2,delta=0;
+ if(id===5||id===8){let nodes=Object.values(v21init().nodes||{}).filter(n=>n.health<90&&!n.offline&&!n.repairDays);nodes.sort((a,b)=>a.health-b.health);obj=nodes[0];desc='Насосно-трубопроводное оборудование';delta=id===5?24:14;}
+ else if(id===10){obj=v30init().tanks.slice().sort((a,b)=>a.health-b.health)[0];desc='Резервуар РВС';delta=20;}
+ else if([6,7,9].includes(id)){
+  let wells=(s.assets?.wellList||[]).filter(w=>w.health<90&&w.status==='Работает').sort((a,b)=>a.health-b.health);obj=wells[0];desc='Скважина №'+(obj?.id||'');delta=id===6?12:id===7?10:8;
+ }
+ else return uiAlert('Эта позиция относится к обеспечению персонала; её влияние учитывается при ежемесячном расходе.');
+ if(!obj)return uiAlert('Сейчас нет оборудования, которому необходима эта запчасть. Складской остаток сохранён.');
+ if(fx420Spares().some(j=>j.status==='В работе'&&j.target===String(obj.id)))return uiAlert('На этом объекте уже выполняется замена.');
+ if(!await uiConfirm('Установить «'+stock.name+'» на '+desc+'?\nСписание: 1 шт. · срок: '+days+' дня.\nСостояние оборудования после работ повысится до +'+delta+' п.п.'))return;
+ stock.qty--;stock.consumed++;let job={id:++fx420state().seq,spare:id,name:stock.name,target:String(obj.id),kind:id===10?'tank':[5,8].includes(id)?'node':'well',before:+obj.health||0,delta,remaining:days,status:'В работе',started:v8date(),description:desc};fx420Spares().unshift(job);plantRecord('Запчасть направлена на ремонт: '+stock.name+' → '+desc);save();render();
+}
+function fx420SpareDay(){let changed=false;for(let j of fx420Spares()){
+ if(j.status!=='В работе')continue;if(--j.remaining>0)continue;
+ let obj=j.kind==='tank'?v30init().tanks.find(x=>String(x.id)===j.target):j.kind==='node'?v21init().nodes[j.target]:(s.assets?.wellList||[]).find(w=>String(w.id)===j.target);
+ if(obj){obj.health=Math.min(100,(+obj.health||0)+j.delta);j.after=obj.health;j.status='Завершён';j.completed=v8date();plantRecord('Установлена '+j.name+': '+j.description+' · состояние '+f(j.before)+'% → '+f(j.after)+'%');changed=true;}
+ else{j.status='Не выполнен';ensurePlant().stock.find(x=>x.id===j.spare).qty++;}
+ }if(changed)save();}
+const fx420OldWarehouse=warehouseView;
+warehouseView=function(){let html=fx420OldWarehouse(),jobs=fx420Spares();return '<section class="fx420-panel"><h3>Ремонт из складских запасов</h3><p class="muted">Запчасть не улучшает производство сама по себе. После назначения она списывается со склада, устанавливается за 2 игровых дня и улучшает состояние конкретной скважины, узла или РВС.</p><div class="fx420-actions">'+ensurePlant().stock.filter(x=>[5,6,7,8,9,10].includes(x.id)).map(x=>'<button class="mini-btn" data-fx420-spare="'+x.id+'" '+(x.qty<1?'disabled':'')+'>'+esc(x.name)+' · '+x.qty+' шт. → применить</button>').join('')+'</div>'+jobs.slice(0,12).map(j=>'<div class="row"><span>'+esc(j.name)+' · '+esc(j.description)+'</span><b>'+esc(j.status)+(j.status==='В работе'?' · '+j.remaining+' дн.':' · '+f(j.before)+' → '+f(j.after??j.before)+'%')+'</b></div>').join('')+'</section>'+html};
+/* Navigation alerts: count new state changes; reading a section clears its own count. */
+function fx420Fingerprint(){
+ let d=v28migrateNames(),w=(s.assets?.wellList||[]),plant=ensurePlant(),inc=s.v8?.incidents||[],events=s.events||[];
+ let stopped=w.filter(x=>x.status!=='Работает').map(x=>x.id+':'+x.status).join(',');
+ let contracts=d.contracts.map(x=>x.id+':'+x.status+':'+x.remaining).join(',');
+ let low=plant.stock.filter(x=>x.qty<x.minimum).map(x=>x.id).join(',');
+ let repair=fx420Spares().map(x=>x.id+':'+x.status).join(',');
+ return {overview:events[0]+'|'+stopped,daily:s.month+'|'+s.volume,dispatch:stopped,assetsTree:stopped,workshops:stopped+'|'+s.condition,people:s.safety+'|'+s.condition,career:s.hr?.people?.length||0,staff:s.hr?.people?.length||0,finance:s.profit+'|'+s.cash,market:s.oil,incidents:JSON.stringify(inc.slice(0,15)),equipment:repair+'|'+plant.types.map(x=>Math.floor(x.condition/10)).join(','),warehouse:low+'|'+repair,contracts:contracts,hse:s.safety+'|'+JSON.stringify(inc.slice(0,10)),decisions:events[0],events:events[0]};
+}
+let fx420LastTab=null;
+const fx420OldRender=render;
+render=function(){
+ let alerts=fx420state().alerts,fp=fx420Fingerprint();
+ for(let [section,value] of Object.entries(fp)){
+  if(alerts.fingerprints[section]!==undefined&&alerts.fingerprints[section]!==String(value))alerts.unread[section]=Math.min(99,(alerts.unread[section]||0)+1);
+  alerts.fingerprints[section]=String(value);
+ }
+ if(fx420LastTab!==tab){alerts.unread[tab]=0;fx420LastTab=tab;}
+ fx420OldRender();
+ for(let b of document.querySelectorAll('[data-v11-tab],[data-tab],[data-v13-go]')){
+  let id=b.dataset.v11Tab||b.dataset.tab||b.dataset.v13Go,n=alerts.unread[id]||0;
+  b.querySelector('.fx420-badge')?.remove();if(!n)continue;
+  let el=document.createElement('span');el.className='fx420-badge';el.textContent=n>9?'9+':String(n);el.setAttribute('aria-label',n+' новых изменений');b.appendChild(el);
+ }
+ document.querySelectorAll('[data-fx420-spare]').forEach(b=>b.onclick=()=>fx420UseSpare(+b.dataset.fx420Spare));
+};
 const BACKUP_KEY=KEY+'-backup';
 const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='.json,application/json';fileInput.style.display='none';document.body.appendChild(fileInput);
 const saveBar=document.createElement('div');saveBar.id='save-manager';
