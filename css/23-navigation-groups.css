@@ -1,0 +1,10 @@
+.group397-nav{border-bottom:1px solid rgba(160,180,190,.18)}
+.group397-nav>summary{padding:12px 13px;color:#b9d9e5;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.02em}
+.group397-nav>.v11sidebtn{width:100%;padding-left:24px}
+.group397-section{border:1px solid rgba(140,155,175,.34);border-radius:9px;margin:10px 0;overflow:hidden}
+.group397-section>summary{padding:13px 14px;cursor:pointer;font-weight:700;background:rgba(120,145,170,.10)}
+.group397-section>summary:hover{background:rgba(120,145,170,.18)}
+.group397-section>:not(summary){margin-left:12px;margin-right:12px}
+.group397-section>:last-child{margin-bottom:12px}
+.group397-toolbar{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
+.group397-toolbar button{border:1px solid rgba(140,155,175,.45);border-radius:6px;padding:6px 10px;background:transparent;color:inherit;cursor:pointer}

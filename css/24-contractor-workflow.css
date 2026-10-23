@@ -1,0 +1,16 @@
+
+.v398-steps{display:grid;gap:8px;padding:14px;border:1px solid rgba(128,145,165,.4);border-radius:9px;margin:12px 0;background:rgba(80,135,190,.07)}
+.v398-steps span{padding-left:8px;border-left:2px solid rgba(80,145,210,.5)}
+.v398-controls{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.v398-controls input{flex:2;min-width:180px}
+.v398-controls select{flex:1;min-width:180px}
+.v398-controls input,.v398-controls select,.v398-info select{padding:9px;border:1px solid #94a3b8;border-radius:7px;background:var(--card,#fff);color:inherit;max-width:100%}
+.v398-directory{max-height:480px;overflow:auto;border:1px solid rgba(130,145,165,.4);border-radius:9px}
+.v398-supplier,.v398-tender,.v398-contract{border-bottom:1px solid rgba(130,145,165,.3);margin:0}
+.v398-supplier>summary,.v398-tender>summary,.v398-contract>summary{display:flex;justify-content:space-between;gap:10px;align-items:center;cursor:pointer;padding:11px}
+.v398-supplier>summary span,.v398-tender>summary small,.v398-contract>summary span{font-size:12px;opacity:.8;text-align:right}
+.v398-info{padding:8px 13px 15px;background:rgba(128,145,165,.07)}
+.v398-info label{display:block;margin:8px 0}
+.v398-info select{display:block;width:100%;margin:5px 0 10px}
+.v398-recommended{background:rgba(75,145,215,.13)}
+@media(max-width:600px){.v398-supplier>summary,.v398-contract>summary,.v398-tender>summary{align-items:flex-start;flex-direction:column}.v398-directory{max-height:350px}}
