@@ -51,7 +51,7 @@ function complyView(){
  if(!s?.small)return '';
  let c=complyInit(),open=c.cases.filter(x=>x.status!=='Устранено');
  let spent=c.cases.reduce((a,x)=>a+(x.finePaid?x.fine:0)+(x.status!=='Выявлено'?x.repairCost:0),0);
- let h='<section class="small-panel"><h2>Государственные проверки и экология</h2><p class="muted">ДЧС: предписания и расходы на устранение. Экология: устранение нарушений и игровые штрафы. Суммы условные, не являются расчётом штрафов по законодательству РК.</p>';
+ let h='<section class="small-panel"><h2>Государственные проверки и экология</h2><p class="muted">ДЧС: предписания и расходы на устранение. Экология: устранение нарушений и расчётные штрафы. Суммы условные, не являются расчётом штрафов по законодательству РК.</p>';
  h+='<div class="small-economy-grid"><div><small>Открытые предписания</small><b>'+open.length+'</b></div><div><small>Всего проверок</small><b>'+c.inspections+'</b></div><div><small>Расходы и штрафы</small><b>'+m(spent)+'</b></div></div>';
  h+='<div class="small-project"><b>Учебная проверка</b><p class="muted">Для тестирования механики; не влияет на реальную инспекционную периодичность.</p><button class="btn secondary" data-comply="inspect" data-agency="ДЧС">Проверка ДЧС</button> <button class="btn secondary" data-comply="inspect" data-agency="Экология">Проверка экологии</button></div>';
  for(let x of c.cases.slice(0,15)){

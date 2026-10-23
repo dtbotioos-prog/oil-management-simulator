@@ -29,11 +29,20 @@ async function stock399Purchase(id,qty){let p=ensurePlant(),x=p.stock.find(x=>x.
  if(!await uiConfirm('Закупить «'+x.name+'» — '+n+' ед. за '+m(cost)+'?'))return;
  s.cash-=cost;x.qty+=n;p.warehouseSpend+=cost;
  v25post('maintenance',cost,{description:'Закупка на склад: '+x.name+' · '+n+' ед.',category:stock399Category(x)});
- stock399Init().history.unshift(v8date()+': '+x.name+' +'+n+' · '+m(cost));save();render();
+ stock399Init().history.unshift(v8date()+': '+x.name+' +'+n+' · '+m(cost));if(x.name==='Продукты питания (порции)')stock413TransferFood();save();render();
+}
+/* Transfer food from central warehouse to the camp without another cash charge. */
+function stock413TransferFood(){
+ const c=v36init().camp,p=ensurePlant(),food=p.stock.find(x=>x.name==='Продукты питания (порции)');
+ if(!food||!c.residents)return 0;
+ const need=Math.max(0,Math.ceil(c.residents*3*5-c.mealStock));
+ const moved=Math.min(Math.max(0,Math.floor(food.qty||0)),need);
+ if(moved>0){food.qty-=moved;food.consumed=(food.consumed||0)+moved;c.mealStock+=moved;}
+ return moved;
 }
 function stock399Satisfaction(){
  let c=v36init().camp,staff=s.small?(typeof growInit==='function'?Math.max(1,growInit().staff||8):8):Math.max(1,c.residents);
- let meal=Math.min(1,(c.mealStock||0)/Math.max(1,staff*3*5));
+ let food=ensurePlant().stock.find(x=>x.name==='Продукты питания (порции)');let available=Math.max(0,+c.mealStock||0)+Math.max(0,+(food&&food.qty)||0);let meal=Math.min(1,available/Math.max(1,c.residents*3*5));
  let beds=c.residents>0?Math.min(1,c.beds/c.residents):1;
  let p=ensurePlant(),hyg=p.stock.find(x=>x.name==='Средства личной гигиены (комплект)'),water=p.stock.find(x=>x.name==='Питьевая вода (л)');
  let hygiene=hyg?Math.min(1,hyg.qty/Math.max(1,staff*.3)):1;
@@ -58,7 +67,7 @@ const stock399OldAssetBind=assetBind;
 assetBind=function(){stock399OldAssetBind();let group=document.querySelector('#stock399-group');if(group)group.onchange=()=>{stock399Filter=group.value;render()};document.querySelectorAll('[data-stock399]').forEach(b=>b.onclick=()=>stock399Purchase(+b.dataset.stock399,+b.dataset.qty))};
 const stock399OldCampView=v36campView;
 v36campView=function(){stock399Init();let c=v36init().camp,k=stock399Satisfaction();
- return '<h2>Потребности и удовлетворённость работников</h2>'+row('Удовлетворённость',k.score+'%')+row('Запас питания на 5 дней',Math.round(k.meal*100)+'%')+row('Койко-места',Math.round(k.beds*100)+'%')+row('Питьевая вода',Math.round(k.drinking*100)+'%')+row('Средства гигиены',Math.round(k.hygiene*100)+'%')+'<p class="muted">Нехватка воды, продуктов и мест проживания ухудшает удовлетворённость. Для пополнения откройте «Склад»; для расширения мест — «Инфраструктура».</p>'+stock399OldCampView();
+ return '<h2>Потребности и удовлетворённость работников</h2>'+row('Удовлетворённость',k.score+'%')+row('Запас питания на 5 дней',Math.round(k.meal*100)+'% ('+f(Math.max(0,c.mealStock)+(ensurePlant().stock.find(x=>x.name==='Продукты питания (порции)')?.qty||0))+' порций всего)')+row('Койко-места',Math.round(k.beds*100)+'%')+row('Питьевая вода',Math.round(k.drinking*100)+'%')+row('Средства гигиены',Math.round(k.hygiene*100)+'%')+'<p class="muted">Нехватка воды, продуктов и мест проживания ухудшает удовлетворённость. Для пополнения откройте «Склад»; для расширения мест — «Инфраструктура».</p>'+stock399OldCampView();
 };
 const stock399OldDaily=v36daily;
 v36daily=function(){stock399Init();stock399OldDaily();let c=v36init().camp,p=ensurePlant();

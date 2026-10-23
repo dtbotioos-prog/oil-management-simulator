@@ -28,7 +28,7 @@ async function v35borrow(){
  let d=v35init();
  let raw=await uiPrompt('Сумма кредита, млн ₸ (100–100000)','5000');if(raw===null)return;
  let amount=Number(raw);if(!Number.isFinite(amount)||amount<100||amount>100000)return uiAlert('Сумма кредита: от 100 до 100 000 млн ₸');
- let yearsRaw=await uiPrompt('Срок кредита, игровых месяцев (3–120)','36');if(yearsRaw===null)return;
+ let yearsRaw=await uiPrompt('Срок кредита, месяцев (3–120)','36');if(yearsRaw===null)return;
  let months=Number(yearsRaw);if(!Number.isInteger(months)||months<3||months>120)return uiAlert('Срок: от 3 до 120 месяцев');
  let rateRaw=await uiPrompt('Годовая ставка, % (5–35)','16');if(rateRaw===null)return;
  let rate=Number(rateRaw);if(!Number.isFinite(rate)||rate<5||rate>35)return uiAlert('Ставка: от 5 до 35%');
@@ -81,11 +81,11 @@ function v35view(){
  out+='<div class="table-scroll"><table><thead><tr><th>Кредит</th><th>Ставка</th><th>Остаток</th><th>Дней до срока</th><th>Статус</th><th>Управление</th></tr></thead><tbody>';
  for(let l of d.loans)out+='<tr><td>№'+l.id+'</td><td>'+l.rate+'%</td><td>'+m(l.balance)+'</td><td>'+Math.max(0,l.remainingDays)+'</td><td>'+esc(l.status)+'</td><td>'+(l.status==='Действует'?'<button class="mini-btn" data-v35-repay="'+l.id+'">Погасить</button>':'—')+'</td></tr>';
  out+='</tbody></table></div>';
- out+='<h3>Денежные потоки казначейства · последние 30 игровых дней</h3>';
+ out+='<h3>Денежные потоки казначейства · последние 30 дней</h3>';
  out+=row('Привлечение кредитов',m(flows.credit_in))+row('Погашение основного долга',m(flows.credit_out))+row('Проценты по кредитам',m(flows.interest))+row('Оплата капитальных договоров',m(flows.capex))+row('Оплата подрядных работ OPEX',m(flows.contract_opex));
  out+='<h3>Реестр капитальных договоров</h3><div class="table-scroll"><table><thead><tr><th>№</th><th>Объект</th><th>Вид работ</th><th>Стоимость</th><th>Статус</th></tr></thead><tbody>';
  for(let c of parts.capex.slice(0,35))out+='<tr><td>'+c.id+'</td><td>'+esc(c.objectName||'—')+'</td><td>'+esc(V27_TYPES[c.type]?.label||c.type)+'</td><td>'+m(c.price)+'</td><td>'+esc(c.status)+'</td></tr>';
- out+='</tbody></table></div><p class="muted">Учебная модель: нет налогов, амортизации, НДС, банковских ковенантов, залогов и индивидуальных графиков подрядных платежей. Показатели казначейства фиксируются с момента установки v3.5.</p>';
+ out+='</tbody></table></div><p class="muted">Расчётная модель: нет налогов, амортизации, НДС, банковских ковенантов, залогов и индивидуальных графиков подрядных платежей. Показатели казначейства фиксируются с момента установки v3.5.</p>';
  return out;
 }
 function v35bind(){

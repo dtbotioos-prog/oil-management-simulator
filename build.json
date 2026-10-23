@@ -1,5 +1,5 @@
 {
-  "version": "4.0.9",
+  "version": "4.1.6",
   "entry": "js/core/game.js",
   "parts": [
     "src/core/01-foundation.js",
@@ -52,6 +52,10 @@
     "src/operations/07zzzzzzzzzzzzzzzzzzzzz-mobile-mail-fix.js",
     "src/operations/07zzzzzzzzzzzzzzzzzzzzzz-mobile-dialog409.js",
     "src/operations/07zzzzzzzzzzzzzzzzzzzzzzz-mail-dialog410.js",
+    "src/operations/07zzzzzzzzzzzzzzzzzzzzzzzz-mail-411.js",
+    "src/operations/07zzzzzzzzzzzzzzzzzzzzzzzzz-well-dashboard.js",
+    "src/operations/07zzzzzzzzzzzzzzzzzzzzzzzzzz-investigations415.js",
+    "src/operations/07zzzzzzzzzzzzzzzzzzzzzzzzzzz-workflow416.js",
     "src/core/08-save-manager.js"
   ]
 }

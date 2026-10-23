@@ -16,13 +16,6 @@ async function mail410Clear(){
  const check=mail86db();
  if(check.items.length){for(const x of check.items)ids.add(x.id);check.deletedIds=[...ids];check.items.length=0;save();render();}
 }
-// One event handler for every historic inbox toolbar, regardless of which version rendered it.
-document.addEventListener('click',function(e){
- const b=e.target.closest?.('[data-fix408-mail="delete"],[data-mail86="deleteall"],[data-mail410-delete]');
- if(!b||!s)return;
- e.preventDefault();e.stopImmediatePropagation();
- void mail410Clear();
-},true);
 const mail410Render=render;
 render=function(){
  mail410Render();

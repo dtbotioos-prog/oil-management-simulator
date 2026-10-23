@@ -38,7 +38,7 @@ function v38report(year,i){
  let text='ЕЖЕМЕСЯЧНАЯ СВОДКА ПО ДОБЫЧЕ — '+V8_MONTHS[i]+' '+year+
  '\nПлан предприятия: '+f(h.plan)+' т; факт: '+f(h.actual)+' т; выполнение: '+f(h.rate)+'%; отклонение: '+f(h.actual-h.plan)+' т.'+
  '\nЦеха, выполнившие план: '+met.length+'; не выполнившие: '+miss.length+'.\n'+lines.join('\n')+
- '\nПричины отклонений необходимо проверить по фонду работающих скважин, простоям и обводнённости. Данные цехов рассчитаны по игровой модели.';
+ '\nПричины отклонений необходимо проверить по фонду работающих скважин, простоям и обводнённости. Данные цехов рассчитаны по расчётный модели.';
  let db=v14Sync();
  db.items.unshift({id,text,category:'production',created:v8date(),status:'new',choice:null,outcome:'',readAt:null});
  d.reportIds.push(id);d.closed.unshift({year,month:i,plan:h.plan,actual:h.actual,rows});

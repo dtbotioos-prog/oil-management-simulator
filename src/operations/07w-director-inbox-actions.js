@@ -37,7 +37,7 @@ v11inbox=function(){
  let h=mail86oldInbox();
  const controls='<div class="v14tools mail86tools"><button data-mail86="readall">✓ Пометить все прочитанными</button><button data-mail86="deleteall">🗑 Удалить все письма</button></div>';
  const count=mail86db().items.filter(x=>x.status==='pending').length;
- const note='<p class="muted">Отложено: '+count+'. Ремонт и поручения меняют реальные игровые объекты; незавершённые задачи видны в письмах.</p>';
+ const note='<p class="muted">Отложено: '+count+'. Ремонт и поручения меняют реальные расчётные объекты; незавершённые задачи видны в письмах.</p>';
  if(v14Selected){
   const item=mail86db().items.find(x=>x.id===v14Selected);
   if(item&&item.status==='pending'&&!item.choice)h=h.replace('Варианты управленческого решения','Варианты управленческого решения (ранее отложено)');
@@ -56,7 +56,7 @@ function mail86target(item){
 function mail86task(item,type,description,days,apply){
  let db=mail86db(),id=1+Math.max(0,...db.tasks.map(t=>t.id));
  db.tasks.push({id,mailId:item.id,type,description,days,status:'В работе',apply});
- item.taskId=id;item.status='pending';item.outcome='Поручение принято: '+description+'. Осталось '+days+' игровых дней.';
+ item.taskId=id;item.status='pending';item.outcome='Поручение принято: '+description+'. Осталось '+days+' дней.';
  return id;
 }
 const mail86oldAdvance=v8advance;

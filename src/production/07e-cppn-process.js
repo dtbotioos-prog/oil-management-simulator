@@ -23,14 +23,14 @@ function v31calculate(){
 function v31day(){
  let d=v31init();
  for(let meta of V31_STAGES){let st=d.stages.find(x=>x.id===meta.id);if(st&&st.online&&!d.shutdown)st.health=Math.max(0,Math.round((st.health-meta.wear)*1000)/1000)}
- if(d.fireEvent){d.fireEvent.days++;if(d.fireEvent.days>3){d.incidentHistory.unshift({...d.fireEvent,resolved:v8date()});d.fireEvent=null;d.shutdown=true;log('Ликвидирована игровая аварийная ситуация на ЦППН. Требуется восстановление и разрешение пуска.');}}
+ if(d.fireEvent){d.fireEvent.days++;if(d.fireEvent.days>3){d.incidentHistory.unshift({...d.fireEvent,resolved:v8date()});d.fireEvent=null;d.shutdown=true;log('Ликвидирована расчётная аварийная ситуация на ЦППН. Требуется восстановление и разрешение пуска.');}}
  d.last=v31calculate();
 }
 async function v31action(kind,id){
  let d=v31init(),st=d.stages.find(x=>x.id===id),meta=V31_STAGES.find(x=>x.id===id);
  if(kind==='shutdown'){if(d.shutdown)return;d.shutdown=true;log('Оператор инициировал аварийную остановку ЦППН');save();render();return}
  if(kind==='restart'){if(d.fireEvent)return uiAlert('Нельзя запустить ЦППН до ликвидации аварии');if(d.stages.some(x=>!x.online||x.health<40))return uiAlert('Не все установки готовы к пуску');d.shutdown=false;log('ЦППН возвращён в работу после проверки готовности');save();render();return}
- if(kind==='simulate'){if(d.fireEvent)return uiAlert('Сценарий уже активен');if(!await uiConfirm('Запустить учебный сценарий пожара на ЦППН? Производство будет остановлено.'))return;d.fireEvent={type:'Учебный сценарий пожара',started:v8date(),days:0};d.shutdown=true;log('Учебный сценарий: пожар на ЦППН, аварийная остановка');save();render();return}
+ if(kind==='simulate'){if(d.fireEvent)return uiAlert('Сценарий уже активен');if(!await uiConfirm('Запустить  сценарий пожара на ЦППН? Производство будет остановлено.'))return;d.fireEvent={type:'Учебный сценарий пожара',started:v8date(),days:0};d.shutdown=true;log('Учебный сценарий: пожар на ЦППН, аварийная остановка');save();render();return}
  if(kind==='reset'){if(!d.fireEvent)return;d.incidentHistory.unshift({...d.fireEvent,resolved:v8date()});d.fireEvent=null;log('Учебный сценарий завершён; ЦППН остаётся остановленным до пуска');save();render();return}
  if(kind==='repair'&&st&&meta){let cost=22;if(s.cash<cost)return uiAlert('Недостаточно средств');if(!await uiConfirm('Выполнить обслуживание '+meta.name+' за '+m(cost)+'?'))return;s.cash-=cost;v25post('maintenance',cost,{description:'ТО установки '+meta.name});st.health=Math.min(100,st.health+20);st.online=true;d.interventions.unshift({date:v8date(),stage:id,cost});log('ТО '+meta.name);save();render()}
 }
@@ -43,7 +43,7 @@ function v31view(){
  out+='<h3>Разделение потоков</h3><div class="v31-flows">'+row('Подготовленная нефть',calc.oil+' усл. ед./сут')+row('Выделенная вода',calc.water+' усл. ед./сут')+row('Газ (условно)',calc.gas+' усл. ед./сут')+row('Условный остаток солей',calc.salt+' ед.')+'</div>';
  out+='<h3>Управление технологией</h3><div class="actions"><button class="btn secondary" data-v31-action="shutdown">Аварийная остановка</button><button class="btn secondary" data-v31-action="restart">Проверить и запустить</button><button class="btn secondary" data-v31-action="simulate">Учебный сценарий пожара</button>'+(d.fireEvent?'<button class="btn secondary" data-v31-action="reset">Завершить сценарий</button>':'')+'</div>';
  if(d.shutdown)out+='<div class="notice bad">ЦППН остановлен. Возобновление возможно после проверки состояния установок.</div>';
- if(d.fireEvent)out+='<div class="notice bad">Учебная пожарная ситуация: '+esc(d.fireEvent.type)+' · '+d.fireEvent.days+' игровых дней</div>';
+ if(d.fireEvent)out+='<div class="notice bad">Учебная пожарная ситуация: '+esc(d.fireEvent.type)+' · '+d.fireEvent.days+' дней</div>';
  out+='<p class="muted">Учебный сценарий и остановка влияют на технологический поток этого экрана. Финансовая реализация нефти в версии 3.1 по-прежнему рассчитывается прежней моделью; полная интеграция технологического потока с продажами запланирована отдельно.</p>';
  return out;
 }

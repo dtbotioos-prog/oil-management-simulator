@@ -50,7 +50,7 @@ async function v40personnel(name,act){
   p.job=title.trim();p.score=cl(p.score+2,0,100);
   d.staffChanges.unshift(v8date()+' · повышение: '+p.name+' · '+oldJob+' → '+p.job+' · '+reason);
  }else if(act==='dismiss'){
-  let reason=await uiPrompt('Основание увольнения '+p.name+' (учебная модель):');
+  let reason=await uiPrompt('Основание увольнения '+p.name+' (расчётная модель):');
   if(!reason?.trim())return;
   let candidates=v40candidateList(name);
   let choices=candidates.slice(0,10).map((x,i)=>(i+1)+'. '+x.name+' ('+x.job+', KPI '+x.score+')').join('\n');

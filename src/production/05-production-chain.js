@@ -86,7 +86,7 @@ async function v21action(id,kind){
  let days=kind==='upgrade'?id.startsWith('ГУ-')?30:60:12;
  let add=kind==='upgrade'?Math.round(o.capacity*.35):0;
  if(s.cash<cost)return uiAlert('Недостаточно средств: '+m(cost));
- if(!await uiConfirm((kind==='upgrade'?'Модернизация':'Ремонт')+' '+id+': '+m(cost)+', '+days+' игровых дней?'))return;
+ if(!await uiConfirm((kind==='upgrade'?'Модернизация':'Ремонт')+' '+id+': '+m(cost)+', '+days+' дней?'))return;
  s.cash-=cost;d.projects.push({id:++d.seq,node:id,kind,cost,days,add,status:'В работе',started:v8date()});
  d.journal.unshift(v8date()+' · '+id+': начаты работы, '+m(cost));v19notify('Начаты работы на '+id);save();render();
 }
@@ -101,7 +101,7 @@ function v21view(){
   '<div class="actions"><button class="mini-btn" data-v21-node="'+esc(o.id)+'" data-v21-kind="upgrade" '+(project?'disabled':'')+'>Модернизация</button><button class="mini-btn" data-v21-node="'+esc(o.id)+'" data-v21-kind="repair" '+(project?'disabled':'')+'>Ремонт</button><button class="mini-btn" data-v21-node="'+esc(o.id)+'" data-v21-kind="toggle">'+(o.offline?'Пуск':'Остановка')+'</button></div></div>';
  }).join('');
  let bottlenecks=a.filter(o=>o.offline||calc.load[o.id]>o.capacity*v21nodeAvailable(o)*.95).map(o=>o.id);
- return '<h2>Производственная цепочка · единая модель</h2><p class="muted">Скважины → ГУ → ДНС → ЦППН; электроснабжение и ППД ограничивают итоговую добычу. Значения являются игровыми, не проектными характеристиками реальных объектов.</p>'+
+ return '<h2>Производственная цепочка · единая модель</h2><p class="muted">Скважины → ГУ → ДНС → ЦППН; электроснабжение и ППД ограничивают итоговую добычу. Значения являются расчётными, не проектными характеристиками реальных объектов.</p>'+
  '<div class="v8grid">'+[['Товарная нефть, т/сут',f(calc.oil)],['Жидкость, м³/сут',f(calc.liquid)],['Добывающих в работе',calc.wellCount],['Нагнетательных в работе',calc.injectors],['Обеспеченность ППД',f(calc.support*100)+'%'],['Макс. загрузка',f(calc.maxLoad*100)+'%']].map(x=>'<div class="v8tile"><small>'+x[0]+'</small><strong>'+x[1]+'</strong></div>').join('')+'</div>'+
  '<div class="notice">'+(bottlenecks.length?'Ограничения / риск перегрузки: '+esc(bottlenecks.join(', ')):'Критических ограничений мощностей не выявлено')+'</div>'+
  '<h3>Объекты цепочки и решения генерального директора</h3><div class="asset-grid">'+rows+'</div>'+

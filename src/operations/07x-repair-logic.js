@@ -48,7 +48,7 @@ async function repair87start(id,type){
  if(type==='diagnose'&&w.repair87?.report&&!w.repair87.report.resolved&&w.repair87.report.recommendation!=='НЕ ТРЕБУЕТСЯ')return uiAlert('Диагностика уже выполнена. Заключение: '+w.repair87.report.recommendation+'. '+w.repair87.report.reason);
  if(type==='service'&&w.health>=90&&w.status==='Работает')return uiAlert('Плановое ТО пока не требуется.');
  if(s.cash<params.cost)return uiAlert('Недостаточно средств: '+m(params.cost));
- if(!await uiConfirm('Начать '+params.name+' скважины №'+w.id+'?\n'+m(params.cost)+' · '+params.days+' игровых дней\nРезультат появится только после завершения работ.'))return;
+ if(!await uiConfirm('Начать '+params.name+' скважины №'+w.id+'?\n'+m(params.cost)+' · '+params.days+' дней\nРезультат появится только после завершения работ.'))return;
  s.cash-=params.cost;v25post('maintenance',params.cost,{description:params.name+' скважины №'+w.id,well:w.id,type});
  d.jobs.unshift({id:++d.seq,well:w.id,type,name:params.name,cost:params.cost,remaining:params.days,days:params.days,status:'В работе',before:w.health,wasStopped:w.status!=='Работает'});
  if(type!=='diagnose')w.status='Ремонт';
@@ -151,11 +151,11 @@ function repair89report(w){
  let recommendation='НЕ ТРЕБУЕТСЯ',defect='Дефект, требующий подземного ремонта, не установлен',reason='Текущее техническое состояние '+health+'%.',scope='Продолжить эксплуатационный контроль и наблюдение',cost=0,days=0;
  if(health<25){
   recommendation='КРС';defect='Признаки серьёзного ухудшения технического состояния скважины';
-  reason='Критическое состояние '+health+'%; необходима проверка герметичности колонны и состояния ствола. Предварительный игровой диагноз, а не подтверждённая причина.';
+  reason='Критическое состояние '+health+'%; необходима проверка герметичности колонны и состояния ствола. Предварительный расчётный диагноз, а не подтверждённая причина.';
   scope='Дополнительное обследование, дефектация, при подтверждении — изоляционно-восстановительные работы, испытание и приёмка';cost=105;days=28;
  }else if(health<50){
   recommendation='ПРС';defect='Признаки износа подземного насосного оборудования';
-  reason='Состояние '+health+'%; требуется проверить насос, штанги и НКТ. Предварительный игровой диагноз.';
+  reason='Состояние '+health+'%; требуется проверить насос, штанги и НКТ. Предварительный расчётный диагноз.';
   scope='Подъём подземного оборудования, дефектация, замена неисправных элементов, спуск, испытание';cost=28;days=10;
  }else if(stopped){
   defect='Причина остановки не установлена';reason='Состояние '+health+'% само по себе не подтверждает необходимость ПРС/КРС.';

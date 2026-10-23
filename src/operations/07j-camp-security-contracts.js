@@ -67,7 +67,7 @@ async function v36accept(id,index){
  if(progress<threshold)return uiAlert('Работы по этапу ещё не выполнены: требуется '+threshold+'% готовности');
  if(index>0&&!x.milestones[index-1].accepted)return uiAlert('Сначала примите предыдущий этап');
  if(index===2&&!x.qualityDocs)return uiAlert('Перед итоговой приёмкой подтвердите исполнительную документацию');
- if(!await uiConfirm('Подписать игровой акт по этапу «'+stage.name+'» договора №'+id+'?'))return;
+ if(!await uiConfirm('Подписать акт по этапу «'+stage.name+'» договора №'+id+'?'))return;
  stage.accepted=true;stage.date=v8date();
  if(index===2){x.acceptedAt=v8date();x.commissioned=true}
  log('Принят этап '+(index+1)+' договора №'+id);save();render();
@@ -87,11 +87,11 @@ function v36campView(){
  '<div class="v36-card"><b>Питание</b><strong>'+Math.floor(c.mealStock)+'</strong><small>Порций на складе · запас на '+(c.residents?(c.mealStock/(c.residents*3)).toFixed(1):'∞')+' суток</small></div>'+
  '<div class="v36-card"><b>Служба безопасности</b><strong>'+c.guards+'</strong><small>Сотрудников охраны</small></div></div>';
  out+=row('Качество питания',Math.round(c.mealQuality)+'%')+row('Состояние общежитий',Math.round(c.housing)+'%')+row('Санитарное состояние',Math.round(c.cleanliness)+'%')+row('Надёжность охраны',Math.round(c.security)+'%')+row('Нарушения / происшествия',c.incidents)+row('Необеспеченные порции за карьеру',Math.round(c.missedMeals));
- if(c.mealStock<c.residents*3)out+='<div class="notice bad">Недостаточно продовольствия на следующий игровой день. Необходимо пополнить склад столовой.</div>';
+ if(c.mealStock<c.residents*3)out+='<div class="notice bad">Недостаточно продовольствия на следующий день. Необходимо пополнить склад столовой.</div>';
  if(c.residents>c.beds)out+='<div class="notice bad">Превышена вместимость общежитий.</div>';
  if(c.security<55)out+='<div class="notice bad">Недостаточный уровень охраны производственных объектов.</div>';
  out+='<div class="actions"><button class="btn secondary" data-v36-residents>Изменить численность</button><button class="btn secondary" data-v36-buy="food">Закупить продукты · 14 млн ₸</button><button class="btn secondary" data-v36-buy="repair">Ремонт общежитий · 25 млн ₸</button><button class="btn secondary" data-v36-buy="clean">Санобработка · 7 млн ₸</button><button class="btn secondary" data-v36-buy="guards">Нанять охрану · 18 млн ₸</button><button class="btn secondary" data-v36-buy="security">Усилить безопасность · 30 млн ₸</button><button class="btn secondary" data-v36-buy="beds">Расширить общежитие · 85 млн ₸</button></div>';
- out+='<h3>Функции службы безопасности</h3><p class="muted">В игровой модели служба отвечает за контроль доступа, охрану имущества, режим объектов, обходы и реагирование на нарушения. Численность охраны влияет на показатель надёжности.</p>';
+ out+='<h3>Функции службы безопасности</h3><p class="muted">В расчётный модели служба отвечает за контроль доступа, охрану имущества, режим объектов, обходы и реагирование на нарушения. Численность охраны влияет на показатель надёжности.</p>';
  return out;
 }
 function v36contractsView(){
@@ -103,7 +103,7 @@ function v36contractsView(){
   out+='<div class="mini-card v36-contract"><b>Договор №'+c.id+' · '+esc(c.objectName||V27_TYPES[c.type]?.label||c.type)+'</b>'+row('Подрядчик',esc(c.supplier))+row('Готовность',Math.round(c.progress||0)+'%')+row('Стоимость',m(c.price))+row('Удержание по модели (информационно)',m(x.holdback));
   for(let i=0;i<x.milestones.length;i++){let st=x.milestones[i];out+='<div class="v36-stage"><span>'+esc(st.name)+' · '+st.share+'%</span><span>'+(st.accepted?'Принят '+esc(st.date):'<button class="mini-btn" data-v36-accept="'+c.id+'" data-v36-stage="'+i+'">Подписать акт</button>')+'</span></div>';}
   if(c.status==='Завершён'&&!x.qualityDocs)out+='<button class="mini-btn" data-v36-docs="'+c.id+'">Подтвердить исполнительную документацию</button>';
-  if(x.commissioned)out+='<div class="notice">Приёмка завершена: '+esc(x.acceptedAt)+'. Объект принят в игровой реестр.</div>';
+  if(x.commissioned)out+='<div class="notice">Приёмка завершена: '+esc(x.acceptedAt)+'. Объект принят в расчётный реестр.</div>';
   out+='</div>';
  }
  return out;

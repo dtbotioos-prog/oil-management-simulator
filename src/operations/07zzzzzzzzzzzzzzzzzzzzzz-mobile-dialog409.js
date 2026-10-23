@@ -24,12 +24,3 @@ fix408DeleteAll=async function(){
  if(typeof mail396Search!=='undefined')mail396Search='';
  save();render();
 };
-// The bulk time controls are destructive to simulation state and require confirmation.
-document.addEventListener('click',async function(e){
- const b=e.target.closest?.('[data-v11-step]');if(!b||!s)return;
- const val=b.dataset.v11Step;
- if(val==='1')return;
- e.preventDefault();e.stopImmediatePropagation();
- const label=val==='7'?'7 дней':val==='month'?'один месяц':val==='year'?'один год':val+' дней';
- if(await uiConfirm('Продвинуть игровое время на '+label+'? Добыча, расходы и события будут рассчитаны автоматически.'))v11step(val==='month'||val==='year'?val:+val);
-},true);

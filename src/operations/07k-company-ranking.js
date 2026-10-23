@@ -72,16 +72,16 @@ function v37annualSnapshot(oldYear){
 function v37view(){
  let d=v37refresh(),years=Object.keys(d.years).map(Number).sort((a,b)=>b-a),selected=years.includes(d.selectedYear)?d.selectedYear:v8init().year;
  let list=d.years[selected]||[],mine=list.find(x=>x.player),isCurrent=selected===v8init().year,live=d.live,trend=isCurrent?live?.trend:(d.history.find(x=>x.year===selected)?.trend||[]);
- let out='<section class="v37-league"><h2>🏆 Рейтинг 100 нефтяных компаний</h2><p class="muted">'+(isCurrent?'Текущий предварительный рейтинг':'Итоговый рейтинг')+' за '+selected+' год. Все конкуренты вымышлены; их оценки генерируются по игровой модели, а показатели вашего предприятия зависят от решений в карьере.</p>';
+ let out='<section class="v37-league"><h2>🏆 Рейтинг 100 нефтяных компаний</h2><p class="muted">'+(isCurrent?'Текущий предварительный рейтинг':'Итоговый рейтинг')+' за '+selected+' год. Все конкуренты вымышлены; их оценки генерируются по расчётный модели, а показатели вашего предприятия зависят от решений в карьере.</p>';
  out+='<div class="actions"><label for="v37-year">Год:</label><select id="v37-year">'+years.map(y=>'<option value="'+y+'"'+(y===selected?' selected':'')+'>'+y+'</option>').join('')+'</select></div>';
  if(mine)out+='<div class="v37-summary"><div><small>Место вашей компании</small><strong>'+mine.rank+' / 100</strong></div><div><small>Итоговый балл</small><strong>'+mine.score+' / 100</strong></div><div><small>Лидер рейтинга</small><strong>'+list[0].score+' / 100</strong></div></div>';
  if(isCurrent&&live){
   let movement=live.change>0?'▲ +'+live.change+' место':live.change<0?'▼ '+live.change+' место':'● Без изменений';
-  out+='<div class="v37-motion"><span class="v37-motion-value">'+movement+'</span><span>Изменение за последний игровой день</span><span>Старт сезона: '+(d.history.length?'с перенесённой репутацией':'100-е место')+'</span></div>';
+  out+='<div class="v37-motion"><span class="v37-motion-value">'+movement+'</span><span>Изменение за последний день</span><span>Старт сезона: '+(d.history.length?'с перенесённой репутацией':'100-е место')+'</span></div>';
  }
  if(trend&&trend.length){
   let last=trend.slice(-45),width=660,height=125,pts=last.map((x,i)=>(i/(Math.max(1,last.length-1))*width).toFixed(1)+','+(12+(x.rank-1)/99*(height-24)).toFixed(1)).join(' ');
-  out+='<h3>Движение позиции · последние '+last.length+' игровых дней</h3><div class="v37-chart"><div class="v37-chart-labels"><span>1 место</span><span>100 место</span></div><svg viewBox="0 0 660 125" role="img" aria-label="График места компании в рейтинге"><line x1="0" y1="12" x2="660" y2="12" stroke="currentColor" opacity=".2"/><line x1="0" y1="113" x2="660" y2="113" stroke="currentColor" opacity=".2"/><polyline fill="none" stroke="#269f96" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="'+pts+'"/></svg></div>';
+  out+='<h3>Движение позиции · последние '+last.length+' дней</h3><div class="v37-chart"><div class="v37-chart-labels"><span>1 место</span><span>100 место</span></div><svg viewBox="0 0 660 125" role="img" aria-label="График места компании в рейтинге"><line x1="0" y1="12" x2="660" y2="12" stroke="currentColor" opacity=".2"/><line x1="0" y1="113" x2="660" y2="113" stroke="currentColor" opacity=".2"/><polyline fill="none" stroke="#269f96" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="'+pts+'"/></svg></div>';
  }
  out+='<h3>Оценка вашей компании по направлениям</h3><div class="v37-aspects">';
  for(let a of V37_ASPECTS){let score=mine?.aspects[a[0]]||0;out+='<div class="v37-aspect"><span>'+a[1]+' · вес '+a[2]+'%</span><b>'+score+'/100</b><div class="v37-track"><i style="width:'+score+'%"></i></div></div>'}

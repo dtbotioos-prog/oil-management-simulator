@@ -35,7 +35,7 @@ async function v33add(){
  if(!Number.isInteger(total)||total<100||total>2000000)return uiAlert('Укажите общий объём от 100 до 2 000 000 тонн');
  let pct=Number(await uiPrompt('Цена относительно рыночной, % (70–150)','100'));
  if(!Number.isFinite(pct)||pct<70||pct>150)return uiAlert('Укажите цену от 70 до 150% рыночной');
- let terms=Number(await uiPrompt('Отсрочка оплаты, игровых дней (0–90)','7'));
+ let terms=Number(await uiPrompt('Отсрочка оплаты, дней (0–90)','7'));
  if(!Number.isInteger(terms)||terms<0||terms>90)return uiAlert('Укажите срок оплаты от 0 до 90 дней');
  let advancePct=Number(await uiPrompt('Предоплата от объёма договора, % (0–50)','0'));
  if(!Number.isFinite(advancePct)||advancePct<0||advancePct>50)return uiAlert('Укажите предоплату от 0 до 50%');
@@ -63,7 +63,7 @@ function v33view(){
  out+='<h3>Последняя отгрузка</h3>';
  if(last){out+=row('Добыто',f(last.produced)+' т')+row('Подготовлено',f(last.processed)+' т')+row('Реализовано',f(last.sold)+' т')+row('Запас в РВС',f(last.stored)+' усл. ед.');
  for(let x of (last.contracts||[]))out+=row('Договор №'+x.id+' · '+esc(x.buyer),f(x.qty)+' т');
- }else out+='<p class="muted">Для расчёта выполните следующий игровой день.</p>';
+ }else out+='<p class="muted">Для расчёта выполните следующий день.</p>';
  return out;
 }
 function v33bind(){

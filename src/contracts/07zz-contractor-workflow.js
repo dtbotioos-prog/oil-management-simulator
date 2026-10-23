@@ -27,8 +27,8 @@ function v398Availability(p){
 }
 function v398View(){
  let d=v28migrateNames(),groups=['Все',...V398_GROUPS.map(x=>x[0])],completed=d.contracts.filter(c=>c.status==='Завершён').length,active=d.contracts.filter(c=>c.status==='Исполняется').length;
- let html='<h2>Подрядчики · управление работами</h2><p class="muted">24 игровые подрядные организации. Компании не начинают работы самостоятельно: генеральный директор выбирает вид работ и объект, сравнивает предложения, заключает договор, затем принимает выполненные этапы.</p>';
- html+='<div class="v398-steps"><b>Как задействовать подрядчика</b><span>1. Выберите компанию и вид работ</span><span>2. Укажите скважину, РВС, здание или новый проект</span><span>3. В тендере нажмите «Заключить договор» напротив предложения</span><span>4. Прокручивайте игровые дни, затем подпишите акты и примите объект</span></div>';
+ let html='<h2>Подрядчики · управление работами</h2><p class="muted">24 расчётные подрядные организации. Компании не начинают работы самостоятельно: генеральный директор выбирает вид работ и объект, сравнивает предложения, заключает договор, затем принимает выполненные этапы.</p>';
+ html+='<div class="v398-steps"><b>Как задействовать подрядчика</b><span>1. Выберите компанию и вид работ</span><span>2. Укажите скважину, РВС, здание или новый проект</span><span>3. В тендере нажмите «Заключить договор» напротив предложения</span><span>4. Прокручивайте дни, затем подпишите акты и примите объект</span></div>';
  html+='<div class="small-economy-grid"><div><small>Подрядчиков</small><b>'+V27_SUPPLIERS.length+'</b></div><div><small>Договоров в работе</small><b>'+active+'</b></div><div><small>Завершено работ</small><b>'+completed+'</b></div><div><small>Открытых тендеров</small><b>'+d.tenders.filter(t=>t.status==='Приём заявок').length+'</b></div></div>';
  html+='<h3>Выбор подрядчика</h3><div class="v398-controls"><input id="v398-search" placeholder="Найти подрядчика или работу" value="'+esc(v398Search)+'"><select id="v398-group">'+groups.map(g=>'<option '+(v398Group===g?'selected':'')+'>'+esc(g)+'</option>').join('')+'</select></div>';
  let q=v398Search.toLowerCase().trim(),listed=0;
@@ -76,7 +76,7 @@ function v398View(){
  for(let c of contracts){
   let x=v36contract(c);
   html+='<details class="v398-contract" '+(c.status==='Завершён'&&!x.commissioned?'open':'')+'><summary><b>№'+c.id+' · '+esc(c.supplier)+'</b><span>'+esc(c.status)+' · '+Math.round(c.progress||0)+'%</span></summary>';
-  html+='<div class="v398-info">'+row('Работы',esc(V27_TYPES[c.type]?.label||c.type))+row('Объект',esc(c.objectName||'Не указан'))+row('Стоимость',m(c.price))+row('Осталось',Math.max(0,c.remaining)+' игровых дней')+row('Приёмка',x.commissioned?'Завершена':'Требуется подписание актов после выполнения');
+  html+='<div class="v398-info">'+row('Работы',esc(V27_TYPES[c.type]?.label||c.type))+row('Объект',esc(c.objectName||'Не указан'))+row('Стоимость',m(c.price))+row('Осталось',Math.max(0,c.remaining)+' дней')+row('Приёмка',x.commissioned?'Завершена':'Требуется подписание актов после выполнения');
   if(c.status==='Исполняется')html+='<button class="mini-btn" data-v28-extend="'+c.id+'">Продлить срок по допсоглашению</button>';
   if(c.status==='Завершён'&&!x.commissioned)html+='<p class="notice">Работы завершены. Ниже в блоке «Акты, этапы работ и ввод объектов» подпишите 3 этапа и подтвердите исполнительную документацию.</p>';
   html+='</div></details>';
