@@ -3739,19 +3739,37 @@ if(typeof v398WorkflowView==='function'){
  v398WorkflowView=function(){return fx420OldWorkflow()};
 }
 function fx420Spares(){return fx420state().repairs}
+/* Repair eligibility is based on the actual item name, never its numeric stock ID.
+   IDs can differ between old saves and newly added warehouse positions. */
+function fx422SpareKind(item){
+ if(!item)return null;
+ const name=String(item.name||'').toLowerCase();
+ if(/личн.*гигиен|моющ|дезинфиц|питан|питьев|бельё|спецодежд|кас[кк]|очк|перчат|сизод|светильник|ламп/.test(name))return null;
+ if(/ремкомплект.*ёмкост|ремкомплект.*резервуар/.test(name))return {kind:'tank',delta:20};
+ if(/запасн.*насос|уплотнен.*насос/.test(name))return {kind:'node',delta:/запасн.*насос/.test(name)?24:14};
+ if(/подшипник.*(ск|шгн)|ремн.*шгн|уплотнен.*шгн|сальник.*шгн|клапан|датчик.*давлен/.test(name))return {kind:'well',delta:/подшипник/.test(name)?12:/клапан/.test(name)?10:8};
+ return null;
+}
 async function fx420UseSpare(id){
- let stock=ensurePlant().stock.find(x=>x.id===id);if(!stock||stock.qty<1)return uiAlert('Запасной части нет на складе. Сначала закупите её.');
- let obj=null,desc='',days=2,delta=0;
- if(id===5||id===8){let nodes=Object.values(v21init().nodes||{}).filter(n=>n.health<90&&!n.offline&&!n.repairDays);nodes.sort((a,b)=>a.health-b.health);obj=nodes[0];desc='Насосно-трубопроводное оборудование';delta=id===5?24:14;}
- else if(id===10){obj=v30init().tanks.slice().sort((a,b)=>a.health-b.health)[0];desc='Резервуар РВС';delta=20;}
- else if([6,7,9].includes(id)){
-  let wells=(s.assets?.wellList||[]).filter(w=>w.health<90&&w.status==='Работает').sort((a,b)=>a.health-b.health);obj=wells[0];desc='Скважина №'+(obj?.id||'');delta=id===6?12:id===7?10:8;
+ let stock=ensurePlant().stock.find(x=>x.id===id),spec=fx422SpareKind(stock);
+ if(!spec)return uiAlert('Эта позиция не является запчастью для ремонта оборудования.');
+ if(stock.qty<1)return uiAlert('Запасной части нет на складе. Сначала закупите её.');
+ let obj=null,desc='',days=2;
+ if(spec.kind==='node'){
+  let nodes=Object.values(v21init().nodes||{}).filter(n=>n.health<90&&!n.offline&&!n.repairDays).sort((a,b)=>a.health-b.health);
+  obj=nodes[0];desc='Насосно-трубопроводное оборудование';
+ }else if(spec.kind==='tank'){
+  obj=v30init().tanks.filter(t=>t.health<90).sort((a,b)=>a.health-b.health)[0];desc='Резервуар РВС';
+ }else{
+  obj=(s.assets?.wellList||[]).filter(w=>w.health<90&&w.status==='Работает').sort((a,b)=>a.health-b.health)[0];
+  desc='Скважина №'+(obj?.id||'');
  }
- else return uiAlert('Эта позиция относится к обеспечению персонала; её влияние учитывается при ежемесячном расходе.');
  if(!obj)return uiAlert('Сейчас нет оборудования, которому необходима эта запчасть. Складской остаток сохранён.');
- if(fx420Spares().some(j=>j.status==='В работе'&&j.target===String(obj.id)))return uiAlert('На этом объекте уже выполняется замена.');
- if(!await uiConfirm('Установить «'+stock.name+'» на '+desc+'?\nСписание: 1 шт. · срок: '+days+' дня.\nСостояние оборудования после работ повысится до +'+delta+' п.п.'))return;
- stock.qty--;stock.consumed++;let job={id:++fx420state().seq,spare:id,name:stock.name,target:String(obj.id),kind:id===10?'tank':[5,8].includes(id)?'node':'well',before:+obj.health||0,delta,remaining:days,status:'В работе',started:v8date(),description:desc};fx420Spares().unshift(job);plantRecord('Запчасть направлена на ремонт: '+stock.name+' → '+desc);save();render();
+ if(fx420Spares().some(j=>j.status==='В работе'&&j.kind===spec.kind&&j.target===String(obj.id)))return uiAlert('На этом объекте уже выполняется замена.');
+ if(!await uiConfirm('Установить «'+stock.name+'» на '+desc+'?\nСписание: 1 шт. · срок: '+days+' дня.\nСостояние оборудования после работ повысится до +'+spec.delta+' п.п.'))return;
+ stock.qty--;stock.consumed=(stock.consumed||0)+1;
+ let job={id:++fx420state().seq,spare:id,name:stock.name,target:String(obj.id),kind:spec.kind,before:+obj.health||0,delta:spec.delta,remaining:days,status:'В работе',started:v8date(),description:desc};
+ fx420Spares().unshift(job);plantRecord('Запчасть направлена на ремонт: '+stock.name+' → '+desc);save();render();
 }
 function fx420SpareDay(){let changed=false;for(let j of fx420Spares()){
  if(j.status!=='В работе')continue;if(--j.remaining>0)continue;
@@ -3760,7 +3778,7 @@ function fx420SpareDay(){let changed=false;for(let j of fx420Spares()){
  else{j.status='Не выполнен';ensurePlant().stock.find(x=>x.id===j.spare).qty++;}
  }if(changed)save();}
 const fx420OldWarehouse=warehouseView;
-warehouseView=function(){let html=fx420OldWarehouse(),jobs=fx420Spares();return '<section class="fx420-panel"><h3>Ремонт из складских запасов</h3><p class="muted">Запчасть не улучшает производство сама по себе. После назначения она списывается со склада, устанавливается за 2 игровых дня и улучшает состояние конкретной скважины, узла или РВС.</p><div class="fx420-actions">'+ensurePlant().stock.filter(x=>[5,6,7,8,9,10].includes(x.id)).map(x=>'<button class="mini-btn" data-fx420-spare="'+x.id+'" '+(x.qty<1?'disabled':'')+'>'+esc(x.name)+' · '+x.qty+' шт. → применить</button>').join('')+'</div>'+jobs.slice(0,12).map(j=>'<div class="row"><span>'+esc(j.name)+' · '+esc(j.description)+'</span><b>'+esc(j.status)+(j.status==='В работе'?' · '+j.remaining+' дн.':' · '+f(j.before)+' → '+f(j.after??j.before)+'%')+'</b></div>').join('')+'</section>'+html};
+warehouseView=function(){let html=fx420OldWarehouse(),jobs=fx420Spares();return '<section class="fx420-panel"><h3>Ремонт из складских запасов</h3><p class="muted">Запчасть не улучшает производство сама по себе. После назначения она списывается со склада, устанавливается за 2 игровых дня и улучшает состояние конкретной скважины, узла или РВС.</p><div class="fx420-actions">'+ensurePlant().stock.filter(x=>fx422SpareKind(x)!==null).map(x=>'<button class="mini-btn" data-fx420-spare="'+x.id+'" '+(x.qty<1?'disabled':'')+'>'+esc(x.name)+' · '+x.qty+' шт. → применить</button>').join('')+'</div>'+jobs.slice(0,12).map(j=>'<div class="row"><span>'+esc(j.name)+' · '+esc(j.description)+'</span><b>'+esc(j.status)+(j.status==='В работе'?' · '+j.remaining+' дн.':' · '+f(j.before)+' → '+f(j.after??j.before)+'%')+'</b></div>').join('')+'</section>'+html};
 /* Navigation alerts: count new state changes; reading a section clears its own count. */
 function fx420Fingerprint(){
  let d=v28migrateNames(),w=(s.assets?.wellList||[]),plant=ensurePlant(),inc=s.v8?.incidents||[],events=s.events||[];
@@ -3786,6 +3804,67 @@ render=function(){
   let el=document.createElement('span');el.className='fx420-badge';el.textContent=n>9?'9+':String(n);el.setAttribute('aria-label',n+' новых изменений');b.appendChild(el);
  }
  document.querySelectorAll('[data-fx420-spare]').forEach(b=>b.onclick=()=>fx420UseSpare(+b.dataset.fx420Spare));
+};
+/* v4.2.1 — reliable tank coating, priority-only warnings, independent power tab. */
+V11_MENU.splice(V11_MENU.findIndex(x=>x[0]==='warehouse'),0,['power','⚡','Энергоснабжение']);
+function fx421Power(){
+ if(!s.small)return '<h2>Энергоснабжение</h2><p class="muted">Энергосистема станет доступна после начала карьеры с промысловыми объектами.</p>';
+ let z=util393init(),st=util393state(),deficit=Math.max(0,st.need-st.capacity);
+ let h='<h2>⚡ Энергоснабжение</h2><p class="muted">Генерация → распределение → скважины. Дефицит электроэнергии снижает фактическую добычу.</p>';
+ h+='<div class="small-economy-grid">'+[['Генерация',st.generation+' кВт'],['Распределение',st.distribution+' кВт'],['Доступная мощность',st.capacity+' кВт'],['Потребление',st.need+' кВт'],['Дефицит',deficit+' кВт'],['Скважин без питания',st.unpowered.length]].map(x=>'<div><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('')+'</div>';
+ h+='<h3>Скважины без электропитания</h3>'+(st.unpowered.length?'<div class="notice bad">№'+st.unpowered.join(', №')+'</div>':'<p class="muted">Все работающие скважины обеспечены электропитанием.</p>');
+ h+='<h3>Строительство энергетических объектов</h3><div class="grow-actions">';
+ for(let f of UTIL393.filter(x=>x.kind==='Электроснабжение'))h+='<div><b>'+esc(f.name)+'</b><small>'+m(f.cost)+' · '+f.days+' дн.</small><p class="muted">'+esc(f.desc)+'</p><p class="muted">В эксплуатации: '+util394count(f.id)+' · строится: '+z.projects.filter(x=>x.id===f.id).length+'</p><button class="mini-btn" data-util393="'+f.id+'" '+(s.cash<f.cost?'disabled':'')+'>Построить</button></div>';
+ return h+'</div><h3>События энергоснабжения</h3>'+z.log.filter(x=>/мощност|электр|ГТЭС|РП-|КТП|электростанц|электропередач/i.test(x)).slice(0,8).map(x=>'<p class="muted">'+esc(x)+'</p>').join('');
+}
+/* Keep existing water/sewer interface but remove duplicate energy panel from its original location. */
+const fx421OldSmallView=smallView;
+smallView=function(){let html=fx421OldSmallView();return html.replace(util393view(),'')};
+/* Contracts are applied to the named RVS as soon as their completed status is visible. */
+function fx421Coating(){
+ let d=v30init(),contracts=v28migrateNames().contracts;
+ for(let c of contracts){if(c.status!=='Завершён'||!['anticorrosion','painting'].includes(c.type)||d.processedContracts.includes(c.id))continue;
+  let tank=d.tanks.find(t=>t.name.toLowerCase()===String(c.objectName||'').toLowerCase());
+  if(!tank)continue;
+  tank.paint=100;tank.fire=Math.min(100,(+tank.fire||0)+5);tank.lastPaint=v8date();d.processedContracts.push(c.id);
+  if(typeof log==='function')log('Восстановлено защитное покрытие '+tank.name+' до 100% по договору №'+c.id);
+ }
+}
+const fx421OldDay=v8advance;
+v8advance=function(){
+ fx421OldDay();fx421Coating();
+ /* Exposed metal corrodes faster; restored coating prevents this extra loss. */
+ for(let t of v30init().tanks)if(t.paint<40)t.health=Math.max(0,(+t.health||0)-.015);
+};
+const fx421OldAccept=v36accept;
+v36accept=function(id,index){fx421OldAccept(id,index);if(index!==2)return;
+ let c=v28migrateNames().contracts.find(c=>c.id===id);
+ if(c&&['painting','anticorrosion'].includes(c.type)){
+  let tank=v30init().tanks.find(t=>t.name.toLowerCase()===String(c.objectName||'').toLowerCase());
+  if(tank){tank.paint=100;tank.lastPaint=v8date();save();render();}
+ }
+};
+/* Alert only for operationally critical conditions; never increment for routine changes. */
+function fx421Critical(){
+ let w=s.assets?.wellList||[],stock=ensurePlant().stock||[];
+ let stopped=w.filter(x=>x.status==='Остановлена'||x.status==='Аварийная остановка'||x.status==='Остановлена аварийно');
+ let missing=stock.filter(x=>x.qty<=0&&x.minimum>0);
+ let power=s.small?util393state():null,unpowered=power?.unpowered||[];
+ return {stopped,missing,unpowered};
+}
+const fx421OldRender=render;
+render=function(){
+ fx421OldRender();
+ let a=fx420state().alerts;a.unread={};
+ let q=fx421Critical(),active=(q.stopped.length+q.missing.length+q.unpowered.length)>0;
+ if(tab==='power'){$('body').innerHTML=v11hero()+fx421Power();document.querySelectorAll('[data-util393]').forEach(b=>b.onclick=()=>util393build(b.dataset.util393));}
+ for(let b of document.querySelectorAll('[data-v11-tab],[data-tab],[data-v13-go]')){
+  b.querySelector('.fx420-badge')?.remove();let id=b.dataset.v11Tab||b.dataset.tab||b.dataset.v13Go;
+  let n=id==='assetsTree'?q.stopped.length:id==='warehouse'?q.missing.length:id==='power'?q.unpowered.length:0;
+  if(!n||id===tab)continue;
+  let el=document.createElement('span');el.className='fx420-badge';el.textContent=n>9?'9+':String(n);el.setAttribute('aria-label',n+' критических событий');b.appendChild(el);
+ }
+ if(tab==='overview'&&active){let msg=[];if(q.stopped.length)msg.push('Остановлено скважин: '+q.stopped.length);if(q.missing.length)msg.push('Отсутствуют необходимые запчасти: '+q.missing.length);if(q.unpowered.length)msg.push('Без питания скважин: '+q.unpowered.length);$('body').insertAdjacentHTML('afterbegin','<div class="notice bad"><b>Требуют внимания:</b> '+esc(msg.join(' · '))+'</div>');}
 };
 const BACKUP_KEY=KEY+'-backup';
 const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='.json,application/json';fileInput.style.display='none';document.body.appendChild(fileInput);
