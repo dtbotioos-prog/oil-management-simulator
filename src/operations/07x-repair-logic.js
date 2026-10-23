@@ -23,7 +23,7 @@ function repair87needs(w){
  if(w.status==='Консервация')return 'Скважина в консервации';
  if(w.health<25)return 'Критическое состояние: диагностика и решение о КРС';
  if(w.health<50)return 'Рекомендуется диагностика / ПРС по результатам';
- if(w.status==='Остановлена')return 'Установить причину остановки перед пуском';
+ if(w.status==='Остановлена'){let r=w.repair87?.report;if(r&&!r.resolved)return 'Диагностика проведена: '+r.recommendation+' — '+r.reason;return 'Установить причину остановки перед пуском';}
  return 'Плановое наблюдение, ремонт не требуется';
 }
 async function repair87start(id,type){
@@ -41,8 +41,11 @@ async function repair87start(id,type){
  if(!params)return;
  if(type==='prs'||type==='krs'){
   const r=w.repair87?.report;
-  if(!r||r.recommendation!==type.toUpperCase()||r.resolved)return uiAlert('Сначала проведите диагностику. Для '+type.toUpperCase()+' необходимо действующее заключение с обоснованием.');
+  if(!r)return uiAlert('Техническое заключение отсутствует. Завершите диагностику.');
+  if(r.resolved)return uiAlert('Предыдущее заключение закрыто после ремонта. Требуется новая диагностика.');
+  if(r.recommendation!==type.toUpperCase())return uiAlert('Диагностика уже проведена: рекомендовано «'+r.recommendation+'», а не '+type.toUpperCase()+'. '+r.reason);
  }
+ if(type==='diagnose'&&w.repair87?.report&&!w.repair87.report.resolved&&w.repair87.report.recommendation!=='НЕ ТРЕБУЕТСЯ')return uiAlert('Диагностика уже выполнена. Заключение: '+w.repair87.report.recommendation+'. '+w.repair87.report.reason);
  if(type==='service'&&w.health>=90&&w.status==='Работает')return uiAlert('Плановое ТО пока не требуется.');
  if(s.cash<params.cost)return uiAlert('Недостаточно средств: '+m(params.cost));
  if(!await uiConfirm('Начать '+params.name+' скважины №'+w.id+'?\n'+m(params.cost)+' · '+params.days+' игровых дней\nРезультат появится только после завершения работ.'))return;
@@ -104,6 +107,7 @@ treeAction=async function(id,act){
   if(w.status==='Работает'){w.status='Остановлена';w.repair87||={};w.repair87.manualStop=true;save();render();return}
   if(w.status!=='Остановлена')return uiAlert('Пуск недоступен для статуса: '+w.status);
   if(w.health<25)return uiAlert('Пуск запрещён: техническое состояние ниже 25%. Необходима диагностика и устранение причин.');
+  if(w.repair87?.report&&!w.repair87.report.resolved&&['ПРС','КРС'].includes(w.repair87.report.recommendation))return uiAlert('Диагностика требует '+w.repair87.report.recommendation+'. Сначала выполните рекомендованные работы.');
   if(v8init().inspection.some(x=>x.well===w.id&&!x.closed))return uiAlert('Действует ограничение после происшествия.');
   if(!await uiConfirm('Подтвердить безопасную готовность скважины №'+w.id+' к пуску?'))return;
   w.status='Работает';w.repair87||={};w.repair87.readyForStart=false;save();render();return;
@@ -127,7 +131,7 @@ treeView=function(){
  '<button class="btn secondary compact" data-repair87="prs" data-well-id="'+w.id+'">ПРС · 28 млн ₸</button>'+
  '<button class="btn secondary compact" data-repair87="krs" data-well-id="'+w.id+'">КРС · 105 млн ₸</button>');
  let jobs=repair87state().jobs.filter(j=>j.well===w.id);
- let note='<div class="notice"><b>Оценка состояния:</b> '+esc(detail)+'. Решение о ПРС или КРС принимается после диагностики.</div>';
+ let note='<div class="notice"><b>Оценка состояния:</b> '+esc(detail)+'. '+(w.repair87?.report&&!w.repair87.report.resolved?'Заключение действует, повторная диагностика не требуется.':'ПРС/КРС назначаются только по заключению.')+'</div>';
  if(w.repair87?.report){let r=w.repair87.report;note+='<div class="notice"><h3>Техническое заключение №'+w.id+'</h3><p><b>Дата:</b> '+esc(r.date)+'</p><p><b>Выявлено:</b> '+esc(r.defect)+'</p><p><b>Рекомендация:</b> '+esc(r.recommendation)+'</p><p><b>Обоснование:</b> '+esc(r.reason)+'</p><p><b>Предлагаемые работы:</b> '+esc(r.scope)+'</p><p><b>Ориентировочная стоимость:</b> '+m(r.cost)+'; <b>срок:</b> '+r.days+' дн.</p><p>'+ (r.resolved?'Мероприятие выполнено.':'Заключение действительно до выполнения рекомендованных работ.')+'</p></div>';} 
  if(jobs.length)note+='<div class="notice"><b>Последняя работа:</b> '+esc(jobs[0].name)+' · '+esc(jobs[0].status)+(jobs[0].status==='В работе'?' · '+jobs[0].remaining+' дн.':'')+'</div>';
  html=html.replace('<h3>Ремонты в работе</h3>',note+'<h3>Ремонты в работе</h3>');

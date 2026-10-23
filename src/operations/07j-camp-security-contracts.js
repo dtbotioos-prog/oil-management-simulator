@@ -3,8 +3,8 @@
    Game economics only: existing contract price is still deducted in full at award.
    Stage accounting records acceptance but does not deduct contract price again. */
 function v36init(){
- if(!s.v36)s.v36={camp:{residents:180,beds:220,mealStock:900,mealQuality:84,housing:87,cleanliness:85,security:82,guards:12,incidents:0,mealsServed:0,missedMeals:0},contracts:{},events:[],spent:0};
- let d=s.v36;d.camp||={residents:180,beds:220,mealStock:900,mealQuality:84,housing:87,cleanliness:85,security:82,guards:12,incidents:0,mealsServed:0,missedMeals:0};d.contracts||={};d.events||=[];return d;
+ if(!s.v36)s.v36={camp:{residents:s.small?8:180,beds:s.small?16:220,mealStock:s.small?240:900,mealQuality:84,housing:87,cleanliness:85,security:82,guards:12,incidents:0,mealsServed:0,missedMeals:0},contracts:{},events:[],spent:0};
+ let d=s.v36;d.camp||={residents:s.small?8:180,beds:s.small?16:220,mealStock:s.small?240:900,mealQuality:84,housing:87,cleanliness:85,security:82,guards:12,incidents:0,mealsServed:0,missedMeals:0};d.contracts||={};d.events||=[];return d;
 }
 function v36contract(c){
  let d=v36init(),k=String(c.id);

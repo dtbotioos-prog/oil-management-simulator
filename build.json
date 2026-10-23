@@ -1,5 +1,5 @@
 {
-  "version": "3.9.5",
+  "version": "4.0.6",
   "entry": "js/core/game.js",
   "parts": [
     "src/core/01-foundation.js",
@@ -38,6 +38,17 @@
     "src/operations/07zzz-facilities.js",
     "src/operations/07zzzz-utilities.js",
     "src/operations/07zzzzz-production-chain.js",
+    "src/operations/07zzzzzz-mail-economy.js",
+    "src/operations/07zzzzzzz-navigation-groups.js",
+    "src/contracts/07zz-contractor-workflow.js",
+    "src/operations/07zzzzzzzz-stock-diagnosis-finance.js",
+    "src/operations/07zzzzzzzzzz-turnkey-contracts.js",
+    "src/operations/07zzzzzzzzzzzz-dashboard-charts.js",
+    "src/operations/07zzzzzzzzzzzzzz-safety-league.js",
+    "src/operations/07zzzzzzzzzzzzzzz-disciplinary-hr.js",
+    "src/operations/07zzzzzzzzzzzzzzzzzz-unified-registers.js",
+    "src/operations/07zzzzzzzzzzzzzzzzzzz-audio-themes.js",
+    "src/operations/07zzzzzzzzzzzzzzzzzzzz-fix-food-mail.js",
     "src/core/08-save-manager.js"
   ]
 }

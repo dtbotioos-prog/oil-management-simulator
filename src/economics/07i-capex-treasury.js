@@ -26,10 +26,10 @@ function v35budget(){
 }
 function v35borrow(){
  let d=v35init();
- let raw=prompt('Сумма кредита, млн ₸ (100–10000)','1000');if(raw===null)return;
- let amount=Number(raw);if(!Number.isFinite(amount)||amount<100||amount>10000)return uiAlert('Сумма кредита: от 100 до 10 000 млн ₸');
- let yearsRaw=prompt('Срок кредита, игровых месяцев (3–60)','24');if(yearsRaw===null)return;
- let months=Number(yearsRaw);if(!Number.isInteger(months)||months<3||months>60)return uiAlert('Срок: от 3 до 60 месяцев');
+ let raw=prompt('Сумма кредита, млн ₸ (100–100000)','5000');if(raw===null)return;
+ let amount=Number(raw);if(!Number.isFinite(amount)||amount<100||amount>100000)return uiAlert('Сумма кредита: от 100 до 100 000 млн ₸');
+ let yearsRaw=prompt('Срок кредита, игровых месяцев (3–120)','36');if(yearsRaw===null)return;
+ let months=Number(yearsRaw);if(!Number.isInteger(months)||months<3||months>120)return uiAlert('Срок: от 3 до 120 месяцев');
  let rateRaw=prompt('Годовая ставка, % (5–35)','16');if(rateRaw===null)return;
  let rate=Number(rateRaw);if(!Number.isFinite(rate)||rate<5||rate>35)return uiAlert('Ставка: от 5 до 35%');
  if(!confirm('Привлечь кредит '+m(amount)+' на '+months+' мес. под '+rate+'% годовых?'))return;
