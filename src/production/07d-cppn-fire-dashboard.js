@@ -68,10 +68,10 @@ function v30view(){
  out+='<h3>Строительство и модернизация</h3><div class="actions"><button class="btn secondary" data-v30-tender="rvs_build">Тендер на новый РВС</button><button class="btn secondary" data-v30-tender="building">Тендер на здание</button><button class="btn secondary" data-v30-tender="painting">Тендер на покраску</button></div>';
  return out;
 }
-function v30fireAction(type){
+async function v30fireAction(type){
  let d=v30init(),cost={inspect:8,training:4,service:25}[type];if(!cost)return;
  if(s.cash<cost)return uiAlert('Недостаточно средств');
- if(!confirm('Выполнить мероприятие по пожарной безопасности за '+m(cost)+'?'))return;
+ if(!await uiConfirm('Выполнить мероприятие по пожарной безопасности за '+m(cost)+'?'))return;
  s.cash-=cost;v25post('maintenance',cost,{description:'Пожарная безопасность: '+type});
  if(type==='inspect'){d.fire.alarm=v30safe(d.fire.alarm+8);d.fire.hydrants=v30safe(d.fire.hydrants+5)}
  if(type==='training')d.fire.training=v30safe(d.fire.training+18);

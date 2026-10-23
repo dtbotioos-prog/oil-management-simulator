@@ -26,13 +26,13 @@ function v31day(){
  if(d.fireEvent){d.fireEvent.days++;if(d.fireEvent.days>3){d.incidentHistory.unshift({...d.fireEvent,resolved:v8date()});d.fireEvent=null;d.shutdown=true;log('Ликвидирована игровая аварийная ситуация на ЦППН. Требуется восстановление и разрешение пуска.');}}
  d.last=v31calculate();
 }
-function v31action(kind,id){
+async function v31action(kind,id){
  let d=v31init(),st=d.stages.find(x=>x.id===id),meta=V31_STAGES.find(x=>x.id===id);
  if(kind==='shutdown'){if(d.shutdown)return;d.shutdown=true;log('Оператор инициировал аварийную остановку ЦППН');save();render();return}
  if(kind==='restart'){if(d.fireEvent)return uiAlert('Нельзя запустить ЦППН до ликвидации аварии');if(d.stages.some(x=>!x.online||x.health<40))return uiAlert('Не все установки готовы к пуску');d.shutdown=false;log('ЦППН возвращён в работу после проверки готовности');save();render();return}
- if(kind==='simulate'){if(d.fireEvent)return uiAlert('Сценарий уже активен');if(!confirm('Запустить учебный сценарий пожара на ЦППН? Производство будет остановлено.'))return;d.fireEvent={type:'Учебный сценарий пожара',started:v8date(),days:0};d.shutdown=true;log('Учебный сценарий: пожар на ЦППН, аварийная остановка');save();render();return}
+ if(kind==='simulate'){if(d.fireEvent)return uiAlert('Сценарий уже активен');if(!await uiConfirm('Запустить учебный сценарий пожара на ЦППН? Производство будет остановлено.'))return;d.fireEvent={type:'Учебный сценарий пожара',started:v8date(),days:0};d.shutdown=true;log('Учебный сценарий: пожар на ЦППН, аварийная остановка');save();render();return}
  if(kind==='reset'){if(!d.fireEvent)return;d.incidentHistory.unshift({...d.fireEvent,resolved:v8date()});d.fireEvent=null;log('Учебный сценарий завершён; ЦППН остаётся остановленным до пуска');save();render();return}
- if(kind==='repair'&&st&&meta){let cost=22;if(s.cash<cost)return uiAlert('Недостаточно средств');if(!confirm('Выполнить обслуживание '+meta.name+' за '+m(cost)+'?'))return;s.cash-=cost;v25post('maintenance',cost,{description:'ТО установки '+meta.name});st.health=Math.min(100,st.health+20);st.online=true;d.interventions.unshift({date:v8date(),stage:id,cost});log('ТО '+meta.name);save();render()}
+ if(kind==='repair'&&st&&meta){let cost=22;if(s.cash<cost)return uiAlert('Недостаточно средств');if(!await uiConfirm('Выполнить обслуживание '+meta.name+' за '+m(cost)+'?'))return;s.cash-=cost;v25post('maintenance',cost,{description:'ТО установки '+meta.name});st.health=Math.min(100,st.health+20);st.online=true;d.interventions.unshift({date:v8date(),stage:id,cost});log('ТО '+meta.name);save();render()}
 }
 function v31view(){
  let d=v31init(),calc=v31calculate();

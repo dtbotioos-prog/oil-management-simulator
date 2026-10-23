@@ -26,26 +26,26 @@ function v33dispatch(available){
  if(sold>0){d.shipments.unshift({date:v8date(),sold,allocations});if(d.shipments.length>365)d.shipments.pop()}
  return {sold,allocations};
 }
-function v33add(){
- let d=v33init(),buyer=prompt('Покупатель (название компании)',V33_BUYERS[d.seq%V33_BUYERS.length]);if(buyer===null)return;
+async function v33add(){
+ let d=v33init(),buyer=await uiPrompt('Покупатель (название компании)',V33_BUYERS[d.seq%V33_BUYERS.length]);if(buyer===null)return;
  buyer=buyer.trim().slice(0,100);if(!buyer)return uiAlert('Укажите покупателя');
- let daily=Number(prompt('Лимит отгрузки в сутки, тонн (100–9000)','3000'));
+ let daily=Number(await uiPrompt('Лимит отгрузки в сутки, тонн (100–9000)','3000'));
  if(!Number.isInteger(daily)||daily<100||daily>9000)return uiAlert('Лимит должен быть от 100 до 9000 тонн');
- let total=Number(prompt('Общий объём договора, тонн (100–2000000)','90000'));
+ let total=Number(await uiPrompt('Общий объём договора, тонн (100–2000000)','90000'));
  if(!Number.isInteger(total)||total<100||total>2000000)return uiAlert('Укажите общий объём от 100 до 2 000 000 тонн');
- let pct=Number(prompt('Цена относительно рыночной, % (70–150)','100'));
+ let pct=Number(await uiPrompt('Цена относительно рыночной, % (70–150)','100'));
  if(!Number.isFinite(pct)||pct<70||pct>150)return uiAlert('Укажите цену от 70 до 150% рыночной');
- let terms=Number(prompt('Отсрочка оплаты, игровых дней (0–90)','7'));
+ let terms=Number(await uiPrompt('Отсрочка оплаты, игровых дней (0–90)','7'));
  if(!Number.isInteger(terms)||terms<0||terms>90)return uiAlert('Укажите срок оплаты от 0 до 90 дней');
- let advancePct=Number(prompt('Предоплата от объёма договора, % (0–50)','0'));
+ let advancePct=Number(await uiPrompt('Предоплата от объёма договора, % (0–50)','0'));
  if(!Number.isFinite(advancePct)||advancePct<0||advancePct>50)return uiAlert('Укажите предоплату от 0 до 50%');
  d.contracts.push({id:++d.seq,buyer,daily,remaining:total,fulfilled:0,status:'Действует',created:v8date(),priceMultiplier:pct/100,terms,advancePct,advanceRemaining:0});
  log('Договор реализации №'+d.seq+' · '+buyer+' · '+total+' т');save();render();
 }
-function v33cancel(id){
+async function v33cancel(id){
  let d=v33init(),c=d.contracts.find(x=>x.id===id);
  if(!c||c.status!=='Действует')return;
- if(!confirm('Приостановить отгрузку по договору №'+id+'?'))return;
+ if(!await uiConfirm('Приостановить отгрузку по договору №'+id+'?'))return;
  c.status='Приостановлен';log('Приостановлен договор реализации №'+id);save();render();
 }
 function v33resume(id){

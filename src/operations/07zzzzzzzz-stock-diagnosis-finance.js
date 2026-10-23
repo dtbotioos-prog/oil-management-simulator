@@ -23,10 +23,10 @@ function stock399Init(){
  return s.v399;
 }
 function stock399Category(x){if(x.group)return x.group;if(/Спецодежда|Каски|очки|Перчатки|СИЗОД/i.test(x.name))return 'СИЗ';if(/насос|штанг|НКТ|запас|детал|ремонт/i.test(x.name))return 'Запчасти';return 'Эксплуатация'}
-function stock399Purchase(id,qty){let p=ensurePlant(),x=p.stock.find(x=>x.id===id);if(!x)return;
+async function stock399Purchase(id,qty){let p=ensurePlant(),x=p.stock.find(x=>x.id===id);if(!x)return;
  let n=Math.floor(qty);if(n<=0||n>100000)return uiAlert('Укажите количество от 1 до 100 000');
  let cost=+(n*x.price).toFixed(4);if(s.cash<cost)return uiAlert('Недостаточно средств: '+m(cost));
- if(!confirm('Закупить «'+x.name+'» — '+n+' ед. за '+m(cost)+'?'))return;
+ if(!await uiConfirm('Закупить «'+x.name+'» — '+n+' ед. за '+m(cost)+'?'))return;
  s.cash-=cost;x.qty+=n;p.warehouseSpend+=cost;
  v25post('maintenance',cost,{description:'Закупка на склад: '+x.name+' · '+n+' ед.',category:stock399Category(x)});
  stock399Init().history.unshift(v8date()+': '+x.name+' +'+n+' · '+m(cost));save();render();

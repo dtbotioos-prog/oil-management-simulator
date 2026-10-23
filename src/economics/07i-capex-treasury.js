@@ -18,28 +18,28 @@ function v35record(type,amount,detail){
  d.cashEntries.unshift({date:v8date(),day:v34date(),type,amount:Math.round(amount*1000)/1000,detail:detail||''});
  if(d.cashEntries.length>2000)d.cashEntries.length=2000;
 }
-function v35budget(){
- let val=prompt('Установить бюджет капитальных вложений (млн ₸, 0–100000)',''+v35init().budget);
+async function v35budget(){
+ let val=await uiPrompt('Установить бюджет капитальных вложений (млн ₸, 0–100000)',''+v35init().budget);
  if(val===null)return;
  let n=Number(val);if(!Number.isFinite(n)||n<0||n>100000)return uiAlert('Укажите бюджет от 0 до 100 000 млн ₸');
  v35init().budget=n;log('Утверждён план CAPEX: '+m(n));save();render();
 }
-function v35borrow(){
+async function v35borrow(){
  let d=v35init();
- let raw=prompt('Сумма кредита, млн ₸ (100–100000)','5000');if(raw===null)return;
+ let raw=await uiPrompt('Сумма кредита, млн ₸ (100–100000)','5000');if(raw===null)return;
  let amount=Number(raw);if(!Number.isFinite(amount)||amount<100||amount>100000)return uiAlert('Сумма кредита: от 100 до 100 000 млн ₸');
- let yearsRaw=prompt('Срок кредита, игровых месяцев (3–120)','36');if(yearsRaw===null)return;
+ let yearsRaw=await uiPrompt('Срок кредита, игровых месяцев (3–120)','36');if(yearsRaw===null)return;
  let months=Number(yearsRaw);if(!Number.isInteger(months)||months<3||months>120)return uiAlert('Срок: от 3 до 120 месяцев');
- let rateRaw=prompt('Годовая ставка, % (5–35)','16');if(rateRaw===null)return;
+ let rateRaw=await uiPrompt('Годовая ставка, % (5–35)','16');if(rateRaw===null)return;
  let rate=Number(rateRaw);if(!Number.isFinite(rate)||rate<5||rate>35)return uiAlert('Ставка: от 5 до 35%');
- if(!confirm('Привлечь кредит '+m(amount)+' на '+months+' мес. под '+rate+'% годовых?'))return;
+ if(!await uiConfirm('Привлечь кредит '+m(amount)+' на '+months+' мес. под '+rate+'% годовых?'))return;
  let loan={id:++d.loanSeq,principal:amount,balance:amount,rate,months,remainingDays:months*30,started:v8date(),status:'Действует',interestPaid:0,principalPaid:0};
  d.loans.push(loan);s.cash+=amount;v35record('credit_in',amount,'Кредит №'+loan.id);
  log('Привлечён кредит №'+loan.id+' на '+m(amount));save();render();
 }
-function v35repay(id){
+async function v35repay(id){
  let loan=v35init().loans.find(x=>x.id===id&&x.status==='Действует');if(!loan)return;
- let raw=prompt('Досрочное погашение основного долга, млн ₸ (остаток '+loan.balance.toFixed(2)+')',loan.balance.toFixed(2));if(raw===null)return;
+ let raw=await uiPrompt('Досрочное погашение основного долга, млн ₸ (остаток '+loan.balance.toFixed(2)+')',loan.balance.toFixed(2));if(raw===null)return;
  let amount=Number(raw);if(!Number.isFinite(amount)||amount<=0||amount>loan.balance+.001)return uiAlert('Недопустимая сумма погашения');
  if(s.cash<amount)return uiAlert('Недостаточно денежных средств');
  s.cash-=amount;loan.balance=Math.max(0,loan.balance-amount);loan.principalPaid+=amount;
@@ -94,7 +94,7 @@ function v35bind(){
  document.querySelectorAll('[data-v35-repay]').forEach(x=>x.onclick=()=>v35repay(Number(x.dataset.v35Repay)));
 }
 const v35oldAward=v27award;
-v27award=function(id,bidId){
+v27award=async function(id,bidId){
  let d=v28migrateNames(),t=d.tenders.find(x=>x.id===id),b=t?.bids?.find(x=>x.id===bidId);
  if(!t||!b)return v35oldAward(id,bidId);
  if(V35_CAPEX_TYPES.has(t.type)){
@@ -104,7 +104,7 @@ v27award=function(id,bidId){
  }
  let before=v28migrateNames().contracts.length;
  let cashBefore=s.cash;
- let result=v35oldAward(id,bidId);
+ let result=await v35oldAward(id,bidId);
  if(v28migrateNames().contracts.length>before&&s.cash<cashBefore){
   v35record(V35_CAPEX_TYPES.has(t.type)?'capex':'contract_opex',cashBefore-s.cash,'Договор №'+v28migrateNames().contracts[0].id);
  }

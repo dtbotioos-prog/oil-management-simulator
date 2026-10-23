@@ -40,11 +40,11 @@ function v36daily(){
  }
  if(d.events.length>100)d.events.length=100;
 }
-function v36purchase(kind){
+async function v36purchase(kind){
  let d=v36init(),c=d.camp,price={food:14,repair:25,clean:7,guards:18,security:30,beds:85}[kind];
  if(!price)return;
  if(s.cash<price)return uiAlert('Недостаточно денежных средств');
- if(!confirm('Выполнить мероприятие за '+m(price)+'?'))return;
+ if(!await uiConfirm('Выполнить мероприятие за '+m(price)+'?'))return;
  s.cash-=price;d.spent+=price;
  if(kind==='food'){c.mealStock+=c.residents*30;c.mealQuality=v30safe(c.mealQuality+6)}
  if(kind==='repair')c.housing=v30safe(c.housing+22);
@@ -55,28 +55,28 @@ function v36purchase(kind){
  v25post(kind==='beds'?'maintenance':'opex',price,{description:'Вахтовый посёлок: '+kind});
  log('Вахтовый посёлок: '+kind+' · '+m(price));save();render();
 }
-function v36setResidents(){
- let c=v36init().camp,raw=prompt('Количество проживающих работников (0–1000)',String(c.residents));if(raw===null)return;
+async function v36setResidents(){
+ let c=v36init().camp,raw=await uiPrompt('Количество проживающих работников (0–1000)',String(c.residents));if(raw===null)return;
  let n=Number(raw);if(!Number.isInteger(n)||n<0||n>1000)return uiAlert('Укажите от 0 до 1000 работников');
  c.residents=n;save();render();
 }
-function v36accept(id,index){
+async function v36accept(id,index){
  let c=v28migrateNames().contracts.find(x=>x.id===id);if(!c)return;
  let x=v36contract(c),stage=x.milestones[index];if(!stage||stage.accepted)return;
  let progress=c.status==='Завершён'?100:Number(c.progress)||0,threshold=[20,70,100][index];
  if(progress<threshold)return uiAlert('Работы по этапу ещё не выполнены: требуется '+threshold+'% готовности');
  if(index>0&&!x.milestones[index-1].accepted)return uiAlert('Сначала примите предыдущий этап');
  if(index===2&&!x.qualityDocs)return uiAlert('Перед итоговой приёмкой подтвердите исполнительную документацию');
- if(!confirm('Подписать игровой акт по этапу «'+stage.name+'» договора №'+id+'?'))return;
+ if(!await uiConfirm('Подписать игровой акт по этапу «'+stage.name+'» договора №'+id+'?'))return;
  stage.accepted=true;stage.date=v8date();
  if(index===2){x.acceptedAt=v8date();x.commissioned=true}
  log('Принят этап '+(index+1)+' договора №'+id);save();render();
 }
-function v36docs(id){
+async function v36docs(id){
  let c=v28migrateNames().contracts.find(x=>x.id===id);if(!c)return;
  let x=v36contract(c);
  if(c.status!=='Завершён')return uiAlert('Исполнительная документация проверяется после завершения работ');
- if(!confirm('Подтвердить комплектность исполнительной документации по договору №'+id+'?'))return;
+ if(!await uiConfirm('Подтвердить комплектность исполнительной документации по договору №'+id+'?'))return;
  x.qualityDocs=true;save();render();
 }
 function v36campView(){

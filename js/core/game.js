@@ -558,10 +558,10 @@ function v27newTender(type,well){
  if(well){let a=v40assets().find(x=>x.key==='well:'+well);if(!a)return uiAlert('Скважина не найдена');return v40createTender(type,a)}
  v40openPicker(type);
 }
-function v27award(id,bidId){let d=v28migrateNames(),t=d.tenders.find(x=>x.id===id);if(!t||t.status!=='Приём заявок')return uiAlert('Тендер закрыт');let b=t.bids.find(x=>x.id===bidId);if(!b)return;let active=d.contracts.filter(x=>x.supplier===b.name&&x.status==='Исполняется').length;if(active>=b.capacity)return uiAlert('Бригады подрядчика заняты. Выберите другого исполнителя.');if(s.cash<b.price)return uiAlert('Недостаточно средств для заключения договора: '+m(b.price));if(t.assetKey&&d.contracts.some(c=>c.assetKey===t.assetKey&&c.status==='Исполняется'))return uiAlert('По объекту уже выполняются подрядные работы');
+async function v27award(id,bidId){let d=v28migrateNames(),t=d.tenders.find(x=>x.id===id);if(!t||t.status!=='Приём заявок')return uiAlert('Тендер закрыт');let b=t.bids.find(x=>x.id===bidId);if(!b)return;let active=d.contracts.filter(x=>x.supplier===b.name&&x.status==='Исполняется').length;if(active>=b.capacity)return uiAlert('Бригады подрядчика заняты. Выберите другого исполнителя.');if(s.cash<b.price)return uiAlert('Недостаточно средств для заключения договора: '+m(b.price));if(t.assetKey&&d.contracts.some(c=>c.assetKey===t.assetKey&&c.status==='Исполняется'))return uiAlert('По объекту уже выполняются подрядные работы');
 let w=null,materials=[];if(t.well&&['prs','krs'].includes(t.type)){ensureAssets();w=s.assets.wellList.find(x=>x.id===t.well);if(!w)return uiAlert('Скважина не найдена');if(w.status==='Ремонт'||w.status==='Ремонт подрядчика')return uiAlert('Скважина уже ремонтируется');/* Contractor supplies all materials, crews and equipment under the turnkey contract. */}
 let advance=Math.round(b.price*.3*10)/10;
-if(!confirm('Заключить договор с «'+b.name+'»?\n\nЦена: '+m(b.price)+'\nСрок: '+b.days+' игровых дней\nБригада: '+b.crew+' чел.\nСписание полной стоимости при подписании: '+m(b.price)+'\n\nПовторных списаний при завершении нет.'))return;
+if(!await uiConfirm('Заключить договор с «'+b.name+'»?\n\nЦена: '+m(b.price)+'\nСрок: '+b.days+' игровых дней\nБригада: '+b.crew+' чел.\nСписание полной стоимости при подписании: '+m(b.price)+'\n\nПовторных списаний при завершении нет.'))return;
 if(w){w.status='Ремонт подрядчика';}
 s.cash-=b.price;v25post('maintenance',b.price,{description:'Договор №'+(d.contractSeq+1)+' · '+V27_TYPES[t.type].label+' · '+(t.objectName||'объект не указан')+' · '+b.name,supplier:b.name,tender:id,well:t.well});
 let c={id:++d.contractSeq,tender:id,type:t.type,well:t.well,assetKey:t.assetKey||null,assetHealthBefore:t.assetHealthBefore??null,objectName:t.objectName||'',supplier:b.name,price:b.price,advance,remaining:b.days,initialDays:b.days,quality:b.quality,reliability:b.reliability,crew:b.crew,status:'Исполняется',started:v8date(),endDate:'',penalty:0,warranty:Math.max(30,Math.round(b.quality*1.8)),progress:0};
@@ -572,13 +572,13 @@ else if(c.type==='drill'){s.wells++;ensureAssets();}else if(V27_TYPES[c.type]?.c
 log('Подрядчик '+c.supplier+' завершил договор №'+c.id);if(typeof v19notify==='function')v19notify('Исполнен договор №'+c.id+' — '+c.supplier);}
 }
 
-function v28extend(id){
+async function v28extend(id){
  let d=v28migrateNames(),c=d.contracts.find(x=>x.id===id);
  if(!c||c.status!=='Исполняется')return uiAlert('Продлить можно только действующий договор');
- let raw=prompt('Дополнительное соглашение №'+(1+(c.amendments||[]).length)+' — на сколько игровых дней продлить договор? (1–180)','7');
+ let raw=await uiPrompt('Дополнительное соглашение №'+(1+(c.amendments||[]).length)+' — на сколько игровых дней продлить договор? (1–180)','7');
  if(raw===null)return;
  let days=Number(raw);if(!Number.isInteger(days)||days<1||days>180)return uiAlert('Укажите целое число от 1 до 180');
- let reason=prompt('Основание дополнительного соглашения','Изменение производственного графика');
+ let reason=await uiPrompt('Основание дополнительного соглашения','Изменение производственного графика');
  if(reason===null)return;
  c.remaining+=days;c.initialDays+=days;c.amendments||=[];c.amendments.push({date:v8date(),days,reason:reason.slice(0,150)});
  log('Допсоглашение к договору №'+id+': продление на '+days+' дн.');save();render();
@@ -681,10 +681,10 @@ function v30view(){
  out+='<h3>Строительство и модернизация</h3><div class="actions"><button class="btn secondary" data-v30-tender="rvs_build">Тендер на новый РВС</button><button class="btn secondary" data-v30-tender="building">Тендер на здание</button><button class="btn secondary" data-v30-tender="painting">Тендер на покраску</button></div>';
  return out;
 }
-function v30fireAction(type){
+async function v30fireAction(type){
  let d=v30init(),cost={inspect:8,training:4,service:25}[type];if(!cost)return;
  if(s.cash<cost)return uiAlert('Недостаточно средств');
- if(!confirm('Выполнить мероприятие по пожарной безопасности за '+m(cost)+'?'))return;
+ if(!await uiConfirm('Выполнить мероприятие по пожарной безопасности за '+m(cost)+'?'))return;
  s.cash-=cost;v25post('maintenance',cost,{description:'Пожарная безопасность: '+type});
  if(type==='inspect'){d.fire.alarm=v30safe(d.fire.alarm+8);d.fire.hydrants=v30safe(d.fire.hydrants+5)}
  if(type==='training')d.fire.training=v30safe(d.fire.training+18);
@@ -731,13 +731,13 @@ function v31day(){
  if(d.fireEvent){d.fireEvent.days++;if(d.fireEvent.days>3){d.incidentHistory.unshift({...d.fireEvent,resolved:v8date()});d.fireEvent=null;d.shutdown=true;log('Ликвидирована игровая аварийная ситуация на ЦППН. Требуется восстановление и разрешение пуска.');}}
  d.last=v31calculate();
 }
-function v31action(kind,id){
+async function v31action(kind,id){
  let d=v31init(),st=d.stages.find(x=>x.id===id),meta=V31_STAGES.find(x=>x.id===id);
  if(kind==='shutdown'){if(d.shutdown)return;d.shutdown=true;log('Оператор инициировал аварийную остановку ЦППН');save();render();return}
  if(kind==='restart'){if(d.fireEvent)return uiAlert('Нельзя запустить ЦППН до ликвидации аварии');if(d.stages.some(x=>!x.online||x.health<40))return uiAlert('Не все установки готовы к пуску');d.shutdown=false;log('ЦППН возвращён в работу после проверки готовности');save();render();return}
- if(kind==='simulate'){if(d.fireEvent)return uiAlert('Сценарий уже активен');if(!confirm('Запустить учебный сценарий пожара на ЦППН? Производство будет остановлено.'))return;d.fireEvent={type:'Учебный сценарий пожара',started:v8date(),days:0};d.shutdown=true;log('Учебный сценарий: пожар на ЦППН, аварийная остановка');save();render();return}
+ if(kind==='simulate'){if(d.fireEvent)return uiAlert('Сценарий уже активен');if(!await uiConfirm('Запустить учебный сценарий пожара на ЦППН? Производство будет остановлено.'))return;d.fireEvent={type:'Учебный сценарий пожара',started:v8date(),days:0};d.shutdown=true;log('Учебный сценарий: пожар на ЦППН, аварийная остановка');save();render();return}
  if(kind==='reset'){if(!d.fireEvent)return;d.incidentHistory.unshift({...d.fireEvent,resolved:v8date()});d.fireEvent=null;log('Учебный сценарий завершён; ЦППН остаётся остановленным до пуска');save();render();return}
- if(kind==='repair'&&st&&meta){let cost=22;if(s.cash<cost)return uiAlert('Недостаточно средств');if(!confirm('Выполнить обслуживание '+meta.name+' за '+m(cost)+'?'))return;s.cash-=cost;v25post('maintenance',cost,{description:'ТО установки '+meta.name});st.health=Math.min(100,st.health+20);st.online=true;d.interventions.unshift({date:v8date(),stage:id,cost});log('ТО '+meta.name);save();render()}
+ if(kind==='repair'&&st&&meta){let cost=22;if(s.cash<cost)return uiAlert('Недостаточно средств');if(!await uiConfirm('Выполнить обслуживание '+meta.name+' за '+m(cost)+'?'))return;s.cash-=cost;v25post('maintenance',cost,{description:'ТО установки '+meta.name});st.health=Math.min(100,st.health+20);st.online=true;d.interventions.unshift({date:v8date(),stage:id,cost});log('ТО '+meta.name);save();render()}
 }
 function v31view(){
  let d=v31init(),calc=v31calculate();
@@ -785,26 +785,26 @@ function v33dispatch(available){
  if(sold>0){d.shipments.unshift({date:v8date(),sold,allocations});if(d.shipments.length>365)d.shipments.pop()}
  return {sold,allocations};
 }
-function v33add(){
- let d=v33init(),buyer=prompt('Покупатель (название компании)',V33_BUYERS[d.seq%V33_BUYERS.length]);if(buyer===null)return;
+async function v33add(){
+ let d=v33init(),buyer=await uiPrompt('Покупатель (название компании)',V33_BUYERS[d.seq%V33_BUYERS.length]);if(buyer===null)return;
  buyer=buyer.trim().slice(0,100);if(!buyer)return uiAlert('Укажите покупателя');
- let daily=Number(prompt('Лимит отгрузки в сутки, тонн (100–9000)','3000'));
+ let daily=Number(await uiPrompt('Лимит отгрузки в сутки, тонн (100–9000)','3000'));
  if(!Number.isInteger(daily)||daily<100||daily>9000)return uiAlert('Лимит должен быть от 100 до 9000 тонн');
- let total=Number(prompt('Общий объём договора, тонн (100–2000000)','90000'));
+ let total=Number(await uiPrompt('Общий объём договора, тонн (100–2000000)','90000'));
  if(!Number.isInteger(total)||total<100||total>2000000)return uiAlert('Укажите общий объём от 100 до 2 000 000 тонн');
- let pct=Number(prompt('Цена относительно рыночной, % (70–150)','100'));
+ let pct=Number(await uiPrompt('Цена относительно рыночной, % (70–150)','100'));
  if(!Number.isFinite(pct)||pct<70||pct>150)return uiAlert('Укажите цену от 70 до 150% рыночной');
- let terms=Number(prompt('Отсрочка оплаты, игровых дней (0–90)','7'));
+ let terms=Number(await uiPrompt('Отсрочка оплаты, игровых дней (0–90)','7'));
  if(!Number.isInteger(terms)||terms<0||terms>90)return uiAlert('Укажите срок оплаты от 0 до 90 дней');
- let advancePct=Number(prompt('Предоплата от объёма договора, % (0–50)','0'));
+ let advancePct=Number(await uiPrompt('Предоплата от объёма договора, % (0–50)','0'));
  if(!Number.isFinite(advancePct)||advancePct<0||advancePct>50)return uiAlert('Укажите предоплату от 0 до 50%');
  d.contracts.push({id:++d.seq,buyer,daily,remaining:total,fulfilled:0,status:'Действует',created:v8date(),priceMultiplier:pct/100,terms,advancePct,advanceRemaining:0});
  log('Договор реализации №'+d.seq+' · '+buyer+' · '+total+' т');save();render();
 }
-function v33cancel(id){
+async function v33cancel(id){
  let d=v33init(),c=d.contracts.find(x=>x.id===id);
  if(!c||c.status!=='Действует')return;
- if(!confirm('Приостановить отгрузку по договору №'+id+'?'))return;
+ if(!await uiConfirm('Приостановить отгрузку по договору №'+id+'?'))return;
  c.status='Приостановлен';log('Приостановлен договор реализации №'+id);save();render();
 }
 function v33resume(id){
@@ -974,28 +974,28 @@ function v35record(type,amount,detail){
  d.cashEntries.unshift({date:v8date(),day:v34date(),type,amount:Math.round(amount*1000)/1000,detail:detail||''});
  if(d.cashEntries.length>2000)d.cashEntries.length=2000;
 }
-function v35budget(){
- let val=prompt('Установить бюджет капитальных вложений (млн ₸, 0–100000)',''+v35init().budget);
+async function v35budget(){
+ let val=await uiPrompt('Установить бюджет капитальных вложений (млн ₸, 0–100000)',''+v35init().budget);
  if(val===null)return;
  let n=Number(val);if(!Number.isFinite(n)||n<0||n>100000)return uiAlert('Укажите бюджет от 0 до 100 000 млн ₸');
  v35init().budget=n;log('Утверждён план CAPEX: '+m(n));save();render();
 }
-function v35borrow(){
+async function v35borrow(){
  let d=v35init();
- let raw=prompt('Сумма кредита, млн ₸ (100–100000)','5000');if(raw===null)return;
+ let raw=await uiPrompt('Сумма кредита, млн ₸ (100–100000)','5000');if(raw===null)return;
  let amount=Number(raw);if(!Number.isFinite(amount)||amount<100||amount>100000)return uiAlert('Сумма кредита: от 100 до 100 000 млн ₸');
- let yearsRaw=prompt('Срок кредита, игровых месяцев (3–120)','36');if(yearsRaw===null)return;
+ let yearsRaw=await uiPrompt('Срок кредита, игровых месяцев (3–120)','36');if(yearsRaw===null)return;
  let months=Number(yearsRaw);if(!Number.isInteger(months)||months<3||months>120)return uiAlert('Срок: от 3 до 120 месяцев');
- let rateRaw=prompt('Годовая ставка, % (5–35)','16');if(rateRaw===null)return;
+ let rateRaw=await uiPrompt('Годовая ставка, % (5–35)','16');if(rateRaw===null)return;
  let rate=Number(rateRaw);if(!Number.isFinite(rate)||rate<5||rate>35)return uiAlert('Ставка: от 5 до 35%');
- if(!confirm('Привлечь кредит '+m(amount)+' на '+months+' мес. под '+rate+'% годовых?'))return;
+ if(!await uiConfirm('Привлечь кредит '+m(amount)+' на '+months+' мес. под '+rate+'% годовых?'))return;
  let loan={id:++d.loanSeq,principal:amount,balance:amount,rate,months,remainingDays:months*30,started:v8date(),status:'Действует',interestPaid:0,principalPaid:0};
  d.loans.push(loan);s.cash+=amount;v35record('credit_in',amount,'Кредит №'+loan.id);
  log('Привлечён кредит №'+loan.id+' на '+m(amount));save();render();
 }
-function v35repay(id){
+async function v35repay(id){
  let loan=v35init().loans.find(x=>x.id===id&&x.status==='Действует');if(!loan)return;
- let raw=prompt('Досрочное погашение основного долга, млн ₸ (остаток '+loan.balance.toFixed(2)+')',loan.balance.toFixed(2));if(raw===null)return;
+ let raw=await uiPrompt('Досрочное погашение основного долга, млн ₸ (остаток '+loan.balance.toFixed(2)+')',loan.balance.toFixed(2));if(raw===null)return;
  let amount=Number(raw);if(!Number.isFinite(amount)||amount<=0||amount>loan.balance+.001)return uiAlert('Недопустимая сумма погашения');
  if(s.cash<amount)return uiAlert('Недостаточно денежных средств');
  s.cash-=amount;loan.balance=Math.max(0,loan.balance-amount);loan.principalPaid+=amount;
@@ -1050,7 +1050,7 @@ function v35bind(){
  document.querySelectorAll('[data-v35-repay]').forEach(x=>x.onclick=()=>v35repay(Number(x.dataset.v35Repay)));
 }
 const v35oldAward=v27award;
-v27award=function(id,bidId){
+v27award=async function(id,bidId){
  let d=v28migrateNames(),t=d.tenders.find(x=>x.id===id),b=t?.bids?.find(x=>x.id===bidId);
  if(!t||!b)return v35oldAward(id,bidId);
  if(V35_CAPEX_TYPES.has(t.type)){
@@ -1060,7 +1060,7 @@ v27award=function(id,bidId){
  }
  let before=v28migrateNames().contracts.length;
  let cashBefore=s.cash;
- let result=v35oldAward(id,bidId);
+ let result=await v35oldAward(id,bidId);
  if(v28migrateNames().contracts.length>before&&s.cash<cashBefore){
   v35record(V35_CAPEX_TYPES.has(t.type)?'capex':'contract_opex',cashBefore-s.cash,'Договор №'+v28migrateNames().contracts[0].id);
  }
@@ -1112,11 +1112,11 @@ function v36daily(){
  }
  if(d.events.length>100)d.events.length=100;
 }
-function v36purchase(kind){
+async function v36purchase(kind){
  let d=v36init(),c=d.camp,price={food:14,repair:25,clean:7,guards:18,security:30,beds:85}[kind];
  if(!price)return;
  if(s.cash<price)return uiAlert('Недостаточно денежных средств');
- if(!confirm('Выполнить мероприятие за '+m(price)+'?'))return;
+ if(!await uiConfirm('Выполнить мероприятие за '+m(price)+'?'))return;
  s.cash-=price;d.spent+=price;
  if(kind==='food'){c.mealStock+=c.residents*30;c.mealQuality=v30safe(c.mealQuality+6)}
  if(kind==='repair')c.housing=v30safe(c.housing+22);
@@ -1127,28 +1127,28 @@ function v36purchase(kind){
  v25post(kind==='beds'?'maintenance':'opex',price,{description:'Вахтовый посёлок: '+kind});
  log('Вахтовый посёлок: '+kind+' · '+m(price));save();render();
 }
-function v36setResidents(){
- let c=v36init().camp,raw=prompt('Количество проживающих работников (0–1000)',String(c.residents));if(raw===null)return;
+async function v36setResidents(){
+ let c=v36init().camp,raw=await uiPrompt('Количество проживающих работников (0–1000)',String(c.residents));if(raw===null)return;
  let n=Number(raw);if(!Number.isInteger(n)||n<0||n>1000)return uiAlert('Укажите от 0 до 1000 работников');
  c.residents=n;save();render();
 }
-function v36accept(id,index){
+async function v36accept(id,index){
  let c=v28migrateNames().contracts.find(x=>x.id===id);if(!c)return;
  let x=v36contract(c),stage=x.milestones[index];if(!stage||stage.accepted)return;
  let progress=c.status==='Завершён'?100:Number(c.progress)||0,threshold=[20,70,100][index];
  if(progress<threshold)return uiAlert('Работы по этапу ещё не выполнены: требуется '+threshold+'% готовности');
  if(index>0&&!x.milestones[index-1].accepted)return uiAlert('Сначала примите предыдущий этап');
  if(index===2&&!x.qualityDocs)return uiAlert('Перед итоговой приёмкой подтвердите исполнительную документацию');
- if(!confirm('Подписать игровой акт по этапу «'+stage.name+'» договора №'+id+'?'))return;
+ if(!await uiConfirm('Подписать игровой акт по этапу «'+stage.name+'» договора №'+id+'?'))return;
  stage.accepted=true;stage.date=v8date();
  if(index===2){x.acceptedAt=v8date();x.commissioned=true}
  log('Принят этап '+(index+1)+' договора №'+id);save();render();
 }
-function v36docs(id){
+async function v36docs(id){
  let c=v28migrateNames().contracts.find(x=>x.id===id);if(!c)return;
  let x=v36contract(c);
  if(c.status!=='Завершён')return uiAlert('Исполнительная документация проверяется после завершения работ');
- if(!confirm('Подтвердить комплектность исполнительной документации по договору №'+id+'?'))return;
+ if(!await uiConfirm('Подтвердить комплектность исполнительной документации по договору №'+id+'?'))return;
  x.qualityDocs=true;save();render();
 }
 function v36campView(){
@@ -1384,10 +1384,10 @@ v8advance=function(){
   v38report(year,i);
  }
 };
-function v38setAnnual(){
- let d=v38init(),v=v8init(),n=prompt('Годовой план добычи, тонн:',String(Math.round(d.annual)));if(n===null)return;
+async function v38setAnnual(){
+ let d=v38init(),v=v8init(),n=await uiPrompt('Годовой план добычи, тонн:',String(Math.round(d.annual)));if(n===null)return;
  let total=Number(n);if(!Number.isFinite(total)||total<12000||total>100000000)return uiAlert('Укажите годовой план от 12 000 до 100 000 000 т');
- let reason=prompt('Основание корректировки годового плана:');if(!reason?.trim())return;
+ let reason=await uiPrompt('Основание корректировки годового плана:');if(!reason?.trim())return;
  let old=v.plans.slice(),start=v8idx(),fixed=old.slice(0,start).reduce((a,b)=>a+b,0);
  if(total<fixed)return uiAlert('Годовой план меньше уже утверждённых закрытых месяцев');
  let remaining=total-fixed,weights=old.slice(start).map((n,j)=>new Date(v.year,start+j+1,0).getDate());
@@ -1400,11 +1400,11 @@ function v38setAnnual(){
  v11init().inbox.unshift('Утверждена корректировка годового плана: '+f(d.annual)+' т. Основание: '+reason.trim());
  save();render();
 }
-function v38setShop(i){
+async function v38setShop(i){
  let v=v8init(),m=v8idx(),data=v38month(m),r=data.rows.find(x=>x.id===i);if(!r)return;
- let raw=prompt('План цеха '+r.name+' на '+V8_MONTHS[m]+', т:',String(r.plan));if(raw===null)return;
+ let raw=await uiPrompt('План цеха '+r.name+' на '+V8_MONTHS[m]+', т:',String(r.plan));if(raw===null)return;
  let n=Number(raw);if(!Number.isFinite(n)||n<0||n>v.plans[m])return uiAlert('Некорректный план цеха');
- let reason=prompt('Основание перераспределения:');if(!reason?.trim())return;
+ let reason=await uiPrompt('Основание перераспределения:');if(!reason?.trim())return;
  let other=data.rows.filter(x=>x!==r),rest=v.plans[m]-n,prev=other.reduce((a,x)=>a+x.plan,0);
  r.plan=n;let assigned=0;other.forEach((x,j)=>{x.plan=j===other.length-1?rest-assigned:Math.round(rest*(prev?x.plan/prev:1/other.length));assigned+=x.plan});
  v38init().decisions.unshift(v8date()+': план '+r.name+' = '+f(n)+' т; '+reason.trim());save();render();
@@ -1426,14 +1426,14 @@ function v38plansView(){
  }
  return out+'</section>';
 }
-function v38leaderAct(name,act){
+async function v38leaderAct(name,act){
  let p=[...v8init().rankCity,...v8init().rankField].find(x=>x.name===name);if(!p)return;
  if(act==='promote'){
-  let reason=prompt('Новая должность / основание повышения '+name+':');if(!reason?.trim())return;
+  let reason=await uiPrompt('Новая должность / основание повышения '+name+':');if(!reason?.trim())return;
   p.job=reason.trim();p.score=cl(p.score+2,0,100);
   v38init().decisions.unshift(v8date()+': повышен '+name+' — '+p.job);
  }else if(act==='dismiss'){
-  let reason=prompt('Основание для кадровой проверки по '+name+':');if(!reason?.trim())return;
+  let reason=await uiPrompt('Основание для кадровой проверки по '+name+':');if(!reason?.trim())return;
   v11init().inbox.unshift('Кадровое поручение: проверить основания для увольнения '+name+'. '+reason.trim());
   v38init().decisions.unshift(v8date()+': инициирована процедура проверки по '+name);
   uiAlert('Поручение создано. Увольнение без проверки оснований не выполняется.');
@@ -1959,14 +1959,14 @@ v38month=function(i){
  return d.shops[key];
 };
 const small44OldAnnual=v38setAnnual;
-v38setAnnual=function(){
+v38setAnnual=async function(){
  if(!small44active())return small44OldAnnual();
  let d=v38init(),v=v8init(),current=v.plans.reduce((a,b)=>a+b,0);
- let raw=prompt('Годовой план малого промысла, тонн:',String(Math.round(current)));
+ let raw=await uiPrompt('Годовой план малого промысла, тонн:',String(Math.round(current)));
  if(raw===null)return;
  let total=Number(raw),idx=v8idx(),closed=v.plans.slice(0,idx).reduce((a,b)=>a+b,0);
  if(!Number.isFinite(total)||total<0||total>1000000||total<closed)return uiAlert('План должен быть не меньше утверждённых закрытых месяцев и не более 1 000 000 т.');
- let reason=prompt('Основание изменения плана:');if(!reason?.trim())return;
+ let reason=await uiPrompt('Основание изменения плана:');if(!reason?.trim())return;
  let days=Array.from({length:12-idx},(_,i)=>new Date(v.year,idx+i+1,0).getDate());
  let remaining=total-closed,den=days.reduce((a,b)=>a+b,0),assigned=0;
  for(let j=idx;j<12;j++){let n=j===11?remaining-assigned:Math.round(remaining*days[j-idx]/den);v.plans[j]=n;assigned+=n;delete d.shops[v.year+'-'+j]}
@@ -3011,10 +3011,10 @@ function stock399Init(){
  return s.v399;
 }
 function stock399Category(x){if(x.group)return x.group;if(/Спецодежда|Каски|очки|Перчатки|СИЗОД/i.test(x.name))return 'СИЗ';if(/насос|штанг|НКТ|запас|детал|ремонт/i.test(x.name))return 'Запчасти';return 'Эксплуатация'}
-function stock399Purchase(id,qty){let p=ensurePlant(),x=p.stock.find(x=>x.id===id);if(!x)return;
+async function stock399Purchase(id,qty){let p=ensurePlant(),x=p.stock.find(x=>x.id===id);if(!x)return;
  let n=Math.floor(qty);if(n<=0||n>100000)return uiAlert('Укажите количество от 1 до 100 000');
  let cost=+(n*x.price).toFixed(4);if(s.cash<cost)return uiAlert('Недостаточно средств: '+m(cost));
- if(!confirm('Закупить «'+x.name+'» — '+n+' ед. за '+m(cost)+'?'))return;
+ if(!await uiConfirm('Закупить «'+x.name+'» — '+n+' ед. за '+m(cost)+'?'))return;
  s.cash-=cost;x.qty+=n;p.warehouseSpend+=cost;
  v25post('maintenance',cost,{description:'Закупка на склад: '+x.name+' · '+n+' ед.',category:stock399Category(x)});
  stock399Init().history.unshift(v8date()+': '+x.name+' +'+n+' · '+m(cost));save();render();
@@ -3359,7 +3359,7 @@ v39catering=function(){
 };
 // Manual purchase has an actual affordable amount, unlike the old fixed 14m price.
 const fix407OldPurchase=v36purchase;
-v36purchase=function(kind){
+v36purchase=async function(kind){
  if(kind!=='food')return fix407OldPurchase(kind);
  const c=v36init().camp,x=v39init();
  if(!c.residents)return uiAlert('В посёлке нет проживающих работников');
@@ -3367,7 +3367,7 @@ v36purchase=function(kind){
  if(!n)return uiAlert('Запаса питания достаточно на 30 суток');
  const cost=+(n*x.mealPrice).toFixed(3);
  if(s.cash+1e-8<cost)return uiAlert('Недостаточно средств: требуется '+m(cost));
- if(!confirm('Закупить '+n+' порций на 30 суток за '+m(cost)+'?'))return;
+ if(!await uiConfirm('Закупить '+n+' порций на 30 суток за '+m(cost)+'?'))return;
  const result=fix407FoodBuy(30);
  if(!result.ok)return uiAlert(result.reason);
  x.cateringKeys.push(v39key());x.cateringKeys=[...new Set(x.cateringKeys)];
@@ -3447,6 +3447,77 @@ document.addEventListener('click',function(e){
  if(b.dataset.fix408Mail==='delete')fix408DeleteAll();
  else mail86readAll();
 },true);
+/* v4.0.9: mobile navigation remains fully expanded and centered app confirmations. */
+function fix409Nav(){
+ const side=document.getElementById('v11side'),host=document.getElementById('v11sideitems');
+ if(!side||!host||!s)return;
+ if(window.matchMedia('(max-width:800px)').matches){
+  side.classList.remove('hide');
+  host.querySelectorAll('details.group397-nav').forEach(d=>{d.open=true;d.setAttribute('open','')});
+  host.querySelectorAll('button[data-v11-tab]').forEach(b=>{
+   const label=b.querySelector('.txt')?.textContent?.trim()||b.dataset.v11Tab;
+   b.title=label;b.setAttribute('aria-label',label);
+  });
+ }
+}
+const fix409Render=render;
+render=function(){fix409Render();fix409Nav()};
+// Mail deletion uses the game's centered modal instead of Safari's top-of-screen confirm.
+fix408DeleteAll=async function(){
+ if(!s)return;
+ if(!await uiConfirm('Удалить все письма? Принятые решения и финансовые операции сохранятся.'))return;
+ const db=mail86db();
+ db.deletedIds=[...new Set([...(db.deletedIds||[]),...db.items.map(x=>x.id)])];db.items=[];
+ const z=v11init(),v=v8init();z.inbox=[];v.notifications=[];
+ v14Selected=null;v14Filter='all';
+ if(typeof mail396Search!=='undefined')mail396Search='';
+ save();render();
+};
+// The bulk time controls are destructive to simulation state and require confirmation.
+document.addEventListener('click',async function(e){
+ const b=e.target.closest?.('[data-v11-step]');if(!b||!s)return;
+ const val=b.dataset.v11Step;
+ if(val==='1')return;
+ e.preventDefault();e.stopImmediatePropagation();
+ const label=val==='7'?'7 дней':val==='month'?'один месяц':val==='year'?'один год':val+' дней';
+ if(await uiConfirm('Продвинуть игровое время на '+label+'? Добыча, расходы и события будут рассчитаны автоматически.'))v11step(val==='month'||val==='year'?val:+val);
+},true);
+/* v4.1.0: authoritative inbox clearing and centered confirmations. */
+async function mail410Clear(){
+ if(!s)return;
+ if(!await uiConfirm('Удалить ВСЕ письма, включая прочитанные и архив?\nПринятые решения, задачи и расходы останутся в истории.'))return;
+ const db=mail86db();
+ const ids=new Set([...(db.deletedIds||[]),...db.items.map(x=>x.id)]);
+ // Also tombstone all original sources, so older saves cannot resurrect them on sync.
+ const z=v11init(),v=v8init();
+ for(const x of [...(z.inbox||[]),...(v.notifications||[])])ids.add('src-'+v14Hash(String(x)));
+ db.deletedIds=[...ids];db.items.length=0;
+ z.inbox.length=0;v.notifications.length=0;
+ v14Selected=null;v14Filter='all';
+ if(typeof mail396Search!=='undefined')mail396Search='';
+ save();render();
+ // Defensive verification: restore empty state if an older render module repopulates it.
+ const check=mail86db();
+ if(check.items.length){for(const x of check.items)ids.add(x.id);check.deletedIds=[...ids];check.items.length=0;save();render();}
+}
+// One event handler for every historic inbox toolbar, regardless of which version rendered it.
+document.addEventListener('click',function(e){
+ const b=e.target.closest?.('[data-fix408-mail="delete"],[data-mail86="deleteall"],[data-mail410-delete]');
+ if(!b||!s)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ void mail410Clear();
+},true);
+const mail410Render=render;
+render=function(){
+ mail410Render();
+ if(!s||tab!=='inbox')return;
+ const body=document.getElementById('body');if(!body)return;
+ // A single reliable toolbar; old controls are hidden to avoid duplicate click paths.
+ body.querySelectorAll('[data-fix408-mail="delete"],[data-mail86="deleteall"]').forEach(b=>{b.hidden=true;});
+ let b=body.querySelector('[data-mail410-delete]');
+ if(!b){b=document.createElement('button');b.type='button';b.className='btn secondary';b.dataset.mail410Delete='1';b.textContent='🗑 Удалить все письма';
+ const toolbar=body.querySelector('#fix408-mail-tools')||body.querySelector('.v14tools');if(toolbar)toolbar.appendChild(b);else body.prepend(b);}
+};
 const BACKUP_KEY=KEY+'-backup';
 const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='.json,application/json';fileInput.style.display='none';document.body.appendChild(fileInput);
 const saveBar=document.createElement('div');saveBar.id='save-manager';

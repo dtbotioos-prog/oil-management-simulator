@@ -1,0 +1,14 @@
+/* v4.0.9: always visible, scrollable icon rail on mobile */
+@media(max-width:800px){
+ .v11sidebar{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:none;touch-action:pan-y;z-index:5}
+ .v11sidebar::-webkit-scrollbar{display:none}
+ #v11sideitems .group397-nav{display:block!important;border:0!important;margin:0!important;padding:0!important}
+ #v11sideitems .group397-nav>summary{display:none!important}
+ #v11sideitems .group397-nav>.v11sidebtn{display:flex!important}
+ #v11sideitems .v11sidebtn{min-width:46px!important;max-width:46px!important;flex:0 0 46px!important;visibility:visible!important}
+ .v13overlay{position:fixed!important;inset:0!important;z-index:20000!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:16px!important;background:rgba(2,13,22,.78)!important}
+ .v13dialog{width:min(390px,100%)!important;max-height:calc(100dvh - 32px)!important;margin:auto!important;border-radius:20px!important;padding:20px!important;box-shadow:0 24px 65px #000c!important}
+ .v13dialog .actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}
+ .v13dialog .actions button{min-height:48px!important;border-radius:12px!important;font-size:16px!important}
+ .v13dialog .actions button:only-child{grid-column:1/-1}
+}

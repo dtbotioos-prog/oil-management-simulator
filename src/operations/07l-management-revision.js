@@ -60,10 +60,10 @@ v8advance=function(){
   v38report(year,i);
  }
 };
-function v38setAnnual(){
- let d=v38init(),v=v8init(),n=prompt('Годовой план добычи, тонн:',String(Math.round(d.annual)));if(n===null)return;
+async function v38setAnnual(){
+ let d=v38init(),v=v8init(),n=await uiPrompt('Годовой план добычи, тонн:',String(Math.round(d.annual)));if(n===null)return;
  let total=Number(n);if(!Number.isFinite(total)||total<12000||total>100000000)return uiAlert('Укажите годовой план от 12 000 до 100 000 000 т');
- let reason=prompt('Основание корректировки годового плана:');if(!reason?.trim())return;
+ let reason=await uiPrompt('Основание корректировки годового плана:');if(!reason?.trim())return;
  let old=v.plans.slice(),start=v8idx(),fixed=old.slice(0,start).reduce((a,b)=>a+b,0);
  if(total<fixed)return uiAlert('Годовой план меньше уже утверждённых закрытых месяцев');
  let remaining=total-fixed,weights=old.slice(start).map((n,j)=>new Date(v.year,start+j+1,0).getDate());
@@ -76,11 +76,11 @@ function v38setAnnual(){
  v11init().inbox.unshift('Утверждена корректировка годового плана: '+f(d.annual)+' т. Основание: '+reason.trim());
  save();render();
 }
-function v38setShop(i){
+async function v38setShop(i){
  let v=v8init(),m=v8idx(),data=v38month(m),r=data.rows.find(x=>x.id===i);if(!r)return;
- let raw=prompt('План цеха '+r.name+' на '+V8_MONTHS[m]+', т:',String(r.plan));if(raw===null)return;
+ let raw=await uiPrompt('План цеха '+r.name+' на '+V8_MONTHS[m]+', т:',String(r.plan));if(raw===null)return;
  let n=Number(raw);if(!Number.isFinite(n)||n<0||n>v.plans[m])return uiAlert('Некорректный план цеха');
- let reason=prompt('Основание перераспределения:');if(!reason?.trim())return;
+ let reason=await uiPrompt('Основание перераспределения:');if(!reason?.trim())return;
  let other=data.rows.filter(x=>x!==r),rest=v.plans[m]-n,prev=other.reduce((a,x)=>a+x.plan,0);
  r.plan=n;let assigned=0;other.forEach((x,j)=>{x.plan=j===other.length-1?rest-assigned:Math.round(rest*(prev?x.plan/prev:1/other.length));assigned+=x.plan});
  v38init().decisions.unshift(v8date()+': план '+r.name+' = '+f(n)+' т; '+reason.trim());save();render();
@@ -102,14 +102,14 @@ function v38plansView(){
  }
  return out+'</section>';
 }
-function v38leaderAct(name,act){
+async function v38leaderAct(name,act){
  let p=[...v8init().rankCity,...v8init().rankField].find(x=>x.name===name);if(!p)return;
  if(act==='promote'){
-  let reason=prompt('Новая должность / основание повышения '+name+':');if(!reason?.trim())return;
+  let reason=await uiPrompt('Новая должность / основание повышения '+name+':');if(!reason?.trim())return;
   p.job=reason.trim();p.score=cl(p.score+2,0,100);
   v38init().decisions.unshift(v8date()+': повышен '+name+' — '+p.job);
  }else if(act==='dismiss'){
-  let reason=prompt('Основание для кадровой проверки по '+name+':');if(!reason?.trim())return;
+  let reason=await uiPrompt('Основание для кадровой проверки по '+name+':');if(!reason?.trim())return;
   v11init().inbox.unshift('Кадровое поручение: проверить основания для увольнения '+name+'. '+reason.trim());
   v38init().decisions.unshift(v8date()+': инициирована процедура проверки по '+name);
   uiAlert('Поручение создано. Увольнение без проверки оснований не выполняется.');

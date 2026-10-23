@@ -30,7 +30,7 @@ v39catering=function(){
 };
 // Manual purchase has an actual affordable amount, unlike the old fixed 14m price.
 const fix407OldPurchase=v36purchase;
-v36purchase=function(kind){
+v36purchase=async function(kind){
  if(kind!=='food')return fix407OldPurchase(kind);
  const c=v36init().camp,x=v39init();
  if(!c.residents)return uiAlert('В посёлке нет проживающих работников');
@@ -38,7 +38,7 @@ v36purchase=function(kind){
  if(!n)return uiAlert('Запаса питания достаточно на 30 суток');
  const cost=+(n*x.mealPrice).toFixed(3);
  if(s.cash+1e-8<cost)return uiAlert('Недостаточно средств: требуется '+m(cost));
- if(!confirm('Закупить '+n+' порций на 30 суток за '+m(cost)+'?'))return;
+ if(!await uiConfirm('Закупить '+n+' порций на 30 суток за '+m(cost)+'?'))return;
  const result=fix407FoodBuy(30);
  if(!result.ok)return uiAlert(result.reason);
  x.cateringKeys.push(v39key());x.cateringKeys=[...new Set(x.cateringKeys)];

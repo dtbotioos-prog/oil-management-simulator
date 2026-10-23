@@ -65,10 +65,10 @@ function v27newTender(type,well){
  if(well){let a=v40assets().find(x=>x.key==='well:'+well);if(!a)return uiAlert('Скважина не найдена');return v40createTender(type,a)}
  v40openPicker(type);
 }
-function v27award(id,bidId){let d=v28migrateNames(),t=d.tenders.find(x=>x.id===id);if(!t||t.status!=='Приём заявок')return uiAlert('Тендер закрыт');let b=t.bids.find(x=>x.id===bidId);if(!b)return;let active=d.contracts.filter(x=>x.supplier===b.name&&x.status==='Исполняется').length;if(active>=b.capacity)return uiAlert('Бригады подрядчика заняты. Выберите другого исполнителя.');if(s.cash<b.price)return uiAlert('Недостаточно средств для заключения договора: '+m(b.price));if(t.assetKey&&d.contracts.some(c=>c.assetKey===t.assetKey&&c.status==='Исполняется'))return uiAlert('По объекту уже выполняются подрядные работы');
+async function v27award(id,bidId){let d=v28migrateNames(),t=d.tenders.find(x=>x.id===id);if(!t||t.status!=='Приём заявок')return uiAlert('Тендер закрыт');let b=t.bids.find(x=>x.id===bidId);if(!b)return;let active=d.contracts.filter(x=>x.supplier===b.name&&x.status==='Исполняется').length;if(active>=b.capacity)return uiAlert('Бригады подрядчика заняты. Выберите другого исполнителя.');if(s.cash<b.price)return uiAlert('Недостаточно средств для заключения договора: '+m(b.price));if(t.assetKey&&d.contracts.some(c=>c.assetKey===t.assetKey&&c.status==='Исполняется'))return uiAlert('По объекту уже выполняются подрядные работы');
 let w=null,materials=[];if(t.well&&['prs','krs'].includes(t.type)){ensureAssets();w=s.assets.wellList.find(x=>x.id===t.well);if(!w)return uiAlert('Скважина не найдена');if(w.status==='Ремонт'||w.status==='Ремонт подрядчика')return uiAlert('Скважина уже ремонтируется');/* Contractor supplies all materials, crews and equipment under the turnkey contract. */}
 let advance=Math.round(b.price*.3*10)/10;
-if(!confirm('Заключить договор с «'+b.name+'»?\n\nЦена: '+m(b.price)+'\nСрок: '+b.days+' игровых дней\nБригада: '+b.crew+' чел.\nСписание полной стоимости при подписании: '+m(b.price)+'\n\nПовторных списаний при завершении нет.'))return;
+if(!await uiConfirm('Заключить договор с «'+b.name+'»?\n\nЦена: '+m(b.price)+'\nСрок: '+b.days+' игровых дней\nБригада: '+b.crew+' чел.\nСписание полной стоимости при подписании: '+m(b.price)+'\n\nПовторных списаний при завершении нет.'))return;
 if(w){w.status='Ремонт подрядчика';}
 s.cash-=b.price;v25post('maintenance',b.price,{description:'Договор №'+(d.contractSeq+1)+' · '+V27_TYPES[t.type].label+' · '+(t.objectName||'объект не указан')+' · '+b.name,supplier:b.name,tender:id,well:t.well});
 let c={id:++d.contractSeq,tender:id,type:t.type,well:t.well,assetKey:t.assetKey||null,assetHealthBefore:t.assetHealthBefore??null,objectName:t.objectName||'',supplier:b.name,price:b.price,advance,remaining:b.days,initialDays:b.days,quality:b.quality,reliability:b.reliability,crew:b.crew,status:'Исполняется',started:v8date(),endDate:'',penalty:0,warranty:Math.max(30,Math.round(b.quality*1.8)),progress:0};
@@ -79,13 +79,13 @@ else if(c.type==='drill'){s.wells++;ensureAssets();}else if(V27_TYPES[c.type]?.c
 log('Подрядчик '+c.supplier+' завершил договор №'+c.id);if(typeof v19notify==='function')v19notify('Исполнен договор №'+c.id+' — '+c.supplier);}
 }
 
-function v28extend(id){
+async function v28extend(id){
  let d=v28migrateNames(),c=d.contracts.find(x=>x.id===id);
  if(!c||c.status!=='Исполняется')return uiAlert('Продлить можно только действующий договор');
- let raw=prompt('Дополнительное соглашение №'+(1+(c.amendments||[]).length)+' — на сколько игровых дней продлить договор? (1–180)','7');
+ let raw=await uiPrompt('Дополнительное соглашение №'+(1+(c.amendments||[]).length)+' — на сколько игровых дней продлить договор? (1–180)','7');
  if(raw===null)return;
  let days=Number(raw);if(!Number.isInteger(days)||days<1||days>180)return uiAlert('Укажите целое число от 1 до 180');
- let reason=prompt('Основание дополнительного соглашения','Изменение производственного графика');
+ let reason=await uiPrompt('Основание дополнительного соглашения','Изменение производственного графика');
  if(reason===null)return;
  c.remaining+=days;c.initialDays+=days;c.amendments||=[];c.amendments.push({date:v8date(),days,reason:reason.slice(0,150)});
  log('Допсоглашение к договору №'+id+': продление на '+days+' дн.');save();render();

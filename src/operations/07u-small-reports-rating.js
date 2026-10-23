@@ -28,14 +28,14 @@ v38month=function(i){
  return d.shops[key];
 };
 const small44OldAnnual=v38setAnnual;
-v38setAnnual=function(){
+v38setAnnual=async function(){
  if(!small44active())return small44OldAnnual();
  let d=v38init(),v=v8init(),current=v.plans.reduce((a,b)=>a+b,0);
- let raw=prompt('Годовой план малого промысла, тонн:',String(Math.round(current)));
+ let raw=await uiPrompt('Годовой план малого промысла, тонн:',String(Math.round(current)));
  if(raw===null)return;
  let total=Number(raw),idx=v8idx(),closed=v.plans.slice(0,idx).reduce((a,b)=>a+b,0);
  if(!Number.isFinite(total)||total<0||total>1000000||total<closed)return uiAlert('План должен быть не меньше утверждённых закрытых месяцев и не более 1 000 000 т.');
- let reason=prompt('Основание изменения плана:');if(!reason?.trim())return;
+ let reason=await uiPrompt('Основание изменения плана:');if(!reason?.trim())return;
  let days=Array.from({length:12-idx},(_,i)=>new Date(v.year,idx+i+1,0).getDate());
  let remaining=total-closed,den=days.reduce((a,b)=>a+b,0),assigned=0;
  for(let j=idx;j<12;j++){let n=j===11?remaining-assigned:Math.round(remaining*days[j-idx]/den);v.plans[j]=n;assigned+=n;delete d.shops[v.year+'-'+j]}
