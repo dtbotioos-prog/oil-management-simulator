@@ -1,5 +1,5 @@
 {
-  "version": "4.0.6",
+  "version": "4.0.8",
   "entry": "js/core/game.js",
   "parts": [
     "src/core/01-foundation.js",
@@ -49,6 +49,7 @@
     "src/operations/07zzzzzzzzzzzzzzzzzz-unified-registers.js",
     "src/operations/07zzzzzzzzzzzzzzzzzzz-audio-themes.js",
     "src/operations/07zzzzzzzzzzzzzzzzzzzz-fix-food-mail.js",
+    "src/operations/07zzzzzzzzzzzzzzzzzzzzz-mobile-mail-fix.js",
     "src/core/08-save-manager.js"
   ]
 }

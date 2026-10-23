@@ -1,0 +1,16 @@
+/* v4.0.8: compact icon-only mobile navigation */
+@media(max-width:800px){
+ .v11sidebar{width:56px!important;min-width:56px!important;flex:0 0 56px!important;padding:7px 4px!important;overflow-x:hidden!important}
+ .v11sidebar .v11brand{font-size:0!important;padding:8px 0!important;text-align:center!important}
+ .v11sidebar .v11brand::after{content:'◈';font-size:24px}
+ #v11sideitems{display:flex;flex-direction:column;gap:3px;width:100%}
+ #v11sideitems .v11sidebtn{width:46px!important;height:46px!important;min-height:46px!important;display:flex!important;align-items:center!important;justify-content:center!important;margin:0!important;padding:0!important;overflow:hidden!important;white-space:nowrap!important;line-height:1!important}
+ #v11sideitems .v11sidebtn .txt{display:none!important}
+ #v11sideitems .v11sidebtn .ico{display:block!important;font-size:23px!important;min-width:0!important;line-height:1!important}
+ #v11sideitems .group397-nav{display:contents!important}
+ #v11sideitems .group397-nav>summary{display:none!important}
+ #v11sideitems .group397-nav>.v11sidebtn{padding:0!important}
+ .v11sidebar>div:last-child{display:none!important}
+ .v11content{width:calc(100% - 56px)!important;min-width:0!important}
+}
+@media(max-width:380px){.v11sidebar{width:52px!important;min-width:52px!important;flex-basis:52px!important}.v11content{width:calc(100% - 52px)!important}}
