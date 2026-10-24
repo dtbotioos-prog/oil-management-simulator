@@ -201,7 +201,7 @@ function v22weatherImpact(){let w=v22weather();return w?{risk:w.severity*.0008,o
 
 function v8idx(){return ((s.month%12)+12)%12}function v8days(){return new Date(s.v8.year,v8idx()+1,0).getDate()}function v8date(){return String(s.v8.day).padStart(2,'0')+'.'+String(v8idx()+1).padStart(2,'0')+'.'+s.v8.year}function v8plan(){return s.v8.plans[v8idx()]||0}
 function v8dailyProduction(){return v21calc().oil}
-function v8advance(){if(s.dead)return;let v=v8init(),daily=v8dailyProduction(),lost=0;let weatherEffect=v22weatherImpact();daily*=weatherEffect.output;v.daysElapsed++;let incidentRisk=cl((100-s.safety)*.00045+(100-s.condition)*.00028+(100-v.morale)*.00012+weatherEffect.risk,.001,.095);if(Math.random()<(s.small?incidentRisk*.12:incidentRisk)){let k=Math.random(),severity=k<.62?'Инцидент без травм':k<.89?'Несчастный случай':k<.98?'Авария':'Тяжёлый несчастный случай';let expense=severity==='Инцидент без травм'?2:severity==='Несчастный случай'?12:severity==='Авария'?38:90;let stop=severity==='Инцидент без травм'?1:severity==='Несчастный случай'?2:severity==='Авария'?5:12;let w=s.assets.wellList.filter(x=>x.status==='Работает')[0];if(w&&(!s.small||severity!=='Инцидент без травм')){w.status='Остановлена';v.inspection.unshift({well:w.id,days:stop,reason:severity,closed:false});lost=w.rate*(1-w.water/100)}v.incidents.unshift({id:++v.seq,date:v8date(),severity,expense,stop,well:w?.id||'—',status:'Расследование',insured:severity.includes('несчастный')||severity.includes('Несчастный')});s.cash-=expense;v.monthCosts+=expense;v25post("incident",expense,{severity});v.morale=cl(v.morale-7,0,100);v.notifications.unshift(severity+': '+expense+' млн ₸, '+(w&&w.status==='Остановлена'?'остановка объекта и расследование':'зарегистрировано событие без остановки'));log(severity+' · '+expense+' млн ₸; зарегистрировано расследование');}
+function v8advance(){if(s.dead)return;let v=v8init(),daily=v8dailyProduction(),lost=0;let weatherEffect=v22weatherImpact();daily*=weatherEffect.output;v.daysElapsed++;let incidentRisk=cl((100-s.safety)*.00045+(100-s.condition)*.00028+(100-v.morale)*.00012+weatherEffect.risk,.001,.095);if(safe434LegacyChance(incidentRisk)){let k=Math.random(),severity=k<.62?'Инцидент без травм':k<.89?'Несчастный случай':k<.98?'Авария':'Тяжёлый несчастный случай';let expense=severity==='Инцидент без травм'?2:severity==='Несчастный случай'?12:severity==='Авария'?38:90;let stop=severity==='Инцидент без травм'?1:severity==='Несчастный случай'?2:severity==='Авария'?5:12;let w=s.assets.wellList.filter(x=>x.status==='Работает')[0];if(w&&(!s.small||severity!=='Инцидент без травм')){w.status='Остановлена';v.inspection.unshift({well:w.id,days:stop,reason:severity,closed:false});lost=w.rate*(1-w.water/100)}v.incidents.unshift({id:++v.seq,date:v8date(),gameYear:Math.floor(v.daysElapsed/365),severity,expense,stop,well:w?.id||'—',status:'Расследование',insured:severity.includes('несчастный')||severity.includes('Несчастный')});s.cash-=expense;v.monthCosts+=expense;v25post("incident",expense,{severity});v.morale=cl(v.morale-7,0,100);v.notifications.unshift(severity+': '+expense+' млн ₸, '+(w&&w.status==='Остановлена'?'остановка объекта и расследование':'зарегистрировано событие без остановки'));log(severity+' · '+expense+' млн ₸; зарегистрировано расследование');}
 for(const x of v.inspection){if(!x.closed){x.days--;if(x.days<=0){x.closed=true;v.notifications.unshift('Ограничение по скв. №'+x.well+' завершилось. Требуется решение о безопасном пуске.')}}}
 daily=Math.max(0,daily-lost);
 let v32=v32settle(daily);
@@ -1782,7 +1782,7 @@ v38plansView=function(){
 /* Small active company: one existing well, staged development, legacy saves preserved. */
 const SMALL_STEPS=[['Геологическое обоснование',12,28],['Проектирование и согласования',20,42],['Подготовка площадки',15,65],['Тендер и договор на бурение',10,90],['Бурение',45,600],['Испытание и освоение',12,75],['Обустройство и подключение',20,145],['Приёмка и ввод',7,30]];
 function smallInit(){return s.small|| (s.small={projects:[],seq:0,events:[],tankCapacity:1000})}
-function smallNew(){s.wells=1;s.rate=16;s.water=23;s.pending=[];s.assets={wellList:[{id:1001,unit:'ГУ-1',shop:0,status:'Работает',rate:16,water:23,health:87,equipment:{type:'ШГН'}}],infrastructure:[{id:'РВС-1',type:'Резервуар',health:90},{id:'ВЛ-1',type:'Выкидная линия',health:91},{id:'УУН-1',type:'Узел учёта',health:90},{id:'ВАГ-1',type:'Вагончик',health:92}]};s.small={projects:[],seq:0,events:['Старт: одна действующая скважина, один РВС и минимальная инфраструктура'],tankCapacity:1000};s.v8=null;s.v21=null;s.v38=null;save()}
+function smallNew(){s.wells=1;s.rate=16;s.water=23;s.pending=[];s.assets={wellList:[{id:1001,unit:'ГУ-1',shop:0,status:'Работает',rate:16,water:23,health:87,equipment:{type:'ШГН'}}],infrastructure:[{id:'РВС-1',type:'Резервуар',health:90},{id:'ВЛ-1',type:'Выкидная линия',health:91},{id:'УУН-1',type:'Узел учёта',health:90},{id:'КТП-1',type:'Комплектная трансформаторная подстанция',health:92}]};s.small={projects:[],seq:0,events:['Старт: одна действующая скважина, один РВС и минимальная инфраструктура'],tankCapacity:1000};s.v8=null;s.v21=null;s.v38=null;save()}
 function smallStart(){let d=smallInit();if(d.projects.some(x=>x.status==='В работе'))return uiAlert('Завершите текущий проект');let well=Math.max(1000,...s.assets.wellList.map(x=>+x.id||0))+1;d.projects.push({id:++d.seq,well,phase:0,days:0,status:'В работе'});save();render()}
 function smallPhase(id){let p=smallInit().projects.find(x=>x.id===id);if(!p||p.days||p.status!=='В работе')return;let [name,days,cost]=SMALL_STEPS[p.phase];if(s.cash<cost)return uiAlert('Недостаточно средств');s.cash-=cost;p.days=days;smallInit().events.unshift('Скважина №'+p.well+': '+name+' · '+days+' дн. · '+cost+' млн ₸');save();render()}
 function smallDay(){if(!s?.small)return;for(let p of s.small.projects){if(p.status!=='В работе'||p.days<=0)continue;if(--p.days>0)continue;if(p.phase===5){p.rate=Math.random()<.78?Math.round((7+Math.random()*15)*10)/10:0;if(!p.rate){p.status='Без притока';s.small.events.unshift('Скважина №'+p.well+': промышленный приток не получен');continue}}p.phase++;if(p.phase===SMALL_STEPS.length){p.status='Введена';s.wells++;s.assets.wellList.push({id:p.well,unit:'ГУ-1',shop:0,status:'Работает',rate:p.rate,water:25,health:96,equipment:{type:'ШГН'}});s.small.events.unshift('Введена новая скважина №'+p.well)}}}
@@ -1850,7 +1850,7 @@ function v43setup(){
  const g=growInit();if(!g.ready)growBootstrap();
  // Replace the fictional large company's staff list, instead of just changing its total.
  let e=ensureEnterprise();e.staff=g.staff;e.target=300;
- e.dept=[{name:'Малый производственный участок',headcount:7,chief:'Мастер участка'},
+ e.dept=[{name:'Производственный участок №1',headcount:7,chief:'Мастер участка'},
  {name:'Управление и обеспечение',headcount:3,chief:'Генеральный директор'},
  {name:'Безопасность и экология',headcount:2,chief:'Ответственные специалисты'}];
  let employees=[],positions=[];
@@ -1867,14 +1867,14 @@ function v43setup(){
  s.plant={types:[{id:0,name:'Станок-качалка',qty:1,expired:0,extended:0,price:5,condition:87,maintenance:0,renewed:0},
  {id:1,name:'Узел учёта',qty:1,expired:0,extended:0,price:4,condition:90,maintenance:0,renewed:0}],
  stock:[{id:0,name:'ЗИП и расходные материалы',qty:12,minimum:4,price:.2,consumed:0}],
- history:[],investment:0,warehouseSpend:0,selected:0,warning:'Стартовый склад малого нефтепромысла; дополнительные активы приобретаются по мере развития.'};
+ history:[],investment:0,warehouseSpend:0,selected:0,warning:'Стартовый склад компании; дополнительные активы приобретаются по мере развития.'};
  // Only one collection point; no fictional second field or PPD complex.
  s.operations={shops:[{id:0,name:'Производственный участок №1',kind:'Добыча',plan:300,efficiency:86,discipline:85,chief:'Мастер участка',history:[],warnings:0,invested:0,review:0}],cases:[],closed:[],sequence:0,logs:[],selected:0,losses:0,prevented:0,issued:0};
  s.assets.infrastructure=[{id:'ГУ-1',type:'Малая групповая установка',health:91},
  {id:'РВС-1',type:'Резервуар 1000 т',health:90},
  {id:'ВЛ-1',type:'Выкидная линия',health:91},
  {id:'УУН-1',type:'Узел учёта',health:90},
- {id:'ВАГ-1',type:'Бытовой вагончик',health:92}];
+ {id:'КТП-1',type:'Комплектная трансформаторная подстанция',health:92}];
  s.v21=null;
  let nodes=v21init().nodes;
  for(let id of Object.keys(nodes))if(!['ГУ-1','ДНС-1','ЦППН','ППД-1','ПС-1'].includes(id))delete nodes[id];
@@ -1897,13 +1897,13 @@ hrView=function(){
  if(!s?.small)return v43oldHrView();
  let g=growInit(),h=ensureHR();
  let total=g.staff,filled=h.positions.filter(p=>p.employeeId).length;
- return '<section class="small-panel"><h2>Штат малого промысла</h2><p class="muted">Начальный реестр — 12 работников. Новые должности появляются по мере найма в блоке развития штата; крупные департаменты отсутствуют.</p>'+row('Фактический штат',total+' чел.')+row('Первоначальные должности',filled+' / 12')+row('Единый ФОТ',m(v8init().salaryFund)+'/мес.')+
+ return '<section class="small-panel"><h2>Персонал компании</h2><p class="muted">Начальный реестр — 12 работников. Новые должности появляются по мере найма в блоке развития штата; крупные департаменты отсутствуют.</p>'+row('Фактический штат',total+' чел.')+row('Первоначальные должности',filled+' / 12')+row('Единый ФОТ',m(v8init().salaryFund)+'/мес.')+
  '<div class="table-scroll"><table><thead><tr><th>Подразделение</th><th>Должность</th><th>Работник</th></tr></thead><tbody>'+h.positions.map(p=>{let person=h.employees.find(e=>e.id===p.employeeId);return '<tr><td>'+esc(p.dept)+'</td><td>'+esc(p.role)+'</td><td>'+esc(person?.name||'Вакансия')+'</td></tr>'}).join('')+'</tbody></table></div><p class="muted">Новые сотрудники, сроки подбора и затраты учитываются в разделе развития штата на главном экране.</p></section>';
 };
 const v43oldOrgView=enterpriseView;
 enterpriseView=function(){
  if(!s?.small)return v43oldOrgView();
- if(tab==='org')return '<section class="small-panel"><h2>Структура малого предприятия</h2>'+ensureEnterprise().dept.map(d=>row(esc(d.name),d.headcount+' чел.')).join('')+'<p class="muted">Большие департаменты создаются по мере роста производства и численности.</p></section>';
+ if(tab==='org')return '<section class="small-panel"><h2>Структура компании</h2>'+ensureEnterprise().dept.map(d=>row(esc(d.name),d.headcount+' чел.')).join('')+'<p class="muted">Большие департаменты создаются по мере роста производства и численности.</p></section>';
  if(tab==='staff')return hrView();
  return v43oldOrgView();
 };
@@ -2586,6 +2586,27 @@ function fac392build(id){let z=fac392init(),f=FAC392.find(x=>x.id===id);if(!z||!
  if(s.cash<f.cost)return uiAlert('Недостаточно средств: требуется '+m(f.cost)+'.');
  s.cash-=f.cost;v25post('maintenance',f.cost,{description:'Капитальные вложения: '+f.name});z.spent+=f.cost;
  z.projects.push({id:f.id,days:f.days,cost:f.cost});z.log.unshift('Начато строительство: '+f.name+' · '+f.days+' дней · '+m(f.cost));save();render();}
+/* v4.3.3 — lifecycle decisions for auxiliary fixed assets. */
+async function fac433Cancel(id){
+ let z=fac392init(),p=z?.projects.find(x=>x.id===id),f=FAC392.find(x=>x.id===id);if(!p||!f)return;
+ let progress=Math.max(0,Math.min(1,1-p.days/f.days));
+ let refund=Math.round(f.cost*(1-progress)*0.7*100)/100;
+ if(!await uiConfirm('Отменить строительство «'+f.name+'»?\nГотовность: '+Math.round(progress*100)+'%.\nВозврат неосвоенного аванса: '+m(refund)+'.\nУже выполненные работы и расходы подрядчика не возвращаются.'))return;
+ z.projects=z.projects.filter(x=>x!==p);s.cash+=refund;z.spent=Math.max(0,z.spent-refund);
+ if(refund>0)v25post('capex_refund',refund,{description:'Возврат аванса при отмене строительства: '+f.name});
+ z.log.unshift('Строительство отменено: '+f.name+'; возврат '+m(refund));log('Отмена строительства: '+f.name);save();render();
+}
+async function fac433Demolish(id){
+ let z=fac392init(),f=FAC392.find(x=>x.id===id);if(!z?.completed.includes(id)||!f)return;
+ let fee=Math.round(f.cost*.1*100)/100;
+ if(s.cash<fee)return uiAlert('Недостаточно средств на демонтаж: '+m(fee));
+ if(!await uiConfirm('Снести «'+f.name+'»?\nСтоимость демонтажа: '+m(fee)+'.\nОбъект будет выведен из эксплуатации, его мощность и содержание прекратятся. Действие необратимо.'))return;
+ s.cash-=fee;v25post('maintenance',fee,{description:'Демонтаж основного средства: '+f.name});
+ z.completed=z.completed.filter(x=>x!==id);
+ if(id==='dorm'){let c=v36init().camp;c.beds=Math.max(0,(c.beds||0)-40);c.residents=Math.min(c.residents||0,c.beds);}
+ if(id==='canteen'){let c=v36init().camp;c.cleanliness=Math.max(0,(c.cleanliness||0)-4);}
+ z.log.unshift('Объект демонтирован: '+f.name+'; затраты '+m(fee));log('Демонтаж: '+f.name);save();render();
+}
 function fac392day(){let z=fac392init();if(!z)return;
  for(let i=z.projects.length-1;i>=0;i--){let p=z.projects[i];if(--p.days>0)continue;
  let f=FAC392.find(x=>x.id===p.id);z.projects.splice(i,1);z.completed.push(p.id);
@@ -2604,7 +2625,7 @@ function fac392view(){let z=fac392init();if(!z)return '';
  for(let kind of ['Социальные объекты','Вспомогательные участки']){html+='<h3>'+kind+'</h3><div class="grow-actions">';
  for(let f of FAC392.filter(x=>x.kind===kind)){let p=z.projects.find(x=>x.id===f.id),built=fac392built(f.id);
  html+='<div><b>'+esc(f.name)+'</b><small>'+m(f.cost)+' · '+f.days+' дн. · содержание '+m(f.upkeep)+'/мес.</small><p class="muted">'+esc(f.benefit)+'</p>'+
- (built?'<strong>Введён в эксплуатацию</strong>':p?'<strong>Строительство: осталось '+p.days+' дн.</strong>':'<button class="mini-btn" data-fac392="'+f.id+'" '+(s.cash<f.cost?'disabled':'')+'>Построить</button>')+'</div>';}
+ (built?'<strong>Введён в эксплуатацию</strong> <button class="mini-btn" data-fac433-demolish="'+f.id+'">Снести · '+m(Math.round(f.cost*.1*100)/100)+'</button>':p?'<strong>Строительство: осталось '+p.days+' дн.</strong> <button class="mini-btn" data-fac433-cancel="'+f.id+'">Отменить стройку</button>':'<button class="mini-btn" data-fac392="'+f.id+'" '+(s.cash<f.cost?'disabled':'')+'>Построить</button>')+'</div>';}
  html+='</div>';}
  html+='<h3>Журнал строительства</h3>'+z.log.slice(0,6).map(x=>'<p class="muted">'+esc(x)+'</p>').join('')+'</section>';return html;}
 const fac392OldDay=smallDay;smallDay=function(){fac392OldDay();fac392day();};
@@ -2621,6 +2642,8 @@ const fac392OldKPIs=staff90KPIs;staff90KPIs=function(){let k=fac392OldKPIs();if(
  if(fac392built('canteen'))k.safety=Math.min(100,k.safety+2);
  return k;};
 document.addEventListener('click',e=>{let b=e.target.closest('[data-fac392]');if(b)fac392build(b.dataset.fac392);});
+
+document.addEventListener('click',e=>{let b=e.target.closest('[data-fac433-cancel]');if(b)fac433Cancel(b.dataset.fac433Cancel);let d=e.target.closest('[data-fac433-demolish]');if(d)fac433Demolish(d.dataset.fac433Demolish);});
 /* v3.9.3 — utilities: generation -> switchgear -> loads, water -> sewer -> treatment. */
 const UTIL393=[
  {id:'gtes',name:'ГТЭС — газотурбинная электростанция, 500 кВт',kind:'Электроснабжение',cost:850,days:100,upkeep:2.8,kw:500,desc:'Собственная генерация; требует топлива и обслуживания'},
@@ -3162,7 +3185,7 @@ const SAFE402_PLACES=['ЦДНГ-1','ЦДНГ-2','ЦДНГ-3','ЦППН','ЦПП�
 const SAFE402_CONTEXT=['во время дневной смены','при подготовке к ремонту','при обходе объекта','во время приёмки смены','при выполнении планового задания','после изменения погодных условий'];
 // 5 × 8 × 10 × 6 = 2400 unique situation combinations.
 function safe402init(){if(!s.safe402)s.safe402={events:[],next:0,selected:'all',discipline:[],actions:[],lastDay:-1};return s.safe402}
-function safe402generate(forceArea){let d=safe402init(),area=forceArea||SAFE402_AREAS[Math.floor(Math.random()*SAFE402_AREAS.length)],n=d.next++,place=SAFE402_PLACES[(n*7+Math.floor(Math.random()*10))%SAFE402_PLACES.length],caseName=area.cases[(n*3+Math.floor(Math.random()*8))%area.cases.length],context=SAFE402_CONTEXT[(n+Math.floor(Math.random()*6))%SAFE402_CONTEXT.length],severity=['Нарушение','Инцидент','Серьёзное происшествие'][Math.random()<.62?0:Math.random()<.75?1:2],impact=severity==='Серьёзное происшествие'?3:severity==='Инцидент'?1.2:.35;let e={id:n+1,area:area.id,title:caseName,place,context,severity,created:v8date(),status:'Ожидает решения',scope:place==='Административный аппарат'?'Городской аппарат':'Производственный цех',impact,decision:null};d.events.unshift(e);d.events=d.events.filter((x,i)=>i<250||!!(d.cases?.[x.id]&&d.cases[x.id].stage!=='complete'));s.safety=cl(s.safety-impact*.3,0,100);log('Событие '+area.short+' №'+e.id+': '+e.title+' ('+place+')');save();return e}
+function safe402generate(forceArea){let d=safe402init(),area=forceArea||SAFE402_AREAS[Math.floor(Math.random()*SAFE402_AREAS.length)],n=d.next++,place=SAFE402_PLACES[(n*7+Math.floor(Math.random()*10))%SAFE402_PLACES.length],caseName=area.cases[(n*3+Math.floor(Math.random()*8))%area.cases.length],context=SAFE402_CONTEXT[(n+Math.floor(Math.random()*6))%SAFE402_CONTEXT.length],severity=['Нарушение','Инцидент','Серьёзное происшествие'][Math.random()<.62?0:Math.random()<.75?1:2],impact=severity==='Серьёзное происшествие'?3:severity==='Инцидент'?1.2:.35;let e={id:n+1,area:area.id,title:caseName,place,context,severity,created:v8date(),gameYear:Math.floor(v8init().daysElapsed/365),status:'Ожидает решения',scope:place==='Административный аппарат'?'Городской аппарат':'Производственный цех',impact,decision:null};d.events.unshift(e);d.events=d.events.filter((x,i)=>i<250||!!(d.cases?.[x.id]&&d.cases[x.id].stage!=='complete'));s.safety=cl(s.safety-impact*.3,0,100);log('Событие '+area.short+' №'+e.id+': '+e.title+' ('+place+')');save();return e}
 function safe402resolve(id,decision){let d=safe402init(),e=d.events.find(x=>x.id===id);if(!e||e.status!=='Ожидает решения')return;let cost=0,boost=0,label='';switch(decision){case 'investigate':label='Назначено расследование и корректирующие мероприятия';cost=.25;boost=.7;break;case 'train':label='Внеплановый инструктаж и обучение';cost=.4;boost=1.2;break;case 'warning':label='Дисциплинарное замечание после проверки';cost=.1;boost=.5;break;case 'reprimand':label='Дисциплинарный выговор после проверки';cost=.15;boost=.65;break;case 'dismiss':label='Расторжение трудового договора после кадровой проверки';cost=.5;boost=.2;break;case 'contain':label='Локализация, устранение и профилактика';cost=e.impact*1.8;boost=2;break;default:return}if(s.cash<cost)return uiAlert('Недостаточно средств на выбранное мероприятие: '+m(cost));s.cash-=cost;if(cost>0)v25post('maintenance',cost,{description:'Мероприятие '+SAFE402_AREAS.find(a=>a.id===e.area).short+' №'+e.id+': '+label});s.safety=cl(s.safety+boost,0,100);e.decision=decision;e.status='Решение принято';e.resolution=label;d.actions.unshift({eventId:id,decision,label,date:v8date(),cost});if(decision==='dismiss'){e.hrReview='Кадровое решение в расчётный модели; применимость зависит от расследования и трудового законодательства';}log('Решение по событию №'+id+': '+label);save();render()}
 function safe402Meter(label,value,color){let v=Math.max(0,Math.min(100,Number(value)||0));return '<div class="safe402-meter"><div><span>'+esc(label)+'</span><b>'+Math.round(v)+'%</b></div><div class="safe402-track"><i style="width:'+v+'%;background:'+color+'"></i></div></div>'}
 function safe402View(){let d=safe402init(),v=v8init(),all=[...d.events],open=all.filter(e=>e.status==='Ожидает решения'),counts=SAFE402_AREAS.map(a=>all.filter(e=>e.area===a.id).length),total=all.length,investigations=v.incidents?.length||0;let out='<section class="safe402"><div class="safe402-heading"><div><h2>Единый центр безопасности</h2><p>БиОТ · Промышленная безопасность · Экология · Пожарная безопасность · Служба безопасности</p></div><span class="safe402-live">● КОНТРОЛЬ РИСКОВ</span></div>';
@@ -3174,7 +3197,7 @@ function safe402View(){let d=safe402init(),v=v8init(),all=[...d.events],open=all
  for(let e of shown){let a=SAFE402_AREAS.find(x=>x.id===e.area);out+='<details class="safe402-event" '+(e.status==='Ожидает решения'?'open':'')+'><summary><span class="safe402-tag" style="border-color:'+a.color+'">'+a.short+'</span><b>№'+e.id+' · '+esc(e.title)+'</b><small>'+esc(e.status)+'</small></summary><div class="safe402-event-body"><p>'+esc(e.place)+' · '+esc(e.scope)+' · '+esc(e.context)+'</p>'+row('Категория',esc(e.severity))+row('Дата',esc(e.created));if(e.status==='Ожидает решения')out+='<p class="muted">Решение руководителя. Дисциплинарные меры в игре допустимы только после установления фактов и соблюдения кадровой процедуры.</p><div class="safe402-actions">'+[['investigate','Расследование'],['contain','Устранить причину'],['train','Обучение'],['warning','Замечание'],['reprimand','Выговор'],['dismiss','Увольнение после проверки']].map(x=>'<button class="mini-btn" data-safe-decision="'+x[0]+'" data-safe-id="'+e.id+'">'+x[1]+'</button>').join('')+'</div>';else out+='<p class="notice">'+esc(e.resolution||'Решение принято')+'</p>';out+='</div></details>'}
  out+='<details class="safe402-legacy"><summary>Дополнительные реестры: расследования, остановки и проверки</summary>'+v8incidentsView()+(typeof complyView==='function'?complyView():'')+'</details>';
  out+='<p class="muted">Библиотека событий: 2 400 сочетаний типа события, объекта и обстоятельств. Это процедурные производственные сценарии, не 2 400 независимых экспертных расследований. Дисциплинарные решения не являются юридической рекомендацией.</p></section>';return out}
-const safe402OldAdvance=v8advance;v8advance=function(){let before=v8init().daysElapsed;safe402OldAdvance();if(!s?.small||v8init().daysElapsed===before)return;let d=safe402init();if(d.lastDay===v8init().daysElapsed)return;d.lastDay=v8init().daysElapsed;let risk=Math.max(.012,Math.min(.065,(100-s.safety)/900));if(Math.random()<risk)safe402generate()};
+const safe402OldAdvance=v8advance;v8advance=function(){let before=v8init().daysElapsed;safe402OldAdvance();if(!s?.small||v8init().daysElapsed===before)return;let d=safe402init();if(d.lastDay===v8init().daysElapsed)return;d.lastDay=v8init().daysElapsed;let risk=Math.max(.012,Math.min(.065,(100-s.safety)/900));if(safe434DailyChance())safe402generate()};
 const safe402OldRender=render;render=function(){safe402OldRender();if(!s)return;document.querySelectorAll('#v11sideitems [data-v11-tab="incidents"],#v11sideitems [data-v11-tab="ecology"]').forEach(b=>b.remove());let safetyNav=document.querySelector('#v11sideitems [data-v11-tab="hse"] .txt');if(safetyNav)safetyNav.textContent='Единый центр безопасности';if(['hse','incidents','ecology'].includes(tab)){let el=$('body');if(el){el.innerHTML=safe402View();let filter=document.getElementById('safe402-filter');if(filter)filter.onchange=()=>{safe402init().selected=filter.value;render()};document.querySelectorAll('[data-safe-filter]').forEach(b=>b.onclick=()=>{safe402init().selected=b.dataset.safeFilter;render()});document.querySelectorAll('[data-safe-decision]').forEach(b=>b.onclick=()=>safe402resolve(+b.dataset.safeId,b.dataset.safeDecision));let demo=document.getElementById('safe402-demo');if(demo)demo.onclick=()=>{safe402generate();render()}}}
  if(tab==='people'||tab==='overview'){let body=$('body');if(body){let league=v37refresh(),list=league.years[v8init().year]||[],mine=list.find(x=>x.player),leader=list[0],ahead=list.find(x=>x.rank===Math.max(1,(mine?.rank||100)-1)),trail=league.live?.trend||[],slice=trail.slice(-30),out='<section class="safe402-league"><h2>Конкурентная среда · 100 компаний</h2><div class="safe402-kpis"><div><small>Ваше место</small><strong>№'+(mine?.rank||100)+'/100</strong></div><div><small>Ваш рейтинг</small><strong>'+(mine?.score||0)+'</strong></div><div><small>Лидер</small><strong>'+(leader?.score||0)+'</strong></div><div><small>Отставание от следующего</small><strong>'+Math.max(0,((ahead?.score||0)-(mine?.score||0))).toFixed(1)+'</strong></div></div><h3>Баллы конкурентов рядом с вами</h3><div class="safe402-rivals">';for(let c of list.filter(x=>Math.abs(x.rank-(mine?.rank||100))<=3)){out+='<div class="safe402-rival '+(c.player?'mine':'')+'"><span>№'+c.rank+' · '+esc(c.name)+'</span><div><i style="width:'+Math.max(1,c.score)+'%"></i></div><b>'+c.score+'</b></div>'}out+='</div><p class="muted">Соперники — вымышленные. Их рейтинг изменяется ежедневно; рост вашей компании зависит от производства, финансов, безопасности, персонала и инвестиций.</p></section>';body.insertAdjacentHTML('afterbegin',out)}}};
 /* v4.0.3: actionable, staged HR procedure linked to safety events and actual staff positions. */
@@ -3255,7 +3278,7 @@ function hr405Reconcile(){
 function safe405Reconcile(){
  const d=safe403Init(),legacy=v8init().incidents||[];d.legacyIndex||={};
  for(const ev of legacy){let key='v8:'+ev.id;if(d.legacyIndex[key])continue;
-  const id=++d.next;d.events.unshift({id,origin:key,area:ev.severity==='Авария'?'industrial':'labor',title:ev.severity,place:ev.well&&ev.well!=='—'?'Скважина №'+ev.well:'Производственный объект',context:'автоматически зарегистрированное производственное событие',severity:ev.severity,created:ev.date,status:'Ожидает решения',scope:'Производственный цех',impact:0,decision:null,expense:ev.expense});d.legacyIndex[key]=id;
+  const id=++d.next;d.events.unshift({id,origin:key,area:ev.severity==='Авария'?'industrial':'labor',title:ev.severity,place:ev.well&&ev.well!=='—'?'Скважина №'+ev.well:'Производственный объект',context:'автоматически зарегистрированное производственное событие',severity:ev.severity,created:ev.date,gameYear:ev.gameYear??Math.floor(v8init().daysElapsed/365),status:'Ожидает решения',scope:'Производственный цех',impact:0,decision:null,expense:ev.expense});d.legacyIndex[key]=id;
  }
  // Legacy events are mirrored, not regenerated: costs and safety penalties remain booked only once.
  return {total:d.events.length,legacy:Object.keys(d.legacyIndex).length,open:d.events.filter(e=>e.status==='Ожидает решения').length};
@@ -3866,6 +3889,198 @@ render=function(){
  }
  if(tab==='overview'&&active){let msg=[];if(q.stopped.length)msg.push('Остановлено скважин: '+q.stopped.length);if(q.missing.length)msg.push('Отсутствуют необходимые запчасти: '+q.missing.length);if(q.unpowered.length)msg.push('Без питания скважин: '+q.unpowered.length);$('body').insertAdjacentHTML('afterbegin','<div class="notice bad"><b>Требуют внимания:</b> '+esc(msg.join(' · '))+'</div>');}
 };
+/* v4.3.0: Finance audit view. Read-only: never changes cash or posts a payment. */
+function fin430init(){if(!s.fin430)s.fin430={};return s.fin430}
+function fin430Kind(e){
+ const d=String(e.meta?.description||'').toLowerCase();
+ if(e.type==='sale')return 'Начисленная выручка';
+ if(/капвлож|строительств|благоустройств|возведени/.test(d))return 'Капитальные вложения (ранее отражались как ремонт)';
+ if(e.type==='payroll')return 'Оплата труда';
+ if(e.type==='bonus')return 'Премии';
+ if(e.type==='maintenance')return 'Ремонты и обслуживание';
+ if(e.type==='incident')return 'Происшествия и штрафы';
+ if(e.type==='opex')return 'Текущие затраты';
+ return 'Прочие начисления';
+}
+function fin430view(){
+ let ledger=v25init(),treasury=v35init(),entries=ledger.entries;
+ let months=[...new Set(entries.map(e=>e.month))].sort((a,b)=>b-a);
+ let chosen=Number(s.fin430?.month);if(!months.includes(chosen))chosen=months[0]??s.month;
+ let monthEntries=entries.filter(e=>e.month===chosen),groups={};
+ for(let e of monthEntries){let k=fin430Kind(e);groups[k]=(groups[k]||0)+e.amount}
+ let income=groups['Начисленная выручка']||0;
+ let expenses=Object.entries(groups).filter(([k])=>k!=='Начисленная выручка').reduce((a,[,v])=>a+v,0);
+ let snapshots=treasury.snapshots||[],first=snapshots[0],last=snapshots[snapshots.length-1];
+ let h='<section class="fin430"><h2>Финансовый контроль · v4.3.0</h2><p class="muted">Все суммы — млн ₸. Начисления, реальные платежи и кредиты — разные показатели. Данные до обновления могут быть неполными.</p>';
+ h+='<div class="actions"><label>Период начислений <select id="fin430-month">'+months.slice(0,24).map(n=>'<option value="'+n+'" '+(n===chosen?'selected':'')+'>Месяц '+n+'</option>').join('')+'</select></label></div>';
+ h+=row('Начисленная выручка',m(income))+row('Учтённые расходы и инвестиции',m(expenses))+row('Разница начислений (не денежный поток)',m(income-expenses));
+ h+='<h3>Из чего состоят начисления</h3>';
+ h+=Object.entries(groups).sort((a,b)=>b[1]-a[1]).map(([k,v])=>row(k,m(v))).join('');
+ h+='<h3>Контроль денежного остатка</h3>'+row('Текущий остаток',m(s.cash));
+ if(first&&last){h+=row('Первый доступный снимок · '+first.date,m(first.cash))+row('Последний снимок · '+last.date,m(last.cash))+row('Изменение между снимками',m(last.cash-first.cash));}
+ let cashEntries=treasury.cashEntries||[];
+ h+='<h3>Отдельные движения казначейства</h3>';
+ let cashGroups={};for(let e of cashEntries){cashGroups[e.type]=(cashGroups[e.type]||0)+e.amount}
+ for(let [k,v] of Object.entries(cashGroups).sort((a,b)=>b[1]-a[1]))h+=row(({credit_in:'Полученные кредиты',credit_out:'Погашение тела кредита',interest:'Проценты',capex:'Оплата капитальных договоров',contract_opex:'Оплата подрядчиков'})[k]||k,m(v));
+ h+='<p class="muted">Казначейские записи могут пересекаться с журналом начислений: их нельзя просто складывать. История хранится с ограничением по количеству записей. Платежи, сделанные напрямую без записи, автоматически восстановить нельзя.</p>';
+ h+='<h3>Последние денежные операции казначейства</h3>';
+ h+=cashEntries.slice(0,30).map(e=>'<div class="row"><span>'+esc(e.date)+' · '+esc(e.detail||e.type)+'</span><b>'+m(e.amount)+'</b></div>').join('')||'<p class="muted">Нет записей.</p>';
+ h+='<div class="notice">Контрольный статус: полной сверки «начальный остаток + все поступления − все выплаты = конечный остаток» пока нет, поскольку прежние игровые механики списывают часть средств напрямую. Это диагностический отчёт, а не подтверждение отсутствия ошибок.</div></section>';
+ return h;
+}
+const fin430oldRender=render;
+render=function(){fin430oldRender();if(tab==='finance'){let el=document.getElementById('body');if(el){el.insertAdjacentHTML('beforeend',fin430view());let sel=document.getElementById('fin430-month');if(sel)sel.onchange=()=>{fin430init().month=Number(sel.value);save();render()}}}};
+/* v4.3.1 — кадровый контроль малого промысла, без изменения старых сохранений. */
+function hr431Init(){if(!s?.small)return null;let g=growInit();g.hr431 ||= {orders:[],nextId:1};return g.hr431}
+function hr431Payroll(){let g=growInit(),v=v8init();g.staff=g.roster.reduce((n,r)=>n+Math.max(0,+r.count||0),0);v.salaryFund=Math.round(g.roster.reduce((n,r)=>n+Math.max(0,+r.salary||0),0)*10000)/10000;if(s.enterprise)s.enterprise.staff=g.staff;return v.salaryFund}
+async function hr431Dismiss(index){let g=growInit(),h=hr431Init();if(!g||!h)return;let r=g.roster[index];if(!r||r.count<1)return uiAlert('В этой категории нет работников');let n=Number(await uiPrompt('Сколько работников уволить с должности «'+r.job+'»? Доступно '+r.count+':','1'));if(!Number.isInteger(n)||n<1||n>r.count)return uiAlert('Укажите количество от 1 до '+r.count);let monthly=(+r.salary||0)/r.count*n;let confirm='Уволить '+n+' чел. («'+r.job+'»)? ФОТ уменьшится примерно на '+m(monthly)+'/мес. Укомплектованность смен и ремонтов может ухудшиться.';if(!await uiConfirm(confirm))return;
+ // Закрываем соответствующие позиции в едином кадровом реестре, если они там есть.
+ let registry=ensureHR(),remaining=n;
+ for(let p of registry.positions){if(!remaining||!p.employeeId)break;if(p.role!==r.job)continue;let employee=registry.employees.find(e=>e.id===p.employeeId&&e.status==='Работает');if(!employee)continue;employee.status='Уволен';employee.positionId=null;p.employeeId=null;remaining--;}
+ r.salary=Math.max(0,(+r.salary||0)-monthly);r.count-=n;
+ h.orders.unshift({id:h.nextId++,date:v8date(),type:'Увольнение',role:r.job,count:n,delta:-monthly});h.orders=h.orders.slice(0,100);
+ g.log.unshift(v8date()+' · увольнение '+n+' чел. · '+r.job+' · экономия ФОТ '+m(monthly)+'/мес.');
+ if(r.count===0)g.roster.splice(index,1);
+ hr431Payroll();
+ // Синхронизация HR не должна повторно добавлять ФОТ уже учтённых в малом промысле работников.
+ save();render();
+}
+const hr431OldGrowView=growView;
+growView=function(){let old=hr431OldGrowView();if(!s?.small)return old;let g=growInit(),h=hr431Init();let html='<section class="small-panel"><h2>Кадровая служба · действующий штат</h2><p class="muted">Увольнение уменьшает численность и месячный фонд оплаты труда. Производственные последствия определяются фактической укомплектованностью. Увольнение не отменяет уже начисленную зарплату.</p>';
+ html+='<div class="small-economy-grid">'+[['Работают',g.staff+' чел.'],['ФОТ в месяц',m(v8init().salaryFund)],['Оформлено увольнений',h.orders.filter(x=>x.type==='Увольнение').reduce((n,x)=>n+x.count,0)+' чел.']].map(x=>'<div><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('')+'</div>';
+ html+='<h3>Штат по должностям</h3>';
+ html+=g.roster.map((r,i)=>'<div class="row"><span><b>'+esc(r.job)+'</b><small class="v8small" style="display:block">'+r.count+' чел. · '+m(r.salary)+'/мес.</small></span><button class="mini-btn" data-hr431-fire="'+i+'">Уволить</button></div>').join('');
+ html+='<h3>Последние кадровые приказы</h3>'+(h.orders.length?h.orders.slice(0,8).map(x=>'<p class="muted">'+esc(x.date+' · '+x.type+' · '+x.role+' · '+x.count+' чел.')+'</p>').join(''):'<p class="muted">Кадровых приказов пока нет.</p>')+'</section>';
+ return old+html;
+};
+document.addEventListener('click',function(event){let b=event.target.closest('[data-hr431-fire]');if(b)hr431Dismiss(Number(b.dataset.hr431Fire))});
+/* v4.3.2 — warehouse automation: orders, transit, issue history, budget guard. */
+function wh432(){let p=ensurePlant();if(!p.automation)p.automation={enabled:false,orders:[],movements:[],seq:0,monthlyLimit:Math.max(5,Math.round(s.cash*.015)),spentMonth:0,month:s.month};return p.automation}
+function wh432log(kind,item,qty,amount,note){let a=wh432();a.movements.unshift({month:s.month,day:typeof v8date==='function'?v8date():String(s.month),kind,item,qty,amount,note});a.movements.length=Math.min(a.movements.length,120)}
+function wh432kind(x){return /Спецодежда|Каски|очки|Перчатки|СИЗОД|гигиен|мыло|полотенц/i.test(x.name)?'СИЗ и обеспечение':'Ремонтные запчасти'}
+function wh432place(x,n,manual){let a=wh432(),p=ensurePlant(),qty=Math.max(0,Math.floor(n));if(!qty||!Number.isFinite(qty))return false;let pending=a.orders.filter(o=>o.item===x.name&&o.status==='В пути').reduce((v,o)=>v+o.qty,0);if(pending>=Math.max(0,x.minimum*2-x.qty))return false;qty=Math.min(qty,Math.max(0,Math.ceil(x.minimum*2-x.qty-pending)));if(!qty)return false;let cost=Math.round(qty*x.price*1000)/1000;if(cost>s.cash||(!manual&&(a.spentMonth+cost>a.monthlyLimit)))return false;s.cash-=cost;p.warehouseSpend+=cost;a.spentMonth+=cost;let order={id:++a.seq,item:x.name,qty,cost,days:wh432kind(x)==='Ремонтные запчасти'?7:4,status:'В пути',month:s.month};a.orders.unshift(order);wh432log('Заказ',x.name,qty,cost,'Оплачено, ожидается поставка');if(typeof v25post==='function')v25post('inventory_purchase',cost,{item:x.name,qty,order:order.id});plantRecord('Заказ МТР №'+order.id+': '+x.name+' — '+qty+' ед., '+m(cost));return true}
+function wh432tick(){let a=wh432(),p=ensurePlant();if(a.month!==s.month){a.month=s.month;a.spentMonth=0}for(let o of a.orders){if(o.status!=='В пути')continue;o.days--;if(o.days>0)continue;let x=p.stock.find(z=>z.name===o.item);if(!x){o.status='Ошибка номенклатуры';continue}x.qty+=o.qty;o.status='Поставлено';wh432log('Приход',x.name,o.qty,0,'Заказ №'+o.id);plantRecord('Поступление МТР №'+o.id+': '+x.name+' — '+o.qty+' ед.')}if(a.enabled){for(let x of p.stock){let pending=a.orders.filter(o=>o.item===x.name&&o.status==='В пути').reduce((v,o)=>v+o.qty,0);if(x.qty+pending<x.minimum)wh432place(x,Math.ceil(x.minimum*2-x.qty-pending),false)}}if(a.orders.length>150)a.orders.splice(150)}
+const wh432OldAssetMonth=assetMonth;
+assetMonth=function(){let p=ensurePlant(),spares=p.stock.filter(x=>wh432kind(x)==='Ремонтные запчасти').map(x=>({x,qty:x.qty,consumed:x.consumed}));wh432OldAssetMonth();for(let z of spares){z.x.qty=z.qty;z.x.consumed=z.consumed}for(let z of p.stock){if(wh432kind(z)!=='Ремонтные запчасти'&&z.consumed>0){} } };
+const wh432OldWarehouse=warehouseView;
+warehouseView=function(){let a=wh432(),p=ensurePlant(),pending=a.orders.filter(o=>o.status==='В пути'),history=a.movements.slice(0,16),low=p.stock.filter(x=>x.qty<x.minimum);let h='<section class="fx420-panel"><h3>Автоматизированное снабжение</h3><p class="muted">Автозаказ по минимальным остаткам. Заказ оплачивается один раз, поставка поступает через 4–7 игровых дней. Выдача ремонтных деталей происходит при назначении ремонта; СИЗ расходуются по месячным нормам.</p><div class="row"><span>Автопополнение</span><b>'+(a.enabled?'Включено':'Выключено')+'</b></div><button class="mini-btn" data-wh432="toggle">'+(a.enabled?'Отключить':'Включить')+' автопополнение</button><div class="row"><span>Лимит автозакупок за месяц</span><b>'+m(a.monthlyLimit)+'</b></div><button class="mini-btn" data-wh432="limit">Изменить лимит</button><div class="row"><span>Заказов в пути</span><b>'+pending.length+'</b></div><div class="row"><span>Позиции ниже минимума</span><b>'+low.length+'</b></div><h4>Поставки в пути</h4>'+(pending.length?pending.slice(0,12).map(o=>'<div class="row"><span>№'+o.id+' · '+esc(o.item)+' · '+o.qty+' ед.</span><b>'+o.days+' дн.</b></div>').join(''):'<p class="muted">Ожидаемых поставок нет.</p>')+'<h4>Движение материалов</h4>'+(history.length?history.map(o=>'<div class="row"><span>'+esc(o.kind)+' · '+esc(o.item)+' · '+o.qty+' ед.</span><small>'+esc(o.day)+'</small></div>').join(''):'<p class="muted">Операций пока нет.</p>')+'</section>';return h+wh432OldWarehouse()};
+const wh432OldBind=assetBind;
+assetBind=function(){wh432OldBind();document.querySelectorAll('[data-wh432]').forEach(b=>b.onclick=async()=>{let a=wh432();if(b.dataset.wh432==='toggle')a.enabled=!a.enabled;else{let n=Number(await uiPrompt('Лимит автозакупок за месяц (млн ₸):',a.monthlyLimit));if(!Number.isFinite(n)||n<0||n>1e9)return;a.monthlyLimit=n}save();render()})};
+
+const wh432OldAdvance=v8advance;
+v8advance=function(){wh432OldAdvance();wh432tick()};
+/* v4.3.4 — annual HSE event budget and unified automatic investigation. */
+function safe434Year(){return Math.floor((Number(v8init().daysElapsed)||0)/365)}
+function safe434Target(){return Math.max(1,Math.min(5,Math.round(3+(75-(Number(s.safety)||75))/25)))}
+function safe434Count(){let y=safe434Year(),d=safe402init();let n=d.events.filter(e=>e.gameYear===y).length;let legacy=(v8init().incidents||[]).filter(e=>e.gameYear===y);for(let e of legacy){if(!d.events.some(x=>x.origin==='v8:'+e.id))n++}return n}
+function safe434DailyChance(){let days=Number(v8init().daysElapsed)||0,remaining=365-days%365;return safe434Count()<safe434Target()&&Math.random()<Math.min(1,(safe434Target()-safe434Count())/Math.max(1,remaining))}
+function safe434LegacyChance(risk){if(s?.small)return false;return safe434DailyChance()}
+function safe434AutoOpen(){let d=safe402init(),cases=inv415Init(),changed=false;for(let e of d.events){if(e.status!=='Ожидает решения'||cases[e.id])continue;let day=Number(v8init().daysElapsed)||0;e.decision='investigate';e.status='Расследование';e.resolution='Расследование назначено автоматически';cases[e.id]={id:e.id,stage:'investigation',started:v8date(),startedDay:day,findings:'',cause:'',measures:'',deadline:0,history:[{date:v8date(),text:'Служба безопасности назначила комиссию'}]};inv417Prepare(e,cases[e.id]);changed=true}if(changed)save()}
+const safe434OldAdvance=v8advance;
+v8advance=function(){let result=safe434OldAdvance();if(s){safe405Reconcile();safe434AutoOpen();inv417Progress()}return result};
+const safe434OldView=safe402View;
+safe402View=function(){safe434AutoOpen();let html=safe434OldView(),node=document.createElement('div');node.innerHTML=html;node.querySelector('#safe402-demo')?.remove();node.querySelectorAll('[data-safe-decision]').forEach(b=>{if(b.dataset.safeDecision!=='investigate')b.remove()});let controls=node.querySelector('.safe402-controls'),summary=document.createElement('p');summary.className='notice';summary.textContent='Значимых событий за текущий игровой год: '+safe434Count()+' из планового диапазона 1–5. Расследования назначаются автоматически; комиссия готовит заключение, мероприятия и проверку, директор утверждает результат. Плановые проверки и замечания учитываются отдельно.';if(controls)controls.before(summary);return node.innerHTML};
+/* v4.3.5: quick navigation, filtered sidebar and director priorities. */
+const ui435Labels={overview:'Обзор',finance:'Финансы',warehouse:'Склад',staff:'Персонал',field:'Месторождение',dispatch:'Диспетчерская',incidents:'Происшествия',hse:'Безопасность',contracts:'Подрядчики',equipment:'Оборудование'};
+const ui435Pins=['overview','finance','warehouse','staff','dispatch','incidents'];
+function ui435Go(id){if(!document.querySelector('[data-v11-tab="'+id+'"]')&&!document.querySelector('[data-tab="'+id+'"]'))return;tab=id;render();window.scrollTo?.({top:0,behavior:'instant'})}
+function ui435Nav(){
+ const host=document.querySelector('#v11sideitems');if(!host)return;
+ let wrap=document.createElement('div');wrap.className='ui435-search';
+ let input=document.createElement('input');input.type='search';input.placeholder='Найти раздел…';input.setAttribute('aria-label','Поиск раздела');
+ input.addEventListener('input',()=>{let q=input.value.toLocaleLowerCase('ru');host.querySelectorAll('[data-v11-tab]').forEach(b=>{b.hidden=!b.textContent.toLocaleLowerCase('ru').includes(q)});host.querySelectorAll('.group397-nav').forEach(d=>{let has=[...d.querySelectorAll('[data-v11-tab]')].some(b=>!b.hidden);d.hidden=!has;if(q&&has)d.open=true})});
+ wrap.append(input);host.prepend(wrap);
+}
+function ui435Quick(){let body=document.querySelector('#body');if(!body)return;
+ let quick=document.createElement('div');quick.className='ui435-quick';quick.setAttribute('aria-label','Быстрые разделы');
+ for(let id of ui435Pins){let b=document.createElement('button');b.type='button';b.textContent=ui435Labels[id];b.className=tab===id?'ui435-active':'';b.onclick=()=>ui435Go(id);quick.append(b)}
+ body.prepend(quick);
+}
+function ui435Priorities(){if(tab!=='overview')return;let body=document.querySelector('#body');if(!body)return;
+ let alerts=[];let cash=Number(s.cash)||0,expense=Number(s.expense)||0;
+ if(cash<0)alerts.push(['Критическое состояние бюджета','Отрицательный остаток денежных средств','finance']);
+ else if(expense>0&&cash<expense)alerts.push(['Недостаток оборотных средств','Остаток меньше расходов прошлого месяца','finance']);
+ if((Number(s.condition)||100)<45)alerts.push(['Износ оборудования','Проверь техническое состояние и ремонты','equipment']);
+ if((Number(s.safety)||100)<55)alerts.push(['Повышенный производственный риск','Требуются профилактические мероприятия','hse']);
+ let pending=s.small?.wh432?.orders||s.small?.warehouse432?.orders||[];
+ if(Array.isArray(pending)&&pending.length)alerts.push(['Поставки материалов','В пути заказов: '+pending.length,'warehouse']);
+ let panel=document.createElement('section');panel.className='ui435-priorities';let heading=document.createElement('h2');heading.textContent='Внимание директора';panel.append(heading);
+ if(!alerts.length){let p=document.createElement('p');p.className='muted';p.textContent='По основным показателям критических отклонений не обнаружено.';panel.append(p)}
+ for(let [name,detail,id] of alerts){let b=document.createElement('button');b.className='ui435-priority';b.type='button';b.onclick=()=>ui435Go(id);let strong=document.createElement('strong');strong.textContent=name;let span=document.createElement('span');span.textContent=detail;b.append(strong,span);panel.append(b)}
+ let quick=body.querySelector('.ui435-quick');quick?.after(panel);
+}
+const ui435OldRender=render;
+render=function(){ui435OldRender();ui435Nav();ui435Quick();ui435Priorities()};
+/* v4.3.6 — integrated asset lifecycle and workforce recruitment. All amounts in mln KZT. */
+function fix436State(){if(!s.fix436)s.fix436={assets:[],payments:[],seq:0};return s.fix436}
+function fix436Cash(type,amount,label,category){
+ amount=Math.round(Number(amount)*10000)/10000;
+ if(!Number.isFinite(amount)||amount<0)throw Error('Некорректная сумма');
+ if(type==='out'&&s.cash<amount)return false;
+ s.cash+=type==='in'?amount:-amount;
+ let z=fix436State();z.payments.push({id:++z.seq,date:v8date(),type,amount,label,category});
+ if(z.payments.length>5000)z.payments.shift();
+ if(type==='out'&&category==='expense')v25post('opex',amount,{description:label,fix436:true});
+ if(type==='out'&&category==='capex')v25post('capex',amount,{description:label,fix436:true});
+ if(type==='in'&&category==='refund')v25post('capex_refund',amount,{description:label,fix436:true});
+ return true;
+}
+function fix436Asset(id,name,cost,group){let z=fix436State();let a=z.assets.find(x=>x.id===id&&x.status==='active');if(a)return a;
+ a={id,name,group,cost,book:cost,lifeMonths:group==='utility'?180:120,months:0,status:'active',date:v8date()};z.assets.push(a);return a;}
+function fix436InitAssets(){if(!s.small)return;let z=fix436State();
+ for(let f of FAC392){if(fac392built(f.id)&&!z.assets.some(a=>a.id==='fac:'+f.id))fix436Asset('fac:'+f.id,f.name,f.cost,'facility')}
+ let count={};for(let id of util393init().built){let f=UTIL393.find(x=>x.id===id);if(!f)continue;count[id]=(count[id]||0)+1;let key='util:'+id+':'+count[id];
+ if(!z.assets.some(a=>a.id===key&&a.status==='active')){let next=1;while(z.assets.some(a=>a.id==='util:'+id+':'+next))next++;fix436Asset('util:'+id+':'+next,f.name,f.cost,'utility');}}
+}
+function fix436Month(){if(!s.small)return;fix436InitAssets();let z=fix436State();for(let a of z.assets){if(a.group==='facility'&&a.status==='active'&&!fac392built(a.id.slice(4))){a.status='retired';a.disposalBook=a.book;a.book=0;continue;}if(a.status!=='active')continue;a.months++;a.book=Math.max(0,Math.round((a.cost-Math.min(a.months,a.lifeMonths)*a.cost/a.lifeMonths)*10000)/10000);}}
+const fix436OldSmallDay=smallDay;
+smallDay=function(){fix436OldSmallDay();if(s.small&&v8init().day===1)fix436Month();};
+async function fix436CancelUtility(index){let z=util393init(),p=z?.projects[index],f=p&&UTIL393.find(x=>x.id===p.id);if(!f)return;
+ let progress=Math.max(0,Math.min(1,1-p.days/f.days));let refund=Math.round(f.cost*(1-progress)*.7*100)/100;
+ if(!await uiConfirm('Отменить строительство «'+f.name+'»? Возврат аванса '+m(refund)+'. Выполненные работы не возмещаются.'))return;
+ z.projects.splice(index,1);fix436Cash('in',refund,'Возврат аванса: '+f.name,'refund');z.spent=Math.max(0,z.spent-refund);
+ z.log.unshift('Отменён проект: '+f.name+'; возврат '+m(refund));save();render();}
+async function fix436RetireUtility(id){let z=util393init(),f=UTIL393.find(x=>x.id===id);if(!z||!f||!z.built.includes(id))return;
+ let fee=Math.round(f.cost*.1*100)/100;if(s.cash<fee)return uiAlert('Недостаточно средств на демонтаж: '+m(fee));
+ if(!await uiConfirm('Демонтировать одну единицу «'+f.name+'»? Стоимость '+m(fee)+'. Мощность и затраты на содержание уменьшатся.'))return;
+ if(!fix436Cash('out',fee,'Демонтаж: '+f.name,'expense'))return;
+ z.built.splice(z.built.indexOf(id),1);
+ let a=fix436State().assets.find(x=>x.group==='utility'&&x.id.startsWith('util:'+id+':')&&x.status==='active');if(a){a.status='retired';a.retired=v8date();a.disposalBook=a.book;a.book=0;}
+ z.log.unshift('Демонтирован объект: '+f.name);save();render();}
+async function fix436Conserve(kind,id){let z=fix436State();fix436InitAssets();let a=z.assets.find(x=>x.id===id&&x.status==='active');if(!a)return;
+ if(!await uiConfirm('Законсервировать «'+a.name+'»? Объект временно прекратит работу.'))return;
+ a.status='conserved';a.conserved=v8date();
+ // Remove from operational registry; keep record for reactivation.
+ if(kind==='facility'){let q=fac392init();q.completed=q.completed.filter(x=>x!==id.slice(4));}
+ else{let q=util393init(),uid=id.split(':')[1];let i=q.built.indexOf(uid);if(i>=0)q.built.splice(i,1);}
+ z.payments.push({id:++z.seq,date:v8date(),type:'memo',amount:0,label:'Консервация: '+a.name,category:'asset'});save();render();}
+async function fix436Reactivate(id){let z=fix436State(),a=z.assets.find(x=>x.id===id&&x.status==='conserved');if(!a)return;
+ let fee=Math.round(a.cost*.02*100)/100;if(s.cash<fee)return uiAlert('Недостаточно средств: '+m(fee));
+ if(!await uiConfirm('Расконсервировать «'+a.name+'»? Подготовка '+m(fee)+'.'))return;
+ if(!fix436Cash('out',fee,'Расконсервация: '+a.name,'expense'))return;
+ a.status='active';if(a.group==='facility'){let q=fac392init(),id2=a.id.slice(4);if(!q.completed.includes(id2))q.completed.push(id2);}
+ else{let q=util393init();q.built.push(a.id.split(':')[1]);}save();render();}
+const fix436OldUtilityView=util393view;
+util393view=function(){let html=fix436OldUtilityView();if(!s.small)return html;fix436InitAssets();let z=util393init();
+ let panel='<section class="small-panel"><h3>Управление жизненным циклом инженерных объектов</h3>';
+ panel+=z.projects.map((p,i)=>{let f=UTIL393.find(x=>x.id===p.id);return f?'<div class="row"><span>'+esc(f.name)+' · '+p.days+' дн. осталось</span><button class="mini-btn" data-fix436-cancel="'+i+'">Отменить</button></div>':''}).join('');
+ panel+=UTIL393.filter(f=>util394count(f.id)>0).map(f=>'<div class="row"><span>'+esc(f.name)+' · '+util394count(f.id)+' шт.</span><button class="mini-btn" data-fix436-retire="'+f.id+'">Демонтировать одну</button></div>').join('');
+ panel+='<p class="muted">Консервация временно отключает мощность; демонтаж окончательно выводит объект из эксплуатации.</p></section>';return html+panel;};
+const fix436OldFacilityView=fac392view;
+fac392view=function(){let html=fix436OldFacilityView();if(!s.small)return html;fix436InitAssets();let a=fix436State().assets.filter(x=>x.status==='active');
+ let panel='<section class="small-panel"><h3>Консервация действующих основных средств</h3>';
+ panel+=a.map(x=>'<div class="row"><span>'+esc(x.name)+' · остаточная стоимость '+m(x.book)+'</span><button class="mini-btn" data-fix436-conserve="'+esc(x.id)+'">Консервировать</button></div>').join('');
+ panel+='</section>';return html+panel;};
+function fix436View(){if(!s.small)return '';fix436InitAssets();let z=fix436State();let active=z.assets.filter(a=>a.status==='active'),conserved=z.assets.filter(a=>a.status==='conserved');
+ let book=active.concat(conserved).reduce((n,a)=>n+a.book,0);
+ return '<section class="small-panel"><h2>Реестр основных средств</h2><p class="muted">Прямолинейная модель амортизации для новых и существующих вспомогательных и инженерных объектов. Оценочная стоимость не списывает деньги повторно. Историческая дата приобретения в старых сохранениях неизвестна, поэтому расчёт начинается с первого учёта.</p>'+row('Активных объектов',active.length)+row('На консервации',conserved.length)+row('Остаточная стоимость',m(book))+
+ conserved.map(a=>'<div class="row"><span>'+esc(a.name)+'</span><button class="mini-btn" data-fix436-reactivate="'+esc(a.id)+'">Расконсервировать</button></div>').join('')+
+ '<h3>Последние контролируемые платежи</h3>'+z.payments.slice(-12).reverse().map(p=>'<div class="row"><span>'+esc(p.date+' · '+p.label)+'</span><b>'+m(p.amount)+'</b></div>').join('')+'</section>';}
+const fix436OldSmallView=smallView;smallView=function(){return fix436OldSmallView()+fix436View()};
+document.addEventListener('click',e=>{let b=e.target.closest('[data-fix436-cancel]');if(b)fix436CancelUtility(+b.dataset.fix436Cancel);
+ b=e.target.closest('[data-fix436-retire]');if(b)fix436RetireUtility(b.dataset.fix436Retire);
+ b=e.target.closest('[data-fix436-conserve]');if(b)fix436Conserve(b.dataset.fix436Conserve.startsWith('fac:')?'facility':'utility',b.dataset.fix436Conserve);
+ b=e.target.closest('[data-fix436-reactivate]');if(b)fix436Reactivate(b.dataset.fix436Reactivate);});
 const BACKUP_KEY=KEY+'-backup';
 const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='.json,application/json';fileInput.style.display='none';document.body.appendChild(fileInput);
 const saveBar=document.createElement('div');saveBar.id='save-manager';
@@ -3911,3 +4126,1013 @@ document.getElementById('save-import').onclick=()=>{closeSettings();fileInput.va
 fileInput.onchange=async()=>{const file=fileInput.files&&fileInput.files[0];if(!file)return;if(file.size>15*1024*1024)return uiAlert('Файл слишком большой (максимум 15 МБ)');try{const parsed=JSON.parse(await file.text());const incoming=parsed&&parsed.format==='oil-management-save'?parsed.game:parsed;if(!validSave(incoming))throw new Error('Неверная структура файла сохранения');if(!await uiConfirm('Загрузить карьеру «'+incoming.name+'»? Текущая карьера будет заменена; перед заменой создаётся резервная копия.'))return;const old=localStorage.getItem(KEY);if(old)localStorage.setItem(BACKUP_KEY,old);localStorage.setItem(KEY,JSON.stringify(incoming));s=incoming;tab='overview';show();$('load').classList.remove('hide');saveStatus('Карьера загружена: '+incoming.name)}catch(e){uiAlert('Не удалось загрузить файл: '+e.message)}};
 
 })();
+/* v5 Alpha 1: compact mobile operations cards and auditable cash snapshots.
+   Additive to legacy saves: no historical cash values are changed. */
+function v5status(o){return o?.health<35?'stop':o?.health<65?'repair':'work'}
+function v5svg(type,status,level){
+ const active=status==='work',green=active?'#38c7a8':'#8497a5';
+ if(type==='well')return `<svg viewBox="0 0 150 100" aria-label="Устье и ствол скважины" role="img"><path d="M0 38H150" stroke="#b89c70" stroke-width="2"/><path d="M75 37V91" stroke="#a9b9c8" stroke-width="9" stroke-linecap="round"/><path d="M75 42V90" stroke="${green}" stroke-width="3" stroke-dasharray="6 5"/><rect x="60" y="24" width="30" height="14" rx="2" fill="#6f8ea1" stroke="#c4d5de" stroke-width="2"/><path d="M75 24V14 M53 31H60 M90 31H97" stroke="#c4d5de" stroke-width="4" stroke-linecap="round"/><circle cx="75" cy="14" r="5" fill="#e5b355"/><path d="M97 31H125V19" stroke="${green}" stroke-width="3" fill="none"/><path d="M120 16L125 21L130 16" stroke="${green}" stroke-width="2" fill="none"/></svg>`;
+ if(type==='tank')return `<svg viewBox="0 0 150 100" role="img" aria-label="Резервуар"><rect x="32" y="18" width="86" height="67" rx="8" fill="#243e53" stroke="#a5b6c4" stroke-width="3"/><rect x="35" y="${82-44*level/100}" width="80" height="${44*level/100}" fill="#32b8a2" opacity=".75"/><path d="M35 39H115" stroke="#a5b6c4" stroke-width="1.5" stroke-dasharray="4 3"/><text x="75" y="62" text-anchor="middle" fill="white" font-size="14" font-weight="600">${Math.round(level)}%</text></svg>`;
+ if(type==='pump')return `<svg viewBox="0 0 150 100" role="img" aria-label="Насос"><rect x="30" y="35" width="88" height="45" rx="10" fill="#36556c" stroke="#a8b9c6" stroke-width="3"/><circle cx="75" cy="57" r="17" fill="#20394c" stroke="#d9ab50" stroke-width="3"/><g stroke="#d9ab50" stroke-width="3"><path d="M75 43V71 M61 57H89 M65 47L85 67 M85 47L65 67"/>${active?'<animateTransform attributeName="transform" type="rotate" from="0 75 57" to="360 75 57" dur="3s" repeatCount="indefinite"/>':''}</g><path d="M15 57H30 M118 57H135" stroke="#6fd5c5" stroke-width="6"/></svg>`;
+ return `<svg viewBox="0 0 150 100" role="img" aria-label="Электроснабжение"><rect x="40" y="20" width="70" height="65" rx="6" fill="#36556c" stroke="#a7bac7" stroke-width="3"/><path d="M82 30L62 56H77L66 75L91 47H76Z" fill="${active?'#f4c55a':'#72879b'}"/><circle cx="101" cy="30" r="4" fill="${active?'#25b98a':'#e3ae45'}"/></svg>`;
+}
+function v5card(title,type,status,metric){let labels={work:'В работе',repair:'Требует ремонта',stop:'Остановлено'};return `<article class="v5-equipment-card"><div class="v5-equipment-head"><strong>${esc(title)}</strong><i class="v5-status-dot ${status}" aria-hidden="true"></i></div><div class="v5-equipment-graphic">${v5svg(type,status,type==='tank'?68:0)}</div><strong class="v5-equipment-metric">${esc(metric)}</strong><small class="v5-equipment-state ${status}">${labels[status]}</small></article>`}
+function v5cards(){if(!s?.small)return '';let wells=s.assets?.wellList||[],w=wells[0],infra=s.assets?.infrastructure||[];let find=(needle)=>infra.find(o=>String(o.id).includes(needle));let tank=find('РВС'),pump=find('ДНС')||find('НАС')||find('ВЛ'),power=find('КТП')||find('ПС');let ws=w?.status==='Работает'?(v5status(w)):'stop';return `<section class="v5-operations"><div class="v5-operations-title"><h2>Производственные объекты</h2><span>2D · оперативная панель</span></div><div class="v5-equipment-grid">${v5card('Скважина №'+(w?.id||1001),'well',ws,(w?.status==='Работает'?f(w?.rate||0):'0')+' т/сут')}${v5card('РВС №1','tank',v5status(tank),'Резервуар · '+(s.small.tankCapacity||1000)+' т')}${v5card('Насос / линия','pump',v5status(pump),'Готовность '+Math.round(pump?.health||90)+'%')}${v5card('КТП №1','power',v5status(power),'Готовность '+Math.round(power?.health||92)+'%')}</div></section>`}
+function v5cashInit(){if(!s.v5cash)s.v5cash={lastCash:Number(s.cash)||0,changes:[],version:1};return s.v5cash}
+function v5cashCheck(){if(!s)return;let a=v5cashInit(),now=Number(s.cash)||0,delta=Math.round((now-a.lastCash)*1000)/1000;if(Math.abs(delta)>0.0001){a.changes.push({date:typeof v8date==='function'&&s.v8?v8date():'',delta,balance:now,category:'Изменение денежных средств (источник требует сверки)'});if(a.changes.length>2000)a.changes.splice(0,a.changes.length-2000)}a.lastCash=now}
+function v5cashView(){let a=v5cashInit();return `<section class="v5-audit"><h2>Контроль движения денежных средств · Alpha 1</h2><p class="muted">Промежуточный контроль изменений баланса. Это не заменяет бухгалтерский журнал: операции старых модулей пока не всегда классифицированы.</p><div class="row"><span>Текущий остаток</span><b>${m(s.cash)}</b></div><div class="row"><span>Зафиксировано изменений</span><b>${a.changes.length}</b></div>${a.changes.slice(-8).reverse().map(x=>`<div class="row"><span>${esc(x.date)} · ${esc(x.category)}</span><b>${x.delta>0?'+':''}${m(x.delta)}</b></div>`).join('')}</section>`}
+const v5oldSave=save;save=function(){if(s)v5cashCheck();return v5oldSave()};
+const v5oldRender=render;render=function(){v5oldRender();if(!s?.small)return;let host=document.getElementById('body');if(!host)return;if(tab==='overview')host.insertAdjacentHTML('afterbegin',v5cards());if(tab==='finance')host.insertAdjacentHTML('afterbegin',v5cashView())};
+/* v5 Alpha 2: cash-backed bank deposits. All values in million KZT.
+   Deposits are financial assets, not revenue/expense; only interest is income. */
+function v5bankInit(){
+ if(!s.v5bank)s.v5bank={version:1,seq:0,deposits:[],operations:[]};
+ const b=s.v5bank;b.deposits=Array.isArray(b.deposits)?b.deposits:[];
+ b.operations=Array.isArray(b.operations)?b.operations:[];
+ b.seq=Number.isInteger(b.seq)?b.seq:0;return b;
+}
+function v5bankRecord(kind,amount,id){
+ const b=v5bankInit();b.operations.unshift({day:v34date(),date:v8date(),kind,amount:Math.round(amount*10000)/10000,id});
+ if(b.operations.length>1500)b.operations.length=1500;
+}
+async function v5bankOpen(){
+ const raw=await uiPrompt('Сумма депозита, млн ₸ (от 1)','10');if(raw===null)return;
+ const amount=Number(raw);if(!Number.isFinite(amount)||amount<1||amount>1000000)return uiAlert('Введите сумму от 1 до 1 000 000 млн ₸');
+ if(s.cash<amount)return uiAlert('Недостаточно средств на расчётном счёте');
+ const rateRaw=await uiPrompt('Годовая ставка, % (0–25)','12');if(rateRaw===null)return;
+ const rate=Number(rateRaw);if(!Number.isFinite(rate)||rate<0||rate>25)return uiAlert('Допустимая ставка от 0 до 25%');
+ if(!await uiConfirm('Разместить '+m(amount)+' под '+rate+'% годовых? Проценты начисляются ежедневно; снять деньги можно в любой день.'))return;
+ const b=v5bankInit(),id=++b.seq;
+ s.cash=Math.round((s.cash-amount)*10000)/10000;
+ b.deposits.push({id,principal:amount,accrued:0,rate,opened:v8date(),status:'Открыт'});
+ v5bankRecord('deposit_open',amount,id);log('Открыт депозит №'+id+': '+m(amount));save();render();
+}
+async function v5bankWithdraw(id){
+ const d=v5bankInit().deposits.find(x=>x.id===id&&x.status==='Открыт');if(!d)return;
+ const total=Math.round((d.principal+d.accrued)*10000)/10000;
+ if(!await uiConfirm('Закрыть депозит №'+id+' и вернуть '+m(total)+' на расчётный счёт?'))return;
+ s.cash=Math.round((s.cash+total)*10000)/10000;
+ v5bankRecord('deposit_close',total,id);
+ d.status='Закрыт';d.closed=v8date();d.paidInterest=d.accrued;
+ // Accrued interest is financial income, never oil-sales revenue.
+ log('Закрыт депозит №'+id+'; начисленный доход '+m(d.accrued));save();render();
+}
+function v5bankDay(){
+ const b=v5bankInit();for(const d of b.deposits){if(d.status!=='Открыт')continue;
+ const interest=Math.round(d.principal*d.rate/100/365*10000)/10000;
+ if(interest>0){d.accrued=Math.round((d.accrued+interest)*10000)/10000;v5bankRecord('deposit_interest',interest,d.id)}
+ }
+}
+function v5bankView(){
+ const b=v5bankInit(),active=b.deposits.filter(d=>d.status==='Открыт');
+ const principal=active.reduce((a,d)=>a+d.principal,0),interest=active.reduce((a,d)=>a+d.accrued,0);
+ let h='<section class="v5-bank"><h2>Банковские депозиты · Alpha 2</h2><p class="muted">Все суммы — млн ₸. Размещение переводит деньги со счёта в финансовый актив; это не расход. Проценты начисляются по каждому игровому дню и выплачиваются при закрытии. Ставки задаются для игровой модели.</p>';
+ h+=row('На расчётном счёте',m(s.cash))+row('Тело открытых депозитов',m(principal))+row('Начисленные проценты',m(interest))+row('Деньги + депозиты',m(s.cash+principal+interest));
+ h+='<div class="actions"><button class="btn secondary" data-v5-deposit-open>Открыть депозит</button></div>';
+ h+='<h3>Депозитный портфель</h3>';
+ h+=active.length?active.map(d=>'<div class="row"><span>Депозит №'+d.id+' · '+d.rate+'% годовых<br><small>Вклад '+m(d.principal)+' · доход '+m(d.accrued)+'</small></span><button class="mini-btn" data-v5-deposit-close="'+d.id+'">Снять</button></div>').join(''):'<p class="muted">Открытых депозитов нет.</p>';
+ h+='<h3>Последние операции по депозитам</h3>';
+ h+=b.operations.slice(0,12).map(o=>'<div class="row"><span>'+esc(o.date)+' · '+esc(({deposit_open:'Размещение',deposit_close:'Возврат',deposit_interest:'Начисление процентов'})[o.kind]||o.kind)+' №'+o.id+'</span><b>'+m(o.amount)+'</b></div>').join('')||'<p class="muted">Операций пока нет.</p>';
+ h+='<div class="notice">Операции депозитов учитываются отдельно от старого журнала добычи. Полная сверка всех денежных операций старых модулей остаётся задачей следующей версии.</div></section>';
+ return h;
+}
+// Existing v35day is invoked once per simulated day through the v26day chain.
+const v5bankOldTreasuryDay=v35day;
+v35day=function(){v5bankOldTreasuryDay();v5bankDay()};
+const v5bankOldRender=render;
+render=function(){v5bankOldRender();if(!s?.small||tab!=='finance')return;const host=document.getElementById('body');if(!host)return;
+ host.insertAdjacentHTML('afterbegin',v5bankView());
+ const open=host.querySelector('[data-v5-deposit-open]');if(open)open.onclick=()=>v5bankOpen();
+ host.querySelectorAll('[data-v5-deposit-close]').forEach(el=>el.onclick=()=>v5bankWithdraw(Number(el.dataset.v5DepositClose)));
+};
+/* Oil Management v5 Alpha 3: non-mutating treasury reconciliation.
+   The source ledgers remain authoritative; this report NEVER changes cash. */
+function v5a3round(x){return Math.round((Number(x)||0)*10000)/10000}
+function v5a3Category(type,source){
+ if(source==='bank')return ({deposit_open:'Финансовый актив · размещение',deposit_close:'Финансовый актив · возврат',deposit_interest:'Процентный доход · начислено'})[type]||'Банк · другое';
+ if(source==='treasury')return ({credit_in:'Финансирование · получение кредита',credit_out:'Финансирование · погашение долга',interest:'Финансовые расходы · проценты',capex:'Инвестиции · CAPEX',contract_opex:'Операционная деятельность · подряд'})[type]||'Казначейство · другое';
+ return ({sale:'Выручка · реализация нефти',opex:'Операционные расходы',payroll:'Расходы · зарплата',incident:'Расходы · происшествия',bonus:'Расходы · премии',maintenance:'Расходы · ремонт'})[type]||'Прочие записи старого журнала';
+}
+function v5a3Report(){
+ const bank=typeof v5bankInit==='function'?v5bankInit():{deposits:[],operations:[]};
+ const treasury=typeof v35init==='function'?v35init():{loans:[],cashEntries:[]};
+ const ledger=typeof v25init==='function'?v25init():{entries:[]};
+ const active=(bank.deposits||[]).filter(d=>d.status==='Открыт');
+ const deposits=v5a3round(active.reduce((n,d)=>n+(Number(d.principal)||0),0));
+ const accrued=v5a3round(active.reduce((n,d)=>n+(Number(d.accrued)||0),0));
+ const debt=v5a3round((treasury.loans||[]).reduce((n,l)=>n+(Number(l.balance)||0),0));
+ const cash=v5a3round(s.cash), liquidity=v5a3round(cash+deposits+accrued);
+ const events=[];
+ for(const x of (bank.operations||[]))events.push({source:'bank',type:x.kind,date:x.date,day:x.day,amount:v5a3round(x.amount),label:v5a3Category(x.kind,'bank')});
+ for(const x of (treasury.cashEntries||[]))events.push({source:'treasury',type:x.type,date:x.date,day:x.day,amount:v5a3round(x.amount),label:v5a3Category(x.type,'treasury')});
+ for(const x of (ledger.entries||[]))events.push({source:'ledger',type:x.type,date:x.date,day:undefined,amount:v5a3round(x.amount),label:v5a3Category(x.type,'ledger')});
+ // This is a cross-ledger VIEW, not an additive cash-flow statement: loan interest
+ // appears in both v25 and v35 and must not be summed twice.
+ events.sort((a,b)=>(Number(b.day)||0)-(Number(a.day)||0));
+ const warnings=[];
+ if(!Number.isFinite(Number(s.cash)))warnings.push('Остаток денежных средств некорректен');
+ if((treasury.loans||[]).some(l=>Number(l.balance)<-0.0001))warnings.push('Отрицательный остаток по кредиту');
+ if(active.some(d=>Number(d.principal)<0||Number(d.accrued)<0))warnings.push('Некорректный остаток депозита');
+ const changes=s.v5cash?.changes||[];
+ const unclassified=changes.filter(x=>x.category==='Изменение денежных средств (источник требует сверки)').length;
+ return {cash,deposits,accrued,debt,liquidity,netLiquidity:v5a3round(liquidity-debt),events,warnings,unclassified};
+}
+function v5a3View(){
+ const r=v5a3Report();let h='<section class="v5-a3"><h2>Сверка финансов · Alpha 3</h2><p class="muted">Все суммы — млн ₸. Денежные средства, депозиты и кредиты показываются раздельно. Записи ниже объединены для просмотра, но не суммируются повторно.</p>';
+ h+=row('Расчётный счёт',m(r.cash))+row('Депозиты · основной вклад',m(r.deposits))+row('Начисленный доход по депозитам',m(r.accrued))+row('Ликвидные средства с депозитами',m(r.liquidity))+row('Основной долг по кредитам',m(r.debt))+row('Ликвидные средства за вычетом долга',m(r.netLiquidity));
+ h+='<h3>Проверка учёта</h3>';
+ h+=r.warnings.length?'<div class="notice bad">'+r.warnings.map(esc).join('; ')+'</div>':'<div class="notice">Остатки кредитов и депозитов прошли базовую проверку знаков.</div>';
+ h+='<p class="muted">Неразобранных изменений денежного остатка в диагностическом журнале: '+r.unclassified+'. Это не означает недостачу: старые операции пока не связаны с единой системой идентификаторов.</p>';
+ h+='<h3>Сводный реестр операций (без повторного списания)</h3>';
+ h+=r.events.slice(0,24).map(e=>'<div class="row"><span>'+esc(e.date||'—')+' · '+esc(e.label)+'<br><small>'+esc(e.source)+'</small></span><b>'+m(e.amount)+'</b></div>').join('')||'<p class="muted">Операций пока нет.</p>';
+ h+='<p class="muted">Ограничение Alpha 3: журнал показывает категории и остатки, но пока не выполняет полную бухгалтерскую сверку исторических операций. Начисленные проценты по депозиту становятся денежными средствами при закрытии вклада. Проценты по кредитам уже учтены в старом журнале OPEX.</p></section>';
+ return h;
+}
+const v5a3OldRender=render;
+render=function(){v5a3OldRender();if(!s?.small||tab!=='finance')return;const host=document.getElementById('body');if(host)host.insertAdjacentHTML('afterbegin',v5a3View())};
+/* Alpha 4 — private share capital, placement and dividends. Units: million KZT,
+   share quote: KZT/share. No public exchange or fictitious price history. */
+function v5sharesInit(){
+ if(!s.v5shares)s.v5shares={version:1,issued:1000000,founder:1000000,investors:0,nominal:1000,seq:0,operations:[],dividendsPaid:0};
+ const a=s.v5shares;a.operations=Array.isArray(a.operations)?a.operations:[];
+ return a;
+}
+function v5sharesQuote(){
+ const a=v5sharesInit();
+ // Indicative private placement price, not a listed security or a tradeable quote.
+ const operating=Math.max(-300,Math.min(600,Number(s.profit)||0));
+ return Math.max(a.nominal,Math.round((1250+operating*0.25)/10)*10);
+}
+function v5sharesRecord(kind,amount,detail){
+ const a=v5sharesInit();a.operations.unshift({kind,amount,detail,date:v8date(),day:v34date(),id:++a.seq});
+ if(a.operations.length>500)a.operations.length=500;
+}
+async function v5sharesIssue(){
+ const a=v5sharesInit(),limit=Math.floor(a.founder/0.51-a.issued);
+ if(limit<1000)return uiAlert('Контрольный пакет 51% защищён. Дальнейший выпуск недоступен.');
+ const raw=await uiPrompt('Сколько новых акций продать инвесторам? (максимум '+limit.toLocaleString('ru-RU')+')','10000');
+ if(raw===null)return;
+ const count=Number(raw);
+ if(!Number.isSafeInteger(count)||count<1||count>limit)return uiAlert('Недопустимое количество акций.');
+ const price=v5sharesQuote(),proceeds=Math.round(count*price/100)/10000;
+ if(!await uiConfirm('Разместить '+count.toLocaleString('ru-RU')+' новых акций по '+price+' ₸? Компания получит '+m(proceeds)+'. Доля основателей станет '+(100*a.founder/(a.issued+count)).toFixed(2)+'%.'))return;
+ a.issued+=count;a.investors+=count;s.cash=Math.round((s.cash+proceeds)*10000)/10000;
+ v5sharesRecord('issue',proceeds,count+' акций · '+price+' ₸/акция');
+ log('Частное размещение акций: '+count+' шт., привлечено '+m(proceeds));save();render();
+}
+async function v5sharesDividend(){
+ const a=v5sharesInit();
+ if(!Number.isFinite(s.cash)||s.cash<=0)return uiAlert('Нет средств для выплаты дивидендов.');
+ if((Number(s.profit)||0)<=0)return uiAlert('Дивиденды доступны при положительной прибыли за последний закрытый месяц.');
+ const cap=Math.floor(Math.min(s.cash*0.3,Math.max(0,s.profit)*0.5)*10000)/10000;
+ if(cap<=0)return uiAlert('Недостаточно свободных средств или прибыли.');
+ const raw=await uiPrompt('Общая сумма дивидендов, млн ₸ (не более '+cap.toFixed(4)+')',String(Math.min(cap,1)));
+ if(raw===null)return;
+ const amount=Number(raw);
+ if(!Number.isFinite(amount)||amount<=0||amount>cap||amount>s.cash)return uiAlert('Сумма превышает допустимый лимит.');
+ const founder=amount*a.founder/a.issued,investors=amount-founder;
+ if(!await uiConfirm('Выплатить '+m(amount)+' акционерам? Основателям '+m(founder)+', инвесторам '+m(investors)+'. Это денежный отток АО, не производственный расход.'))return;
+ s.cash=Math.round((s.cash-amount)*10000)/10000;
+ a.dividendsPaid=Math.round((a.dividendsPaid+amount)*10000)/10000;
+ v5sharesRecord('dividend',amount,'Основатели '+founder.toFixed(4)+'; инвесторы '+investors.toFixed(4));
+ log('Выплачены дивиденды акционерам: '+m(amount));save();render();
+}
+function v5sharesView(){
+ const a=v5sharesInit(),quote=v5sharesQuote(),founderPct=100*a.founder/a.issued;
+ const capitalization=a.issued*quote/1000000;
+ let h='<section class="v5-shares"><div class="v5-shares-head"><div><small>ФИНАНСЫ · АКЦИОНЕРНЫЙ КАПИТАЛ</small><h2>Акции АО · Alpha 4</h2></div><span class="v5-shares-chip">Частное АО</span></div>';
+ h+='<div class="v5-shares-grid"><div class="v5-shares-tile"><small>Расчётная цена акции</small><strong>'+quote.toLocaleString('ru-RU')+' ₸</strong><small>Условная оценка, не биржевая котировка</small></div><div class="v5-shares-tile"><small>Оценка капитала</small><strong>'+m(capitalization)+'</strong><small>'+a.issued.toLocaleString('ru-RU')+' акций</small></div></div>';
+ h+='<h3>Структура акционеров</h3><div class="v5-shares-bar"><span style="width:'+founderPct.toFixed(4)+'%"></span><i style="width:'+(100-founderPct).toFixed(4)+'%"></i></div>';
+ h+='<div class="v5-shares-legend"><span>● Основатели · '+founderPct.toFixed(2)+'%</span><span>● Инвесторы · '+(100-founderPct).toFixed(2)+'%</span></div>';
+ h+=row('Акции основателей',a.founder.toLocaleString('ru-RU'))+row('Акции инвесторов',a.investors.toLocaleString('ru-RU'))+row('Номинал акции',a.nominal.toLocaleString('ru-RU')+' ₸')+row('Всего выплачено дивидендов',m(a.dividendsPaid));
+ h+='<div class="actions"><button class="btn" data-v5-shares-issue>Привлечь инвесторов</button><button class="btn secondary" data-v5-shares-dividend>Выплатить дивиденды</button></div>';
+ h+='<h3>Операции с капиталом</h3>';
+ h+=a.operations.slice(0,10).map(x=>'<div class="row"><span>'+esc(x.date)+' · '+(x.kind==='issue'?'Выпуск акций':'Дивиденды')+'<br><small>'+esc(x.detail)+'</small></span><b>'+m(x.amount)+'</b></div>').join('')||'<p class="muted">Операций ещё нет.</p>';
+ h+='<p class="muted">Размещение новых акций увеличивает денежные средства и собственный капитал, но не нефтяную выручку. Дивиденды уменьшают деньги, но не операционные расходы. Биржевые торги и продажа существующих акций будут добавлены отдельно.</p></section>';
+ return h;
+}
+const v5sharesOldRender=render;
+render=function(){v5sharesOldRender();if(!s?.small||tab!=='finance')return;
+ const host=document.getElementById('body');if(!host)return;
+ host.insertAdjacentHTML('afterbegin',v5sharesView());
+ const issue=host.querySelector('[data-v5-shares-issue]');if(issue)issue.onclick=()=>v5sharesIssue();
+ const dividend=host.querySelector('[data-v5-shares-dividend]');if(dividend)dividend.onclick=()=>v5sharesDividend();
+};
+/* Alpha 5: fictional equity exchange, cash-backed positions, deterministic daily prices.
+   Amounts in million KZT; prices per share in KZT. Does not affect operating profit. */
+const V5_EXCHANGE_LIST=[
+ {id:'CEN',name:'Caspian Energy',sector:'Добыча',price:1250,volatility:0.025},
+ {id:'STO',name:'Steppe Oil',sector:'Разведка',price:870,volatility:0.038},
+ {id:'MDR',name:'Mangystau Drilling',sector:'Сервис',price:2140,volatility:0.032},
+ {id:'KTP',name:'KazTrans Power',sector:'Энергетика',price:1640,volatility:0.019}
+];
+function v5exRound(n){return Math.round(n*10000)/10000}
+function v5exInit(){
+ if(!s.v5exchange||typeof s.v5exchange!=='object')s.v5exchange={version:1,day:null,quotes:{},holdings:{},operations:[],seq:0};
+ const x=s.v5exchange;x.quotes=x.quotes||{};x.holdings=x.holdings||{};
+ x.operations=Array.isArray(x.operations)?x.operations:[];x.seq=Number.isInteger(x.seq)?x.seq:0;
+ for(const company of V5_EXCHANGE_LIST){
+  if(!x.quotes[company.id]||!Number.isFinite(x.quotes[company.id].price)||x.quotes[company.id].price<=0)
+   x.quotes[company.id]={price:company.price,previous:company.price,history:[company.price]};
+  if(!Number.isSafeInteger(x.holdings[company.id])||x.holdings[company.id]<0)x.holdings[company.id]=0;
+ }
+ return x;
+}
+// Pseudo-random deterministic shocks, stable for each company and game day.
+function v5exShock(id,day){
+ let hash=2166136261;const key=id+':'+String(day);
+ for(let i=0;i<key.length;i++){hash=Math.imul(hash^key.charCodeAt(i),16777619)}
+ hash^=hash>>>16;hash=Math.imul(hash,2246822507);hash^=hash>>>13;
+ return ((hash>>>0)/4294967295)*2-1;
+}
+function v5exDay(){
+ if(!s||!s.small)return;
+ const x=v5exInit(),day=Number(v34date());
+ if(!Number.isFinite(day))return;
+ if(x.day===null){x.day=day;return}
+ if(day<=x.day)return;
+ // Bounded catch-up protects old saves and avoids expensive multi-year loops.
+ const from=Math.max(x.day+1,day-730);
+ for(let d=from;d<=day;d++)for(const c of V5_EXCHANGE_LIST){
+  const q=x.quotes[c.id],prev=q.price;
+  const drift=0.00008,shock=v5exShock(c.id,d)*c.volatility;
+  q.previous=prev;q.price=Math.max(10,Math.round(prev*(1+drift+shock)));
+  q.history.push(q.price);if(q.history.length>90)q.history.shift();
+ }
+ x.day=day;
+}
+function v5exValuation(){
+ const x=v5exInit();return v5exRound(V5_EXCHANGE_LIST.reduce((sum,c)=>sum+x.holdings[c.id]*x.quotes[c.id].price/1000000,0));
+}
+function v5exTrade(id,side,count){
+ const x=v5exInit(),c=V5_EXCHANGE_LIST.find(c=>c.id===id);
+ if(!c||!['buy','sell'].includes(side)||!Number.isSafeInteger(count)||count<1||count>100000000)
+  return {ok:false,error:'Некорректная заявка'};
+ const unit=x.quotes[id].price,gross=count*unit/1000000;
+ // Exchange commission: 0.2%, minimum 0.0001 million KZT (100 KZT).
+ const fee=v5exRound(Math.max(0.0001,gross*0.002));
+ const total=v5exRound(gross+(side==='buy'?fee:-fee));
+ if(side==='buy'&&(!Number.isFinite(s.cash)||s.cash+1e-8<total))return {ok:false,error:'Недостаточно денег на расчётном счёте'};
+ if(side==='sell'&&x.holdings[id]<count)return {ok:false,error:'Недостаточно акций для продажи'};
+ if(side==='sell'&&total<0)return {ok:false,error:'Комиссия превышает сумму продажи'};
+ const nextCash=v5exRound(s.cash+(side==='buy'?-total:total));
+ if(nextCash<-0.000001)return {ok:false,error:'Недостаточно средств'};
+ s.cash=nextCash;x.holdings[id]+=side==='buy'?count:-count;
+ x.operations.unshift({id:++x.seq,ticker:id,side,count,price:unit,gross:v5exRound(gross),fee,total,date:v8date(),day:v34date()});
+ if(x.operations.length>1000)x.operations.length=1000;
+ return {ok:true,total,fee,price:unit};
+}
+async function v5exTradePrompt(id,side){
+ const x=v5exInit(),c=V5_EXCHANGE_LIST.find(c=>c.id===id);if(!c)return;
+ const raw=await uiPrompt((side==='buy'?'Купить':'Продать')+' акции '+c.name+' — количество','100');
+ if(raw===null)return;const count=Number(raw);
+ if(!Number.isSafeInteger(count)||count<1)return uiAlert('Введите целое положительное количество акций.');
+ const preview=v5exRound(count*x.quotes[id].price/1000000),fee=v5exRound(Math.max(.0001,preview*.002));
+ if(!await uiConfirm((side==='buy'?'Купить ':'Продать ')+count+' шт. '+id+' по '+x.quotes[id].price+' ₸ за акцию? Стоимость '+m(preview)+'; комиссия '+m(fee)+'.'))return;
+ const result=v5exTrade(id,side,count);
+ if(!result.ok)return uiAlert(result.error);
+ log((side==='buy'?'Покупка':'Продажа')+' акций '+id+': '+count+' шт., '+m(result.total));save();render();
+}
+function v5exSparkline(history){
+ const vals=history.slice(-30);if(vals.length<2)return '<span class="v5ex-empty-chart">Ожидание котировок</span>';
+ const min=Math.min(...vals),max=Math.max(...vals),span=Math.max(1,max-min);
+ const points=vals.map((v,i)=>(i*280/(vals.length-1)).toFixed(1)+','+(65-(v-min)/span*55).toFixed(1)).join(' ');
+ const up=vals[vals.length-1]>=vals[0];
+ return '<svg viewBox="0 0 280 76" role="img" aria-label="История условных котировок за '+vals.length+' игровых дней" preserveAspectRatio="none"><path d="M0 74H280" stroke="#365467" stroke-width="1"/><polyline points="'+points+'" fill="none" stroke="'+(up?'#48d5ac':'#f0a46c')+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+}
+function v5exView(){
+ const x=v5exInit(),value=v5exValuation();let h='<section class="v5-exchange"><div class="v5ex-heading"><div><small>ФИНАНСЫ · ИНВЕСТИЦИИ</small><h2>Фондовый рынок · Alpha 5</h2></div><span class="v5ex-label">2D · Биржа</span></div>';
+ h+='<p class="muted">Вымышленные компании, игровые котировки. Акции приобретаются на деньги АО. Портфель — финансовый актив, а не расход на добычу.</p>';
+ h+='<div class="v5ex-stats"><div><small>Денежные средства</small><strong>'+m(s.cash)+'</strong></div><div><small>Стоимость портфеля</small><strong>'+m(value)+'</strong></div></div>';
+ h+='<h3>Котировки и сделки</h3>';
+ for(const c of V5_EXCHANGE_LIST){
+  const q=x.quotes[c.id],pct=q.previous?((q.price/q.previous-1)*100):0;
+  h+='<article class="v5ex-stock"><div class="v5ex-stock-top"><div><b>'+esc(c.name)+'</b><small>'+c.id+' · '+esc(c.sector)+'</small></div><div class="v5ex-price"><strong>'+q.price.toLocaleString('ru-RU')+' ₸</strong><small class="'+(pct>=0?'v5ex-positive':'v5ex-negative')+'">'+(pct>=0?'+':'')+pct.toFixed(2)+'% за день</small></div></div>';
+  h+='<div class="v5ex-chart">'+v5exSparkline(q.history)+'</div>';
+  h+='<div class="v5ex-stock-bottom"><span>В портфеле: <b>'+x.holdings[c.id].toLocaleString('ru-RU')+' шт.</b></span><div><button class="btn" data-v5ex-buy="'+c.id+'">Купить</button><button class="btn secondary" data-v5ex-sell="'+c.id+'" '+(!x.holdings[c.id]?'disabled':'')+'>Продать</button></div></div></article>';
+ }
+ h+='<h3>История биржевых операций</h3>';
+ h+=x.operations.slice(0,12).map(o=>'<div class="row"><span>'+esc(o.date)+' · '+(o.side==='buy'?'Покупка':'Продажа')+' '+esc(o.ticker)+'<br><small>'+o.count+' шт. × '+o.price+' ₸ · комиссия '+m(o.fee)+'</small></span><b>'+m(o.total)+'</b></div>').join('')||'<p class="muted">Сделок пока нет.</p>';
+ h+='<p class="muted">Котировки изменяются раз в игровой день по воспроизводимой игровой модели. Комиссия биржи — 0,2%, минимум 100 ₸. Рыночная переоценка не зачисляет деньги на счёт до продажи акций. Акции самого АО пока размещаются отдельно, без публичных торгов.</p></section>';
+ return h;
+}
+const v5exOldDay=v35day;
+v35day=function(){v5exOldDay();v5exDay()};
+const v5exOldRender=render;
+render=function(){v5exOldRender();if(!s?.small||tab!=='finance')return;
+ const host=document.getElementById('body');if(!host)return;
+ host.insertAdjacentHTML('afterbegin',v5exView());
+ host.querySelectorAll('[data-v5ex-buy]').forEach(el=>el.onclick=()=>v5exTradePrompt(el.dataset.v5exBuy,'buy'));
+ host.querySelectorAll('[data-v5ex-sell]').forEach(el=>el.onclick=()=>v5exTradePrompt(el.dataset.v5exSell,'sell'));
+};
+/* Alpha 6: infrastructure construction with mutually exclusive own crew / contractor
+   delivery, milestone payments, project lifecycle, persistent assets and CAPEX entries.
+   Monetary amounts: million KZT. No automatic daily debit outside milestone payments. */
+const V5_BUILD_CATALOG=[
+ {id:'tank',name:'РВС · резервуар 1 000 т',cost:85,days:35,capacity:1000,asset:'Резервуар'},
+ {id:'pump',name:'Насосная станция',cost:58,days:24,asset:'Насосная станция'},
+ {id:'power',name:'КТП · электроснабжение',cost:38,days:18,asset:'Комплектная трансформаторная подстанция'}
+];
+function v5bRound(n){return Math.round(n*10000)/10000}
+function v5bInit(){
+ if(!s.v5build||typeof s.v5build!=='object')s.v5build={version:1,seq:0,projects:[],entries:[],lastDay:null};
+ let b=s.v5build;b.projects=Array.isArray(b.projects)?b.projects:[];
+ b.entries=Array.isArray(b.entries)?b.entries:[];
+ b.seq=Number.isSafeInteger(b.seq)?b.seq:0;return b;
+}
+function v5bQuote(kind,mode){
+ let item=V5_BUILD_CATALOG.find(x=>x.id===kind);
+ if(!item||!['contractor','own'].includes(mode))return null;
+ // Own construction: materials + site crew payroll; contractor: fixed-price turnkey.
+ return {cost:v5bRound(item.cost*(mode==='own'?.88:1.12)),days:Math.ceil(item.days*(mode==='own'?1.35:1))};
+}
+function v5bEntry(project,amount,stage){
+ let b=v5bInit();amount=v5bRound(amount);
+ b.entries.unshift({project:project.id,stage,amount,day:v34date(),date:v8date(),mode:project.mode});
+ if(b.entries.length>500)b.entries.length=500;
+ if(typeof v35record==='function')v35record('capex',amount,'Строительство '+project.name+' · '+stage+' · проект №'+project.id);
+ if(typeof v25post==='function')v25post('capex',amount,{description:'Строительство '+project.name+' · '+stage,project:project.id});
+}
+function v5bStart(kind,mode){
+ if(!s?.small)return {ok:false,error:'Строительство доступно в новой карьере'};
+ const item=V5_BUILD_CATALOG.find(x=>x.id===kind),q=v5bQuote(kind,mode);
+ if(!item||!q)return {ok:false,error:'Неизвестный проект или способ строительства'};
+ let b=v5bInit();if(b.projects.filter(p=>p.status==='Строится').length>=3)return {ok:false,error:'Одновременно допускается не более трёх строек'};
+ const advance=v5bRound(q.cost*.3);
+ if(!Number.isFinite(s.cash)||s.cash+1e-8<advance)return {ok:false,error:'Недостаточно средств для аванса'};
+ let p={id:++b.seq,kind,name:item.name,mode,status:'Строится',cost:q.cost,paid:advance,days:q.days,remaining:q.days,started:v34date(),finished:null};
+ s.cash=v5bRound(s.cash-advance);b.projects.unshift(p);v5bEntry(p,advance,'Аванс 30%');
+ return {ok:true,project:p};
+}
+function v5bDay(){
+ if(!s?.small)return;
+ let b=v5bInit(),today=v34date();if(!Number.isFinite(today))return;
+ if(b.lastDay===null){b.lastDay=today-1}
+ if(today<=b.lastDay)return;
+ const elapsed=Math.min(730,today-b.lastDay);b.lastDay=today;
+ for(let p of b.projects){
+  if(p.status!=='Строится')continue;
+  p.remaining=Math.max(0,p.remaining-elapsed);
+  if(p.remaining>0)continue;
+  // No commissioning without payment of the remaining 70%.
+  p.status='Ожидает оплаты';
+ }
+}
+function v5bCommission(id){
+ let b=v5bInit(),p=b.projects.find(x=>x.id===id);
+ if(!p||p.status!=='Ожидает оплаты')return {ok:false,error:'Объект ещё не готов к приёмке'};
+ const balance=v5bRound(p.cost-p.paid);
+ if(!Number.isFinite(s.cash)||s.cash+1e-8<balance)return {ok:false,error:'Недостаточно денег для окончательного расчёта'};
+ s.cash=v5bRound(s.cash-balance);p.paid=v5bRound(p.paid+balance);
+ v5bEntry(p,balance,'Окончательный расчёт 70%');
+ s.assets=s.assets||{};s.assets.infrastructure=Array.isArray(s.assets.infrastructure)?s.assets.infrastructure:[];
+ const item=V5_BUILD_CATALOG.find(x=>x.id===p.kind);
+ const prefix=p.kind==='tank'?'РВС':p.kind==='pump'?'НАС':'КТП';
+ s.assets.infrastructure.push({id:prefix+'-А6-'+p.id,type:item.asset,health:100,buildProjectId:p.id});
+ if(p.kind==='tank')s.small.tankCapacity=(Number(s.small.tankCapacity)||1000)+item.capacity;
+ p.status='Введён';p.finished=v34date();return {ok:true,project:p};
+}
+function v5bView(){
+ let b=v5bInit();let out='<section class="v5-build"><div class="v5b-head"><div><small>ПРОИЗВОДСТВО · КАПИТАЛЬНЫЕ ВЛОЖЕНИЯ</small><h2>Строительство и подрядчики · Alpha 6</h2></div><span>2D · Проекты</span></div>';
+ out+='<p class="muted">Собственная строительная бригада (модель затрат на материалы и персонал) или подрядчик под ключ. Аванс 30% при запуске, остаток 70% при приёмке. Суммы — млн ₸.</p>';
+ out+='<div class="v5b-stats"><div><small>Деньги АО</small><strong>'+m(s.cash)+'</strong></div><div><small>Строится / ожидает приёмки</small><strong>'+b.projects.filter(p=>p.status!=='Введён').length+'</strong></div></div>';
+ out+='<h3>Новые объекты</h3><div class="v5b-catalog">';
+ for(let item of V5_BUILD_CATALOG){let own=v5bQuote(item.id,'own'),con=v5bQuote(item.id,'contractor');
+  out+='<article class="v5b-card"><strong>'+esc(item.name)+'</strong><div class="v5b-options"><div><small>Своя бригада · '+own.days+' дн.</small><b>'+m(own.cost)+'</b><button class="btn secondary" data-v5b-kind="'+item.id+'" data-v5b-mode="own">Строить своими силами</button></div><div><small>Подрядчик · '+con.days+' дн.</small><b>'+m(con.cost)+'</b><button class="btn" data-v5b-kind="'+item.id+'" data-v5b-mode="contractor">Нанять подрядчика</button></div></div></article>';
+ }
+ out+='</div><h3>Проекты</h3>';
+ for(let p of b.projects){let progress=Math.round(100*(p.days-p.remaining)/p.days);
+  out+='<article class="v5b-project"><div class="v5b-project-top"><strong>№'+p.id+' · '+esc(p.name)+'</strong><span>'+esc(p.status)+'</span></div><small>'+(p.mode==='own'?'Свои силы':'Подрядчик')+' · оплачено '+m(p.paid)+' из '+m(p.cost)+'</small><div class="v5b-track"><div style="width:'+progress+'%"></div></div><small>'+(p.status==='Строится'?'Осталось '+p.remaining+' игровых дней':p.status==='Введён'?'Введён в эксплуатацию':'Работы завершены · требуется окончательный расчёт')+'</small>'+(p.status==='Ожидает оплаты'?'<button class="btn" data-v5b-accept="'+p.id+'">Оплатить остаток и принять · '+m(v5bRound(p.cost-p.paid))+'</button>':'')+'</article>';
+ }
+ if(!b.projects.length)out+='<p class="muted">Активных строительных проектов пока нет.</p>';
+ out+='<h3>Капитальные платежи</h3>'+(b.entries.slice(0,8).map(e=>'<div class="row"><span>Проект №'+e.project+' · '+esc(e.stage)+'<br><small>'+esc(e.date)+'</small></span><b>−'+m(e.amount)+'</b></div>').join('')||'<p class="muted">Платежей пока нет.</p>');
+ out+='<p class="muted">РВС увеличивает ёмкость хранения на 1 000 т. Насосная станция и КТП добавляются в реестр активов; их влияние на пропускную способность и электроснабжение будет подключено в следующем производственном этапе.</p></section>';return out;
+}
+async function v5bStartPrompt(kind,mode){
+ let item=V5_BUILD_CATALOG.find(x=>x.id===kind),q=v5bQuote(kind,mode);if(!item||!q)return;
+ if(!await uiConfirm('Начать '+item.name+' ('+(mode==='own'?'своими силами':'подрядчик')+')? Смета '+m(q.cost)+', '+q.days+' дней, аванс '+m(v5bRound(q.cost*.3))+'.'))return;
+ let r=v5bStart(kind,mode);if(!r.ok)return uiAlert(r.error);log('Начато строительство '+item.name+' · '+(mode==='own'?'своими силами':'подрядчик'));save();render();
+}
+async function v5bAcceptPrompt(id){let p=v5bInit().projects.find(x=>x.id===id);if(!p)return;
+ if(!await uiConfirm('Принять '+p.name+'? Окончательный платёж '+m(v5bRound(p.cost-p.paid))+'.'))return;
+ let r=v5bCommission(id);if(!r.ok)return uiAlert(r.error);log('Введён объект '+p.name+' · проект №'+id);save();render();
+}
+const v5bOldDay=v35day;v35day=function(){v5bOldDay();v5bDay()};
+const v5bOldRender=render;render=function(){v5bOldRender();if(!s?.small||tab!=='overview')return;let host=document.getElementById('body');if(!host)return;
+ host.insertAdjacentHTML('beforeend',v5bView());
+ host.querySelectorAll('[data-v5b-kind]').forEach(el=>el.onclick=()=>v5bStartPrompt(el.dataset.v5bKind,el.dataset.v5bMode));
+ host.querySelectorAll('[data-v5b-accept]').forEach(el=>el.onclick=()=>v5bAcceptPrompt(Number(el.dataset.v5bAccept)));
+};
+/* Alpha 7 — dedicated project crews, personnel and departments.
+   Wages are paid ONLY for staff hired in this register; no legacy staff payroll is duplicated. */
+const V5_HR_ROLES=[
+ {id:'foreman',name:'Мастер строительных работ',dept:'Строительно-монтажный участок',salary:.42,qualification:3},
+ {id:'fitter',name:'Монтажник технологического оборудования',dept:'Строительно-монтажный участок',salary:.30,qualification:2},
+ {id:'electrician',name:'Электромонтёр',dept:'Энергетическая служба',salary:.33,qualification:2},
+ {id:'operator',name:'Оператор добычи нефти и газа',dept:'ЦДНГ',salary:.27,qualification:2},
+ {id:'mechanic',name:'Механик',dept:'Ремонтная служба',salary:.36,qualification:3}
+];
+function v5hInit(){
+ if(!s.v5hr||typeof s.v5hr!=='object')s.v5hr={version:1,seq:0,staff:[],payments:[],lastDay:null};
+ const h=s.v5hr;h.staff=Array.isArray(h.staff)?h.staff:[];h.payments=Array.isArray(h.payments)?h.payments:[];
+ h.seq=Number.isSafeInteger(h.seq)?h.seq:0;return h;
+}
+function v5hRoster(kind){
+ const people=v5hInit().staff.filter(p=>p.active&&p.qualified&&p.shift==='День');
+ const count=id=>people.filter(p=>p.role===id).length;
+ const required=kind==='power'?{foreman:1,electrician:2}:{foreman:1,fitter:2};
+ return {ok:Object.entries(required).every(([r,n])=>count(r)>=n),required,available:Object.fromEntries(Object.keys(required).map(r=>[r,count(r)]))};
+}
+function v5hHire(role){
+ const r=V5_HR_ROLES.find(x=>x.id===role);if(!r)return {ok:false,error:'Неизвестная должность'};
+ if(!s?.small)return {ok:false,error:'Доступно в новой карьере'};
+ const h=v5hInit();if(h.staff.filter(p=>p.active).length>=80)return {ok:false,error:'Лимит кадрового реестра'};
+ const p={id:++h.seq,role:r.id,dept:r.dept,qualified:true,shift:'День',active:true,hired:v34date()};h.staff.push(p);return {ok:true,person:p};
+}
+function v5hSet(id,field,value){
+ const p=v5hInit().staff.find(x=>x.id===id&&x.active);if(!p)return {ok:false,error:'Работник не найден'};
+ if(field==='shift'&&!['День','Ночь','Отдых'].includes(value))return {ok:false,error:'Неверная смена'};
+ if(field==='qualified'&&typeof value!=='boolean')return {ok:false,error:'Неверный статус квалификации'};
+ if(!['shift','qualified'].includes(field))return {ok:false,error:'Недопустимое поле'};
+ p[field]=value;return {ok:true};
+}
+function v5hFire(id){
+ const h=v5hInit(),p=h.staff.find(x=>x.id===id&&x.active);if(!p)return {ok:false,error:'Работник не найден'};
+ const working=(s.v5build?.projects||[]).some(b=>b.status==='Строится'&&b.mode==='own');
+ if(working&&v5hRosterAfterRemoval(id)===false)return {ok:false,error:'Работник необходим действующей строительной бригаде'};
+ p.active=false;return {ok:true};
+}
+function v5hRosterAfterRemoval(id){
+ const h=v5hInit(),p=h.staff.find(x=>x.id===id);if(!p)return false;
+ p.active=false;let ok=(s.v5build?.projects||[]).filter(b=>b.status==='Строится'&&b.mode==='own').every(b=>v5hRoster(b.kind).ok);p.active=true;return ok;
+}
+function v5hDay(){
+ if(!s?.small)return;const h=v5hInit(),today=v34date();if(!Number.isFinite(today))return;
+ if(h.lastDay===null)h.lastDay=today-1;
+ if(today<=h.lastDay)return;
+ const days=Math.min(730,today-h.lastDay);h.lastDay=today;
+ // Monthly salary in million KZT; only new Alpha 7 employees are included.
+ const monthly=h.staff.filter(p=>p.active).reduce((a,p)=>a+(V5_HR_ROLES.find(r=>r.id===p.role)?.salary||0),0);
+ const amount=Math.round(monthly/30*days*10000)/10000;
+ if(amount<=0)return;
+ s.cash=Math.round((Number(s.cash)||0)*10000-amount*10000)/10000;
+ h.payments.unshift({day:today,days,amount,headcount:h.staff.filter(p=>p.active).length});if(h.payments.length>250)h.payments.length=250;
+ if(typeof v35record==='function')v35record('payroll',amount,'Зарплата сотрудников Alpha 7 · '+days+' дн.');
+ if(typeof v25post==='function')v25post('payroll',amount,{description:'Зарплата сотрудников Alpha 7',days});
+}
+const v5hOldStart=v5bStart;
+v5bStart=function(kind,mode){
+ if(mode==='own'){
+  const roster=v5hRoster(kind);
+  if(!roster.ok)return {ok:false,error:'Недостаточно квалифицированных работников дневной смены для собственной бригады'};
+ }
+ return v5hOldStart(kind,mode);
+};
+const v5hOldDay=v35day;
+v35day=function(){v5hOldDay();v5hDay()};
+function v5hView(){
+ const h=v5hInit(),active=h.staff.filter(p=>p.active),monthly=active.reduce((a,p)=>a+(V5_HR_ROLES.find(r=>r.id===p.role)?.salary||0),0);
+ let html='<section class="v5-hr"><div class="v5h-header"><div><small>УПРАВЛЕНИЕ ПЕРСОНАЛОМ · ALPHA 7</small><h2>Персонал и подразделения</h2></div><span>2D · Штат</span></div>';
+ html+='<div class="v5h-stats"><div><small>Сотрудники</small><strong>'+active.length+'</strong></div><div><small>ФОТ / 30 дней</small><strong>'+m(monthly)+'</strong></div></div>';
+ html+='<p class="muted">Новый кадровый реестр учитывается отдельно от старых кадровых модулей. Зарплата начисляется по игровым дням, включая выходные; суммы указаны в млн ₸.</p>';
+ html+='<h3>Нанять сотрудника</h3><div class="v5h-roles">';
+ for(const r of V5_HR_ROLES)html+='<article><strong>'+esc(r.name)+'</strong><small>'+esc(r.dept)+' · '+m(r.salary)+'/мес.</small><button class="btn secondary" data-v5h-hire="'+r.id+'">Нанять</button></article>';
+ html+='</div><h3>Подразделения</h3><div class="v5h-depts">';
+ for(const d of [...new Set(V5_HR_ROLES.map(r=>r.dept))])html+='<div><span>'+esc(d)+'</span><b>'+active.filter(p=>p.dept===d).length+' чел.</b></div>';
+ html+='</div><h3>Состав и смены</h3>';
+ if(!active.length)html+='<p class="muted">Сотрудников в новом реестре пока нет.</p>';
+ for(const p of active){const r=V5_HR_ROLES.find(x=>x.id===p.role);html+='<article class="v5h-person"><div><strong>№'+p.id+' · '+esc(r?.name||p.role)+'</strong><small>'+esc(p.dept)+'</small></div><div class="v5h-actions"><button class="btn secondary" data-v5h-shift="'+p.id+'">'+esc(p.shift)+'</button><button class="btn secondary" data-v5h-qual="'+p.id+'">'+(p.qualified?'Допущен':'Обучение')+'</button><button class="btn secondary" data-v5h-fire="'+p.id+'">Уволить</button></div></article>'}
+ const tank=v5hRoster('tank'),power=v5hRoster('power');
+ html+='<h3>Готовность собственных бригад</h3><div class="v5h-depts"><div><span>РВС и насосная: мастер 1, монтажники 2</span><b>'+(tank.ok?'Готова':'Не укомплектована')+'</b></div><div><span>КТП: мастер 1, электромонтёры 2</span><b>'+(power.ok?'Готова':'Не укомплектована')+'</b></div></div>';
+ html+='<p class="muted">Для строительства своими силами требуются квалифицированные сотрудники дневной смены. Подрядное строительство не требует собственной бригады. Учёт склада, техники и полноценная посменная оплата будут развиты позднее.</p></section>';
+ return html;
+}
+const v5hOldRender=render;
+render=function(){v5hOldRender();if(!s?.small||tab!=='overview')return;const host=document.getElementById('body');if(!host)return;
+ host.insertAdjacentHTML('beforeend',v5hView());
+ host.querySelectorAll('[data-v5h-hire]').forEach(el=>el.onclick=()=>{const r=v5hHire(el.dataset.v5hHire);if(!r.ok)return uiAlert(r.error);save();render()});
+ host.querySelectorAll('[data-v5h-shift]').forEach(el=>el.onclick=()=>{const id=Number(el.dataset.v5hShift),p=v5hInit().staff.find(x=>x.id===id),opts=['День','Ночь','Отдых'];v5hSet(id,'shift',opts[(opts.indexOf(p.shift)+1)%3]);save();render()});
+ host.querySelectorAll('[data-v5h-qual]').forEach(el=>el.onclick=()=>{const id=Number(el.dataset.v5hQual),p=v5hInit().staff.find(x=>x.id===id);v5hSet(id,'qualified',!p.qualified);save();render()});
+ host.querySelectorAll('[data-v5h-fire]').forEach(el=>el.onclick=async()=>{if(!await uiConfirm('Уволить сотрудника?'))return;const r=v5hFire(Number(el.dataset.v5hFire));if(!r.ok)return uiAlert(r.error);save();render()});
+};
+/* Alpha 8 — inventory, supplier lead times and power capacity.
+   Amounts in million KZT. Procurement is a stock asset transfer, not OPEX. */
+const V5_STOCK_ITEMS=[
+ {id:'steel',name:'Металлоконструкции',unit:'компл.',price:5,lead:6},
+ {id:'pipes',name:'Трубы и арматура',unit:'компл.',price:3,lead:4},
+ {id:'electrics',name:'Электрооборудование',unit:'компл.',price:7,lead:8},
+ {id:'spares',name:'Ремкомплект насоса',unit:'шт.',price:1.5,lead:3}
+];
+const V5_BUILD_BOM={tank:{steel:3,pipes:2},pump:{pipes:3,electrics:1},power:{electrics:3,steel:1}};
+function v5wInit(){
+ if(!s.v5warehouse||typeof s.v5warehouse!=='object')s.v5warehouse={version:1,stock:{},orders:[],entries:[],seq:0,lastDay:null};
+ const w=s.v5warehouse;w.stock=w.stock&&typeof w.stock==='object'?w.stock:{};
+ w.orders=Array.isArray(w.orders)?w.orders:[];w.entries=Array.isArray(w.entries)?w.entries:[];
+ w.seq=Number.isSafeInteger(w.seq)?w.seq:0;return w;
+}
+function v5wOrder(id,qty){
+ const item=V5_STOCK_ITEMS.find(x=>x.id===id);qty=Number(qty);
+ if(!s?.small)return {ok:false,error:'Доступно в новой карьере'};
+ if(!item||!Number.isSafeInteger(qty)||qty<1||qty>100)return {ok:false,error:'Неверная номенклатура или количество'};
+ const cost=v5bRound(item.price*qty);
+ if(!Number.isFinite(s.cash)||s.cash+1e-8<cost)return {ok:false,error:'Недостаточно средств'};
+ const w=v5wInit(),day=v34date();
+ s.cash=v5bRound(s.cash-cost);
+ const order={id:++w.seq,item:id,qty,cost,remaining:item.lead,status:'В пути',day};w.orders.unshift(order);
+ w.entries.unshift({type:'purchase',id:order.id,item:id,qty,amount:cost,day});
+ if(typeof v35record==='function')v35record('inventory',cost,'Закупка материалов · '+item.name);
+ if(typeof v25post==='function')v25post('inventory',cost,{description:'Материалы на склад',order:order.id});
+ return {ok:true,order};
+}
+function v5wDay(){
+ if(!s?.small)return;
+ const w=v5wInit(),today=v34date();if(!Number.isFinite(today))return;
+ if(w.lastDay===null)w.lastDay=today-1;
+ if(today<=w.lastDay)return;
+ const elapsed=Math.min(730,today-w.lastDay);w.lastDay=today;
+ for(const order of w.orders){if(order.status!=='В пути')continue;
+  order.remaining=Math.max(0,order.remaining-elapsed);
+  if(order.remaining===0){order.status='Получен';w.stock[order.item]=(w.stock[order.item]||0)+order.qty;}
+ }
+}
+function v5wMissing(kind){const w=v5wInit(),bom=V5_BUILD_BOM[kind]||{};
+ return Object.entries(bom).filter(([id,n])=>(w.stock[id]||0)<n).map(([id,n])=>({id,need:n,have:w.stock[id]||0}));}
+function v5wConsume(kind,project){const w=v5wInit(),bom=V5_BUILD_BOM[kind]||{};
+ if(v5wMissing(kind).length)return false;
+ for(const [id,n] of Object.entries(bom))w.stock[id]-=n;
+ w.entries.unshift({type:'consumption',project:project.id,bom:{...bom},day:v34date()});return true;}
+const v5wOldBuild=v5bStart;
+v5bStart=function(kind,mode){
+ if(mode==='own'){
+  const missing=v5wMissing(kind);
+  if(missing.length)return {ok:false,error:'Не хватает материалов на складе: '+missing.map(x=>x.id+' '+x.have+'/'+x.need).join(', ')};
+ }
+ const result=v5wOldBuild(kind,mode);
+ if(result.ok&&mode==='own')v5wConsume(kind,result.project);
+ return result;
+};
+function v5wPower(){const assets=s.assets?.infrastructure||[];
+ const commissioned=assets.filter(a=>a.buildProjectId&&String(a.id).startsWith('КТП-')).length;
+ return {commissioned,capacityKw:commissioned*400};}
+function v5wView(){const w=v5wInit(),p=v5wPower();let out='<section class="v5-warehouse"><div class="v5w-head"><div><small>МТО · ЭНЕРГЕТИКА · ALPHA 8</small><h2>Склад и оборудование</h2></div><span>2D · Запасы</span></div>';
+ out+='<div class="v5w-stats"><div><small>Позиций на складе</small><strong>'+Object.values(w.stock).reduce((a,b)=>a+b,0)+'</strong></div><div><small>Поставок в пути</small><strong>'+w.orders.filter(x=>x.status==='В пути').length+'</strong></div><div><small>Новые КТП</small><strong>'+p.commissioned+'</strong></div></div>';
+ out+='<p class="muted">Закупка оплачивается один раз; материалы поступают после срока доставки. Собственные строительные бригады расходуют реальные складские запасы. Подрядчики обеспечивают материалы самостоятельно.</p>';
+ out+='<h3>Номенклатура и закупки</h3><div class="v5w-items">';
+ for(const item of V5_STOCK_ITEMS){out+='<article><div><strong>'+esc(item.name)+'</strong><small>Остаток: '+(w.stock[item.id]||0)+' '+item.unit+' · '+m(item.price)+'/ед. · '+item.lead+' дн.</small></div><button class="btn secondary" data-v5w-buy="'+item.id+'">Купить 1</button></article>'}out+='</div>';
+ out+='<h3>Материалы для строительства своими силами</h3>';
+ for(const [kind,bom] of Object.entries(V5_BUILD_BOM)){const name=V5_BUILD_CATALOG.find(x=>x.id===kind)?.name||kind;out+='<div class="v5w-bom"><b>'+esc(name)+'</b><small>'+Object.entries(bom).map(([id,n])=>esc(V5_STOCK_ITEMS.find(x=>x.id===id)?.name||id)+': '+(w.stock[id]||0)+'/'+n).join(' · ')+'</small></div>'}
+ out+='<h3>Поставки</h3>'+(w.orders.slice(0,12).map(o=>'<div class="v5w-order"><span>№'+o.id+' · '+esc(V5_STOCK_ITEMS.find(x=>x.id===o.item)?.name||o.item)+' × '+o.qty+'</span><b>'+esc(o.status)+(o.status==='В пути'?' · '+o.remaining+' дн.':'')+'</b></div>').join('')||'<p class="muted">Заказов пока нет.</p>');
+ out+='<h3>Энергетика</h3><div class="v5w-bom"><b>Новые КТП: '+p.commissioned+'</b><small>Установленная мощность новых КТП: '+p.capacityKw+' кВт. Учёт потребления и ограничение добычи по мощности будут подключены отдельно после согласования модели нагрузки.</small></div></section>';return out;}
+const v5wOldDay=v35day;v35day=function(){v5wOldDay();v5wDay()};
+const v5wOldRender=render;render=function(){v5wOldRender();if(!s?.small||tab!=='overview')return;const host=document.getElementById('body');if(!host)return;
+ host.insertAdjacentHTML('beforeend',v5wView());host.querySelectorAll('[data-v5w-buy]').forEach(el=>el.onclick=async()=>{
+ const id=el.dataset.v5wBuy,item=V5_STOCK_ITEMS.find(x=>x.id===id);if(!item||!await uiConfirm('Закупить '+item.name+' за '+m(item.price)+'?'))return;
+ const r=v5wOrder(id,1);if(!r.ok)return uiAlert(r.error);save();render();
+ });};
+/* Alpha 9 — independent production risk register. All amounts in million KZT. */
+const V5_RISK_TYPES=[
+ {id:'guard',name:'Отсутствует ограждение вращающихся частей',severity:3,cost:0.35,days:2},
+ {id:'electric',name:'Неисправность электрооборудования',severity:4,cost:0.7,days:3},
+ {id:'leak',name:'Утечка нефти на трубопроводе',severity:5,cost:1.2,days:4},
+ {id:'permit',name:'Работы без действующего наряда-допуска',severity:4,cost:0.15,days:1},
+ {id:'ppe',name:'Отсутствуют необходимые СИЗ',severity:2,cost:0.1,days:1}
+];
+function v5rInit(){
+ if(!s.v5risk||typeof s.v5risk!=='object')s.v5risk={version:1,seq:0,findings:[],events:[],inspections:0,lastDay:null,condition:100};
+ const r=s.v5risk;r.findings=Array.isArray(r.findings)?r.findings:[];r.events=Array.isArray(r.events)?r.events:[];
+ r.seq=Number.isSafeInteger(r.seq)?r.seq:0;
+ if(!Number.isFinite(r.condition))r.condition=100;
+ return r;
+}
+function v5rInspect(){
+ if(!s?.small)return {ok:false,error:'Доступно в новой карьере'};
+ const r=v5rInit();r.inspections++;r.events.unshift({kind:'inspection',day:v34date(),text:'Проведён производственный обход №'+r.inspections});return {ok:true};
+}
+function v5rFinding(type){
+ if(!s?.small)return {ok:false,error:'Доступно в новой карьере'};
+ const item=V5_RISK_TYPES.find(x=>x.id===type);if(!item)return {ok:false,error:'Неизвестное нарушение'};
+ const r=v5rInit(),f={id:++r.seq,type,day:v34date(),severity:item.severity,status:'Открыто',stopped:item.severity>=4,remaining:item.days};
+ r.findings.unshift(f);r.events.unshift({kind:'finding',day:v34date(),id:f.id,text:item.name});
+ return {ok:true,finding:f};
+}
+function v5rStop(id){const f=v5rInit().findings.find(x=>x.id===id);if(!f||f.status==='Устранено')return {ok:false,error:'Нарушение не найдено'};
+ f.stopped=true;v5rInit().events.unshift({kind:'stop',day:v34date(),id,text:'Работы приостановлены'});return {ok:true};}
+function v5rCorrect(id){
+ const r=v5rInit(),f=r.findings.find(x=>x.id===id);if(!f||f.status==='Устранено')return {ok:false,error:'Нарушение не найдено или устранено'};
+ const item=V5_RISK_TYPES.find(x=>x.id===f.type);if(!item)return {ok:false,error:'Неизвестный тип'};
+ if(f.status==='Устранение')return {ok:false,error:'Устранение уже выполняется'};
+ if(!Number.isFinite(s.cash)||s.cash+1e-8<item.cost)return {ok:false,error:'Недостаточно средств для устранения'};
+ s.cash=v5bRound(s.cash-item.cost);f.status='Устранение';f.remaining=item.days;
+ r.events.unshift({kind:'correct',day:v34date(),id,amount:item.cost,text:'Начато устранение: '+item.name});
+ if(typeof v35record==='function')v35record('hse_corrective',item.cost,'Устранение нарушения №'+id);
+ if(typeof v25post==='function')v25post('maintenance',item.cost,{description:'Устранение нарушения №'+id});
+ return {ok:true,cost:item.cost};
+}
+function v5rExposure(){const r=v5rInit();return r.findings.filter(f=>f.status!=='Устранено').reduce((a,f)=>a+f.severity*(f.status==='Устранение'?.5:1),0)}
+function v5rDay(){
+ if(!s?.small)return;const r=v5rInit(),today=v34date();if(!Number.isFinite(today))return;
+ if(r.lastDay===null)r.lastDay=today-1;if(today<=r.lastDay)return;
+ const days=Math.min(730,today-r.lastDay);r.lastDay=today;
+ for(const f of r.findings){if(f.status!=='Устранение')continue;f.remaining=Math.max(0,f.remaining-days);
+  if(f.remaining===0){f.status='Устранено';f.stopped=false;r.events.unshift({kind:'closed',day:today,id:f.id,text:'Нарушение устранено, ограничение снято'});}}
+ r.condition=Math.max(0,Math.min(100,Math.round((r.condition-days*.04+days*(r.findings.filter(f=>f.status==='Устранено').length? .015:0))*100)/100));
+ if(r.events.length>300)r.events.length=300;
+}
+function v5rSummary(){const r=v5rInit();return {open:r.findings.filter(f=>f.status!=='Устранено').length,stopped:r.findings.filter(f=>f.stopped&&f.status!=='Устранено').length,exposure:v5rExposure(),condition:r.condition,inspections:r.inspections};}
+function v5rView(){const r=v5rInit(),q=v5rSummary();let html='<section class="v5-risk"><div class="v5r-title"><div><small>HSE · ALPHA 9</small><h2>Промышленная безопасность</h2></div><span>2D · Риски</span></div>';
+ html+='<div class="v5r-stats"><div><small>Открыто</small><strong>'+q.open+'</strong></div><div><small>Остановки</small><strong>'+q.stopped+'</strong></div><div><small>Индекс риска</small><strong>'+q.exposure+'</strong></div><div><small>Состояние</small><strong>'+q.condition+'%</strong></div></div>';
+ html+='<p class="muted">Учёт нарушений, приостановки работ и затрат на устранение. Это отдельный реестр Alpha 9: пока он не блокирует старые производственные операции и не генерирует случайные аварии.</p>';
+ html+='<button class="btn secondary" data-v5r-inspect="1">Провести обход</button><h3>Зарегистрировать несоответствие</h3><div class="v5r-types">';
+ for(const x of V5_RISK_TYPES)html+='<article><div><strong>'+esc(x.name)+'</strong><small>Категория '+x.severity+'/5 · устранение '+m(x.cost)+' · '+x.days+' дн.</small></div><button class="btn secondary" data-v5r-add="'+x.id+'">Добавить</button></article>';
+ html+='</div><h3>Реестр нарушений</h3>';
+ for(const f of r.findings.slice(0,35)){const x=V5_RISK_TYPES.find(z=>z.id===f.type);html+='<article class="v5r-finding"><div><strong>№'+f.id+' · '+esc(x?.name||f.type)+'</strong><small>'+esc(f.status)+(f.stopped?' · Работы остановлены':'')+(f.status==='Устранение'?' · '+f.remaining+' дн.':'')+'</small></div><div class="v5r-actions">';
+ if(f.status==='Открыто'){if(!f.stopped)html+='<button class="btn secondary" data-v5r-stop="'+f.id+'">Остановить</button>';html+='<button class="btn secondary" data-v5r-fix="'+f.id+'">Устранить</button>';}html+='</div></article>'}
+ if(!r.findings.length)html+='<p class="muted">Нарушений пока нет.</p>';
+ html+='<h3>Журнал HSE</h3>'+(r.events.slice(0,15).map(e=>'<div class="v5r-log">'+esc(e.text)+' · день '+e.day+'</div>').join('')||'<p class="muted">Записей пока нет.</p>')+'</section>';return html;
+}
+const v5rOldDay=v35day;v35day=function(){v5rOldDay();v5rDay()};
+const v5rOldRender=render;render=function(){v5rOldRender();if(!s?.small||tab!=='overview')return;const host=document.getElementById('body');if(!host)return;
+ host.insertAdjacentHTML('beforeend',v5rView());host.querySelectorAll('[data-v5r-inspect]').forEach(el=>el.onclick=()=>{v5rInspect();save();render()});
+ host.querySelectorAll('[data-v5r-add]').forEach(el=>el.onclick=()=>{const x=v5rFinding(el.dataset.v5rAdd);if(!x.ok)return uiAlert(x.error);save();render()});
+ host.querySelectorAll('[data-v5r-stop]').forEach(el=>el.onclick=()=>{const x=v5rStop(Number(el.dataset.v5rStop));if(!x.ok)return uiAlert(x.error);save();render()});
+ host.querySelectorAll('[data-v5r-fix]').forEach(el=>el.onclick=async()=>{const id=Number(el.dataset.v5rFix),f=v5rInit().findings.find(x=>x.id===id),item=V5_RISK_TYPES.find(x=>x.id===f?.type);if(!item||!await uiConfirm('Начать устранение за '+m(item.cost)+'?'))return;
+ const x=v5rCorrect(id);if(!x.ok)return uiAlert(x.error);save();render()});};
+/* Alpha 10: production coordination. Read-only production factors avoid double charging.
+   Simulation coefficients are illustrative, not engineering design standards. */
+function v5uInit(){
+ if(!s.v5unified||typeof s.v5unified!=='object')s.v5unified={version:1,repairs:[],events:[],seq:0,lastDay:null};
+ const u=s.v5unified;u.repairs=Array.isArray(u.repairs)?u.repairs:[];u.events=Array.isArray(u.events)?u.events:[];
+ return u;
+}
+function v5uMetrics(){
+ const wells=(s.assets?.wellList||[]).filter(w=>w.status==='Работает');
+ const pumps=(s.assets?.infrastructure||[]).filter(a=>String(a.id||'').startsWith('НАС-А6-')).length;
+ const power=(typeof v5wPower==='function'?v5wPower().capacityKw:0)+150; // existing starter KTP
+ const demand=wells.length*35+pumps*90+45; // field auxiliary load
+ const powerFactor=Math.min(1,power/Math.max(1,demand));
+ const findings=s.v5risk?.findings||[];
+ const stopped=findings.filter(f=>f.stopped&&f.status!=='Устранено').length;
+ const open=findings.filter(f=>f.status!=='Устранено').length;
+ const riskFactor=stopped?0:Math.max(.75,1-open*.035);
+ const operators=(s.v5hr?.staff||[]).filter(p=>p.active&&p.role==='operator'&&p.qualified&&p.shift!=='Отдых').length;
+ const staffFactor=operators?1:.9; // legacy operating staff continue working
+ const health=wells.length?wells.reduce((a,w)=>a+(Number(w.health)||75),0)/wells.length:100;
+ const equipmentFactor=Math.max(.6,Math.min(1,health/85));
+ const factor=Math.max(0,Math.min(1,powerFactor*riskFactor*staffFactor*equipmentFactor));
+ return {wells:wells.length,pumps,power,demand,powerFactor,stopped,open,riskFactor,operators,staffFactor,health,equipmentFactor,factor};
+}
+const v5uOldProduction=v8dailyProduction;
+v8dailyProduction=function(){const base=v5uOldProduction();if(!s?.small)return base;return Math.max(0,base*v5uMetrics().factor)};
+function v5uRepair(){
+ if(!s?.small)return {ok:false,error:'Только новая карьера'};
+ const u=v5uInit(),w=v5wInit();
+ if((w.stock.spares||0)<1)return {ok:false,error:'На складе нет ремкомплекта насоса'};
+ const target=(s.assets?.wellList||[]).filter(x=>x.status==='Работает').sort((a,b)=>(a.health||100)-(b.health||100))[0];
+ if(!target)return {ok:false,error:'Нет действующих скважин для обслуживания'};
+ if(u.repairs.some(x=>x.well===target.id&&x.status==='В работе'))return {ok:false,error:'Обслуживание уже назначено'};
+ const mechanic=(s.v5hr?.staff||[]).some(p=>p.active&&p.role==='mechanic'&&p.qualified&&p.shift==='День');
+ if(!mechanic)return {ok:false,error:'Нужен квалифицированный механик дневной смены'};
+ const cost=.25;
+ if(!Number.isFinite(s.cash)||s.cash<cost)return {ok:false,error:'Недостаточно денег на обслуживание'};
+ w.stock.spares--;s.cash=v5bRound(s.cash-cost);
+ const repair={id:++u.seq,well:target.id,status:'В работе',remaining:2,day:v34date(),cost};u.repairs.unshift(repair);
+ // Do not mutate well status: production is derated by wear, and this is preventive service.
+ if(typeof v35record==='function')v35record('maintenance',cost,'ТО скважины №'+target.id+' · Alpha 10');
+ if(typeof v25post==='function')v25post('maintenance',cost,{well:target.id,description:'ТО скважины · Alpha 10'});
+ u.events.unshift('Начато ТО скважины №'+target.id+' (2 дня)');return {ok:true,repair};
+}
+function v5uDay(){
+ if(!s?.small)return;const u=v5uInit(),today=v34date();if(!Number.isFinite(today))return;
+ if(u.lastDay===null)u.lastDay=today-1;
+ if(today<=u.lastDay)return;
+ const elapsed=Math.min(730,today-u.lastDay);u.lastDay=today;
+ for(const r of u.repairs){if(r.status!=='В работе')continue;r.remaining=Math.max(0,r.remaining-elapsed);
+  if(r.remaining===0){r.status='Завершён';const well=(s.assets?.wellList||[]).find(w=>w.id===r.well);
+   if(well)well.health=Math.min(100,(Number(well.health)||70)+20);
+   u.events.unshift('ТО скважины №'+r.well+' завершено');}}
+ if(u.events.length>80)u.events.length=80;
+}
+const v5uOldDay=v35day;v35day=function(){v5uOldDay();v5uDay()};
+function v5uView(){const x=v5uMetrics(),u=v5uInit(),percent=n=>Math.round(n*100)+'%';
+ let h='<section class="v5-unified"><div class="v5u-head"><div><small>ALPHA 10 · ПРОИЗВОДСТВЕННЫЙ КОНТУР</small><h2>Единая производственная система</h2></div><span>2D · Баланс</span></div>';
+ h+='<div class="v5u-grid"><div><small>Коэффициент выпуска</small><strong>'+percent(x.factor)+'</strong></div><div><small>Мощность / потребность</small><strong>'+x.power+' / '+x.demand+' кВт</strong></div><div><small>Работающие скважины</small><strong>'+x.wells+'</strong></div><div><small>Остановки HSE</small><strong>'+x.stopped+'</strong></div></div>';
+ for(const [label,value,detail] of [['Электроснабжение',x.powerFactor,x.pumps+' насосных станций'],['Промышленная безопасность',x.riskFactor,x.open+' открытых замечаний'],['Персонал',x.staffFactor,x.operators+' операторов в новом реестре'],['Техническое состояние',x.equipmentFactor,Math.round(x.health)+'% среднее состояние скважин']]){
+ h+='<div class="v5u-line"><div><b>'+label+'</b><span>'+percent(value)+'</span></div><div class="v5u-track"><i style="width:'+Math.round(value*100)+'%"></i></div><small>'+detail+'</small></div>';}
+ h+='<p class="muted">Производственные коэффициенты применяются к действующему суточному расчёту добычи. Остановки HSE с активным запретом дают нулевой выпуск; дефицит мощности, отсутствие операторов в новом реестре и износ снижают добычу. Старый персонал учитывается через базовый коэффициент 90%.</p>';
+ h+='<h3>ТО оборудования</h3><p class="muted">Требуются ремкомплект на складе, механик дневной смены и 0,25 млн ₸. ТО занимает 2 игровых дня и восстанавливает 20 пунктов состояния наиболее изношенной работающей скважины.</p>';
+ h+='<button class="btn secondary" data-v5u-repair="1">Назначить ТО скважины</button>';
+ for(const r of u.repairs.slice(0,8))h+='<div class="v5u-entry">Скважина №'+r.well+' · '+esc(r.status)+(r.status==='В работе'?' · '+r.remaining+' дн.':'')+'</div>';
+ h+='<p class="muted">Модель упрощённая: коэффициенты условные; единая бухгалтерия, диспетчеризация и инженерные расчёты потребуют дальнейшей интеграции.</p></section>';return h;
+}
+const v5uOldRender=render;render=function(){v5uOldRender();if(!s?.small||tab!=='overview')return;const host=document.getElementById('body');if(!host)return;
+ host.insertAdjacentHTML('beforeend',v5uView());host.querySelectorAll('[data-v5u-repair]').forEach(el=>el.onclick=async()=>{
+ if(!await uiConfirm('Назначить ТО скважины? Будут использованы 1 ремкомплект и 0,25 млн ₸.'))return;
+ const result=v5uRepair();if(!result.ok)return uiAlert(result.error);save();render();});};
+/* Alpha 11: read-only management statement. All monetary values: million KZT.
+   Valuations are estimates, not audited accounting or a cash-flow reconciliation. */
+function v5rNum(n){return Number.isFinite(Number(n))?Number(n):0}
+function v5rRound(n){return Math.round(n*10000)/10000}
+function v5rReport(){
+ const cash=v5rNum(s.cash), bank=v5bankInit(), loans=v35init(), warehouse=v5wInit(), build=v5bInit();
+ const deposits=bank.deposits.filter(d=>d.status==='Открыт').reduce((a,d)=>a+v5rNum(d.principal),0);
+ const interest=bank.deposits.filter(d=>d.status==='Открыт').reduce((a,d)=>a+v5rNum(d.accrued),0);
+ const inventory=V5_STOCK_ITEMS.reduce((a,item)=>a+v5rNum(warehouse.stock[item.id])*item.price,0);
+ const shares=v5exValuation();
+ const commissioned=build.projects.filter(p=>p.status==='Введён').reduce((a,p)=>a+v5rNum(p.paid),0);
+ const construction=build.projects.filter(p=>p.status!=='Введён').reduce((a,p)=>a+v5rNum(p.paid),0);
+ const debt=loans.loans.reduce((a,l)=>a+Math.max(0,v5rNum(l.balance)),0);
+ const pending=build.projects.filter(p=>p.status==='Ожидает оплаты').reduce((a,p)=>a+Math.max(0,v5rNum(p.cost)-v5rNum(p.paid)),0);
+ const current=v25totals(v25init().entries.filter(e=>e.month===s.month));
+ const last=v25init().closed.at(-1)||null;
+ const totals={cash,deposits,interest,inventory,shares,commissioned,construction,debt,pending};
+ const assets=cash+deposits+interest+inventory+shares+commissioned+construction;
+ // Residual is not a verified shareholder-equity figure: many legacy assets/liabilities omitted.
+ const residual=assets-debt;
+ const out={...Object.fromEntries(Object.entries(totals).map(([k,v])=>[k,v5rRound(v)])),assets:v5rRound(assets),residual:v5rRound(residual),current,last,
+  operating:v5rRound(current.sale-current.expense),
+  capitalRaised:v5rRound(v5sharesInit().operations.filter(e=>e.kind==='issue').reduce((a,e)=>a+v5rNum(e.amount),0)),
+  dividends:v5rRound(v5sharesInit().dividendsPaid),
+  inventoryOrders:warehouse.orders.filter(o=>o.status==='В пути').length,
+  projectsOpen:build.projects.filter(p=>p.status!=='Введён').length,
+  warnings:[]};
+ if(cash<0)out.warnings.push('Отрицательный остаток денег');
+ if(pending>0)out.warnings.push('Ожидают окончательного расчёта '+build.projects.filter(p=>p.status==='Ожидает оплаты').length+' объектов');
+ if((s.v5cash?.changes||[]).some(e=>e.category==='Изменение денежных средств (источник требует сверки)'))
+  out.warnings.push('Часть исторических движений денег не классифицирована');
+ return out;
+}
+function v5rView(){const r=v5rReport();let h='<section class="v5-report"><div class="v5r-head"><div><small>ALPHA 11 · УПРАВЛЕНЧЕСКИЙ УЧЁТ</small><h2>Баланс предприятия</h2></div><span>2D · Отчёт ГД</span></div>';
+ h+='<p class="muted">Сводная оценка только учтённых в новых модулях активов и обязательств. Суммы в млн ₸. Отчёт не изменяет денежные средства и не заменяет бухгалтерский баланс.</p>';
+ h+='<div class="v5r-grid"><div><small>Учтённые активы</small><strong>'+m(r.assets)+'</strong></div><div><small>Кредиты · основной долг</small><strong>'+m(r.debt)+'</strong></div><div><small>Деньги на счёте</small><strong>'+m(r.cash)+'</strong></div><div><small>Расчётный остаток</small><strong>'+m(r.residual)+'</strong></div></div>';
+ h+='<h3>Активы · оценка</h3>';
+ for(const [label,val] of [['Денежные средства',r.cash],['Депозиты · основной вклад',r.deposits],['Начисленные проценты к получению',r.interest],['Материалы на складе · по закупочным ценам',r.inventory],['Портфель акций · текущие котировки',r.shares],['Введённые объекты · по оплаченным суммам',r.commissioned],['Незавершённое строительство · оплачено',r.construction]])h+=row(label,m(val));
+ h+='<h3>Обязательства и капитал</h3>'+row('Основной долг по кредитам',m(r.debt))+row('Остаток платежей по готовым объектам · справочно',m(r.pending))+row('Привлечено при выпуске акций · накопительно',m(r.capitalRaised))+row('Выплачено дивидендов · накопительно',m(r.dividends));
+ h+='<p class="muted">Расчётный остаток = учтённые активы − кредиты. Он не равен подтверждённому собственному капиталу: часть старых активов, обязательств и начислений пока отсутствует. Оставшиеся 70% по объектам отражены справочно, чтобы не выдавать договорные платежи за уже признанную кредиторскую задолженность.</p>';
+ h+='<h3>Результаты текущего месяца · по журналу начислений</h3>'+row('Выручка от реализации',m(r.current.sale))+row('Учтённые операционные расходы',m(r.current.expense))+row('Расчётный операционный результат',m(r.operating))+row('Реализовано нефти',f(r.current.volume)+' т');
+ if(r.last)h+='<h3>Последний закрытый месяц №'+esc(String(r.last.month))+'</h3>'+row('Выручка',m(r.last.sale))+row('Расходы',m(r.last.expense))+row('Результат',m(r.last.profit));
+ h+='<h3>Контроль директора</h3>'+row('Поставок в пути',String(r.inventoryOrders))+row('Незавершённых проектов',String(r.projectsOpen));
+ h+=(r.warnings.length?'<div class="notice bad">'+r.warnings.map(esc).join(' · ')+'</div>':'<div class="notice">Базовые контрольные признаки без замечаний.</div>');
+ h+='<p class="muted">Не суммируйте этот отчёт с реестрами Alpha 3: некоторые операции отражены в нескольких источниках. Не включены оценка старых скважин, дебиторская и кредиторская задолженность, налоги и полная амортизация. Финансовые доходы и расходы не полностью входят в отчёт о прибыли.</p></section>';return h;
+}
+const v5a11OldRender=render;render=function(){v5a11OldRender();if(!s?.small||tab!=='finance')return;const host=document.getElementById('body');if(host)host.insertAdjacentHTML('afterbegin',v5rView());};
+/* Alpha 12: strategic management. Budget targets and KPI are planning metadata;
+   actual values are read from existing ledgers, avoiding duplicate cash postings. */
+const V5S_AREAS=[{id:'production',name:'Добыча и эксплуатация',weight:35},{id:'construction',name:'Капитальное строительство',weight:25},{id:'people',name:'Персонал и обучение',weight:15},{id:'safety',name:'Промышленная безопасность',weight:15},{id:'reserve',name:'Резерв директора',weight:10}];
+function v5sInit(){
+ if(!s.v5strategy||typeof s.v5strategy!=='object')s.v5strategy={version:1,year:1,budget:50,allocation:{production:35,construction:25,people:15,safety:15,reserve:10},targetTons:12000,targetSafety:0,targetAvailability:90,decisions:[],seq:0,locked:false};
+ const a=s.v5strategy;a.decisions=Array.isArray(a.decisions)?a.decisions:[];a.allocation=a.allocation&&typeof a.allocation==='object'?a.allocation:{};
+ for(const x of V5S_AREAS)if(!Number.isFinite(Number(a.allocation[x.id])))a.allocation[x.id]=x.weight;
+ return a;
+}
+function v5sSetPlan(data){
+ if(!s?.small)return {ok:false,error:'Только новая карьера'};
+ const a=v5sInit();if(a.locked)return {ok:false,error:'План утверждён. Для изменений откройте новую редакцию'};
+ const budget=Number(data.budget),tons=Number(data.targetTons),availability=Number(data.targetAvailability);
+ if(!Number.isFinite(budget)||budget<=0||budget>1000000)return {ok:false,error:'Некорректный годовой бюджет'};
+ if(!Number.isFinite(tons)||tons<=0||tons>1e9)return {ok:false,error:'Некорректный план добычи'};
+ if(!Number.isFinite(availability)||availability<1||availability>100)return {ok:false,error:'Доступность должна быть от 1 до 100%'};
+ const allocation={};let sum=0;
+ for(const x of V5S_AREAS){const v=Number(data.allocation?.[x.id]);if(!Number.isFinite(v)||v<0||v>100||!Number.isInteger(v))return {ok:false,error:'Доли бюджета должны быть целыми процентами'};allocation[x.id]=v;sum+=v;}
+ if(sum!==100)return {ok:false,error:'Сумма долей бюджета должна составлять 100%'};
+ Object.assign(a,{budget,targetTons:tons,targetAvailability:availability,allocation});return {ok:true};
+}
+function v5sApprove(){const a=v5sInit();if(a.locked)return {ok:false,error:'План уже утверждён'};a.locked=true;a.decisions.unshift({id:++a.seq,day:v34date(),kind:'Утверждение',note:'Годовой бюджет '+a.budget+' млн ₸'});return {ok:true};}
+function v5sRevise(){const a=v5sInit();if(!a.locked)return {ok:false,error:'План уже открыт'};a.locked=false;a.decisions.unshift({id:++a.seq,day:v34date(),kind:'Редакция',note:'Открыта новая редакция плана'});return {ok:true};}
+function v5sDecision(note){const a=v5sInit();const clean=String(note||'').trim().slice(0,180);if(clean.length<5)return {ok:false,error:'Опишите решение (не менее 5 символов)'};a.decisions.unshift({id:++a.seq,day:v34date(),kind:'Поручение',note:clean});a.decisions.length=Math.min(a.decisions.length,100);return {ok:true};}
+function v5sActual(){
+ const a=v5sInit(),r=v5rReport(),entries=v25init().entries||[],closed=v25init().closed||[];
+ const volumes=closed.reduce((sum,x)=>sum+(Number(x.volume)||0),0)+(Number(r.current.volume)||0);
+ const spending={production:0,construction:0,people:0,safety:0,reserve:0};
+ for(const e of entries){const amount=Math.max(0,Number(e.amount)||0);if(e.type==='opex'||e.type==='maintenance')spending.production+=amount;else if(e.type==='payroll')spending.people+=amount;else if(e.type==='incident')spending.safety+=amount;}
+ const projects=v5bInit().projects||[];spending.construction=projects.reduce((sum,p)=>sum+Math.max(0,Number(p.paid)||0),0);
+ const risk=v5rSummary(),prod=v5uMetrics();
+ return {volume:volumes,spending,risks:risk.open,stops:risk.stopped,availability:Math.round(prod.factor*100),report:r,period:'Накопительно за историю доступных журналов (не только текущий год)'};
+}
+function v5sView(){const a=v5sInit(),t=v5sActual(),fmt=n=>Number(n||0).toLocaleString('ru-RU',{maximumFractionDigits:2});
+ let h='<section class="v5-strategy"><div class="v5s-head"><small>ALPHA 12 · КАБИНЕТ ГЕНЕРАЛЬНОГО ДИРЕКТОРА</small><h2>Стратегическое управление</h2><p>Годовой план · лимиты · KPI подразделений</p></div>';
+ h+='<div class="v5s-kpis"><div><small>Годовой бюджет</small><strong>'+fmt(a.budget)+' млн ₸</strong></div><div><small>План добычи</small><strong>'+fmt(a.targetTons)+' т</strong></div><div><small>Учтённый выпуск</small><strong>'+fmt(t.volume)+' т</strong></div><div><small>Коэффициент выпуска</small><strong>'+t.availability+'%</strong></div></div>';
+ h+='<p class="muted">'+esc(t.period)+'. Цели являются управленческими ориентирами, а не автоматическими лимитами расходов. Исторические журналы не содержат полного годового разделения.</p>';
+ h+='<div class="v5s-plan"><label>Бюджет, млн ₸ <input data-v5s="budget" type="number" min="0.01" step="0.01" value="'+a.budget+'" '+(a.locked?'disabled':'')+'></label><label>Добыча, т <input data-v5s="targetTons" type="number" min="1" step="1" value="'+a.targetTons+'" '+(a.locked?'disabled':'')+'></label><label>Целевая доступность, % <input data-v5s="targetAvailability" type="number" min="1" max="100" step="1" value="'+a.targetAvailability+'" '+(a.locked?'disabled':'')+'></label></div>';
+ h+='<h3>Распределение бюджета и контроль исполнения</h3>';
+ for(const x of V5S_AREAS){const pct=a.allocation[x.id],limit=a.budget*pct/100,actual=t.spending[x.id];h+='<div class="v5s-area"><div class="v5s-line"><b>'+x.name+'</b><label><input aria-label="Доля '+x.name+'" data-v5s-area="'+x.id+'" type="number" min="0" max="100" step="1" value="'+pct+'" '+(a.locked?'disabled':'')+'> %</label></div><div class="v5s-track"><i style="width:'+Math.min(100,limit>0?actual/limit*100:0)+'%"></i></div><small>Ориентир '+fmt(limit)+' млн ₸ · отражено '+fmt(actual)+' млн ₸</small></div>';}
+ h+='<div class="v5s-actions">'+(a.locked?'<button class="btn secondary" data-v5s-action="revise">Открыть редакцию</button>':'<button class="btn secondary" data-v5s-action="save">Сохранить план</button><button class="btn" data-v5s-action="approve">Утвердить план</button>')+'</div>';
+ h+='<h3>KPI подразделений</h3><div class="v5s-metrics"><div>ЦДНГ · добыча <b>'+fmt(t.volume)+' / '+fmt(a.targetTons)+' т</b></div><div>Эксплуатация · доступность <b>'+t.availability+' / '+a.targetAvailability+'%</b></div><div>HSE · открытые замечания <b>'+t.risks+'</b></div><div>HSE · остановки <b>'+t.stops+'</b></div><div>Строительство · проектов <b>'+v5bInit().projects.length+'</b></div><div>Финансы · деньги <b>'+fmt(t.report.cash)+' млн ₸</b></div></div>';
+ h+='<h3>Решения генерального директора</h3><div class="v5s-actions"><input data-v5s-note maxlength="180" placeholder="Поручение или стратегическое решение"><button class="btn secondary" data-v5s-action="note">Записать решение</button></div>';
+ for(const d of a.decisions.slice(0,12))h+='<div class="v5s-decision"><small>День '+esc(String(d.day))+' · '+esc(d.kind)+'</small><div>'+esc(d.note)+'</div></div>';
+ h+='<p class="muted">Утверждение бюджета не списывает деньги и не заменяет бухгалтерский контроль. Фактические затраты — частичная классификация доступных журналов; закупки и отдельные операции могут учитываться в иных модулях.</p></section>';return h;
+}
+const v5sOldRender=render;render=function(){v5sOldRender();if(!s?.small||tab!=='overview')return;const host=document.getElementById('body');if(!host)return;host.insertAdjacentHTML('beforeend',v5sView());const root=host.querySelector('.v5-strategy');if(!root)return;
+ root.querySelectorAll('[data-v5s-action]').forEach(b=>b.onclick=async()=>{const action=b.dataset.v5sAction;let result;
+ if(action==='save'){const allocation={};root.querySelectorAll('[data-v5s-area]').forEach(el=>allocation[el.dataset.v5sArea]=el.value);result=v5sSetPlan({budget:root.querySelector('[data-v5s="budget"]').value,targetTons:root.querySelector('[data-v5s="targetTons"]').value,targetAvailability:root.querySelector('[data-v5s="targetAvailability"]').value,allocation});}
+ if(action==='approve'){result=v5sApprove();}
+ if(action==='revise'){result=v5sRevise();}
+ if(action==='note'){result=v5sDecision(root.querySelector('[data-v5s-note]').value);}
+ if(!result.ok)return uiAlert(result.error);save();render();});};
+/* Alpha 13: director assignments and explicit, scoped budget enforcement.
+   Historical spending remains diagnostic; new construction starts are gated by
+   approved budget using the existing CAPEX ledger, not a second debit. */
+const V5X_OWNERS=['Генеральный директор','Главный инженер','Начальник ЦДНГ','Начальник СМУ','Начальник службы HSE','Финансовый директор'];
+function v5xInit(){if(!s.v5execution||typeof s.v5execution!=='object')s.v5execution={version:1,seq:0,tasks:[],reviews:[],lastReview:null};const x=s.v5execution;x.tasks=Array.isArray(x.tasks)?x.tasks:[];x.reviews=Array.isArray(x.reviews)?x.reviews:[];x.seq=Number.isSafeInteger(x.seq)?x.seq:0;return x;}
+function v5xTask(title,owner,days,area){if(!s?.small)return {ok:false,error:'Только новая карьера'};const x=v5xInit(),name=String(title||'').trim().slice(0,160),d=Number(days);if(name.length<5)return {ok:false,error:'Укажите поручение (от 5 символов)'};if(!V5X_OWNERS.includes(owner))return {ok:false,error:'Неизвестный ответственный'};if(!Number.isSafeInteger(d)||d<1||d>365)return {ok:false,error:'Срок от 1 до 365 дней'};if(!V5S_AREAS.some(a=>a.id===area))return {ok:false,error:'Неизвестное направление'};const t={id:++x.seq,title:name,owner,area,created:v34date(),due:v34date()+d,status:'Назначено',closed:null};x.tasks.unshift(t);x.tasks.length=Math.min(x.tasks.length,150);return {ok:true,task:t};}
+function v5xStatus(id,status){const t=v5xInit().tasks.find(x=>x.id===Number(id));if(!t)return {ok:false,error:'Поручение не найдено'};if(!['Назначено','В работе','Выполнено'].includes(status))return {ok:false,error:'Недопустимый статус'};if(t.status==='Выполнено')return {ok:false,error:'Закрытое поручение нельзя изменить'};t.status=status;t.closed=status==='Выполнено'?v34date():null;return {ok:true};}
+function v5xSummary(){const a=v5xInit().tasks,day=v34date();return {all:a.length,done:a.filter(t=>t.status==='Выполнено').length,overdue:a.filter(t=>t.status!=='Выполнено'&&day>t.due).length,active:a.filter(t=>t.status!=='Выполнено').length};}
+function v5xReview(){const x=v5xInit(),day=v34date(),month=Math.floor(Math.max(0,day-1)/30)+1,key='M'+month;if(x.lastReview===key)return {ok:false,error:'Отчёт за этот игровой месяц уже создан'};const p=v5sInit(),a=v5sActual(),t=v5xSummary(),limits={};for(const k of V5S_AREAS)limits[k.id]={limit:p.budget*p.allocation[k.id]/100,actual:a.spending[k.id]||0};const report={month,key,day,volume:a.volume,target:p.targetTons,availability:a.availability,risks:a.risks,stops:a.stops,done:t.done,overdue:t.overdue,limits};x.reviews.unshift(report);x.reviews.length=Math.min(x.reviews.length,24);x.lastReview=key;return {ok:true,report};}
+function v5xBudget(area,amount){const p=v5sInit();if(!p.locked)return {ok:true,advisory:true};const value=Number(amount);if(!Number.isFinite(value)||value<0)return {ok:false,error:'Неверная сумма'};const actual=v5sActual().spending[area]||0,limit=p.budget*(p.allocation[area]||0)/100;if(actual+value>limit+1e-8)return {ok:false,error:'Лимит «'+(V5S_AREAS.find(a=>a.id===area)?.name||area)+'» превышен: доступно '+Math.max(0,limit-actual).toFixed(2)+' млн ₸'};return {ok:true};}
+// Scope: the Alpha 6 construction API only. Other legacy transactions are not intercepted.
+const v5xOldBuildStart=v5bStart;v5bStart=function(kind,mode){const q=v5bQuote(kind,mode);if(q){const check=v5xBudget('construction',v5bRound(q.cost*.3));if(!check.ok)return check;}return v5xOldBuildStart(kind,mode);};
+const v5xOldCommission=v5bCommission;v5bCommission=function(id){const p=v5bInit().projects.find(p=>p.id===Number(id));if(p&&p.status==='Ожидает оплаты'){const check=v5xBudget('construction',v5bRound(p.cost-p.paid));if(!check.ok)return check;}return v5xOldCommission(id);};
+function v5xView(){const x=v5xInit(),sum=v5xSummary(),p=v5sInit(),fmt=n=>Number(n||0).toLocaleString('ru-RU',{maximumFractionDigits:2});let out='<section class="v5-execution"><small>ALPHA 13 · КОНТРОЛЬ ИСПОЛНЕНИЯ</small><h2>Поручения и бюджетная дисциплина</h2><p>Строительные платежи Alpha 6 ограничиваются утверждённым бюджетом. Другие расходы пока контролируются информационно.</p><div class="v5x-stats"><div>Всего <b>'+sum.all+'</b></div><div>Выполнено <b>'+sum.done+'</b></div><div>Просрочено <b>'+sum.overdue+'</b></div></div><h3>Поручить руководителю</h3><div class="v5x-form"><input data-v5x-title maxlength="160" placeholder="Содержание поручения"><select data-v5x-owner>'+V5X_OWNERS.map(o=>'<option>'+esc(o)+'</option>').join('')+'</select><select data-v5x-area>'+V5S_AREAS.map(a=>'<option value="'+a.id+'">'+esc(a.name)+'</option>').join('')+'</select><label>Срок, дней <input data-v5x-days type="number" min="1" max="365" value="10"></label><button class="btn" data-v5x-action="add">Назначить</button></div><h3>Контроль исполнения</h3>';
+ for(const t of x.tasks.slice(0,25)){const overdue=t.status!=='Выполнено'&&v34date()>t.due;out+='<article class="v5x-task"><b>№'+t.id+' · '+esc(t.title)+'</b><small>'+esc(t.owner)+' · срок: день '+t.due+(overdue?' · ПРОСРОЧЕНО':'')+'</small><div class="v5x-taskbar"><span>'+esc(t.status)+'</span>'+(t.status!=='Выполнено'?'<button data-v5x-id="'+t.id+'" data-v5x-status="В работе" class="btn secondary">В работе</button><button data-v5x-id="'+t.id+'" data-v5x-status="Выполнено" class="btn">Выполнено</button>':'')+'</div></article>';}
+ if(!x.tasks.length)out+='<p>Поручений пока нет.</p>';
+ out+='<h3>Ежемесячная оценка</h3><p>Месяц = 30 игровых дней. Снимок фиксирует доступные накопительные показатели, а не обороты исключительно за месяц.</p><button class="btn secondary" data-v5x-action="review">Зафиксировать отчёт за месяц</button>';
+ for(const r of x.reviews.slice(0,6))out+='<div class="v5x-review"><b>Месяц '+r.month+' · день '+r.day+'</b><div>Добыча '+fmt(r.volume)+' / '+fmt(r.target)+' т · доступность '+r.availability+'%</div><div>HSE: '+r.risks+' замечаний, '+r.stops+' остановок · выполнено '+r.done+' · просрочено '+r.overdue+'</div></div>';
+ out+='<p>Бюджет '+(p.locked?'утверждён':'не утверждён')+'. Лимиты строительства применяются к авансу и приёмке; расходы остальных модулей не блокируются. Данные прошлых лет не выделены отдельно.</p></section>';return out;}
+const v5xOldRender=render;render=function(){v5xOldRender();if(!s?.small||tab!=='overview')return;const host=document.getElementById('body');if(!host)return;host.insertAdjacentHTML('beforeend',v5xView());const root=host.querySelector('.v5-execution');if(!root)return;root.querySelectorAll('[data-v5x-action]').forEach(b=>b.onclick=()=>{let r;if(b.dataset.v5xAction==='add')r=v5xTask(root.querySelector('[data-v5x-title]').value,root.querySelector('[data-v5x-owner]').value,root.querySelector('[data-v5x-days]').value,root.querySelector('[data-v5x-area]').value);else r=v5xReview();if(!r.ok)return uiAlert(r.error);save();render();});root.querySelectorAll('[data-v5x-status]').forEach(b=>b.onclick=()=>{const r=v5xStatus(b.dataset.v5xId,b.dataset.v5xStatus);if(!r.ok)return uiAlert(r.error);save();render();});};
+/* Alpha 14: ring-fenced fictional subsidiaries. Capital transfers are internal:
+   parent cash decreases when subsidiary cash increases and vice versa.
+   Consolidated assets count subsidiary cash, NOT internal equity contributions again.
+   All amounts million KZT; output and costs are simplified game mechanics. */
+const V5G_TYPES=[{id:'production',name:'Добывающее предприятие',rate:1.8,cost:.10},{id:'service',name:'Сервисная компания',rate:0,cost:.07},{id:'energy',name:'Энергетическая компания',rate:0,cost:.08}];
+function v5gRound(n){return Math.round(n*10000)/10000}
+function v5gInit(){if(!s.v5group||typeof s.v5group!=='object')s.v5group={version:1,seq:0,companies:[],transfers:[],lastDay:null};const g=s.v5group;g.companies=Array.isArray(g.companies)?g.companies:[];g.transfers=Array.isArray(g.transfers)?g.transfers:[];g.seq=Number.isSafeInteger(g.seq)?g.seq:0;return g;}
+function v5gCreate(name,type,capital){if(!s?.small)return {ok:false,error:'Только новая карьера'};const g=v5gInit(),label=String(name||'').trim().slice(0,60),cfg=V5G_TYPES.find(t=>t.id===type),n=Number(capital);if(label.length<3)return {ok:false,error:'Название должно содержать от 3 символов'};if(!cfg)return {ok:false,error:'Неизвестный профиль предприятия'};if(!Number.isFinite(n)||n<1||n>1e6)return {ok:false,error:'Капитал от 1 до 1 000 000 млн ₸'};if(g.companies.length>=12)return {ok:false,error:'Максимум 12 дочерних компаний'};if(g.companies.some(c=>c.name.toLowerCase()===label.toLowerCase()))return {ok:false,error:'Компания с таким названием уже есть'};if(!Number.isFinite(s.cash)||s.cash+1e-8<n)return {ok:false,error:'Недостаточно денег у головной компании'};const c={id:++g.seq,name:label,type,cash:v5gRound(n),invested:v5gRound(n),tons:0,revenue:0,costs:0,created:v34date(),days:0};s.cash=v5gRound(s.cash-n);g.companies.push(c);v5gLog(g,c,'Капитализация',n);return {ok:true,company:c};}
+function v5gLog(g,c,kind,amount){g.transfers.unshift({id:g.transfers.length?g.transfers[0].id+1:1,company:c.id,kind,amount:v5gRound(amount),day:v34date()});g.transfers.length=Math.min(200,g.transfers.length);}
+function v5gTransfer(id,kind,amount){const g=v5gInit(),c=g.companies.find(x=>x.id===Number(id)),n=Number(amount);if(!c)return {ok:false,error:'Предприятие не найдено'};if(!['fund','return'].includes(kind))return {ok:false,error:'Неизвестный тип перевода'};if(!Number.isFinite(n)||n<=0||n>1e6)return {ok:false,error:'Некорректная сумма'};if(kind==='fund'){if(!Number.isFinite(s.cash)||s.cash+1e-8<n)return {ok:false,error:'Недостаточно денег у головной компании'};s.cash=v5gRound(s.cash-n);c.cash=v5gRound(c.cash+n);c.invested=v5gRound(c.invested+n);v5gLog(g,c,'Финансирование',n);}else{if(c.cash+1e-8<n)return {ok:false,error:'Недостаточно денег у дочернего предприятия'};c.cash=v5gRound(c.cash-n);s.cash=v5gRound(s.cash+n);c.invested=v5gRound(c.invested-n);v5gLog(g,c,'Возврат капитала',n);}return {ok:true};}
+function v5gDay(){if(!s?.small)return;const g=v5gInit(),today=v34date();if(!Number.isFinite(today))return;if(g.lastDay===null)g.lastDay=today-1;if(today<=g.lastDay)return;const delta=Math.min(730,today-g.lastDay);g.lastDay=today;for(const c of g.companies){const cfg=V5G_TYPES.find(x=>x.id===c.type);if(!cfg)continue;for(let i=0;i<delta;i++){const upkeep=v5gRound(Math.min(c.cash,Math.max(0,c.invested)*cfg.cost/365));if(upkeep>0){c.cash=v5gRound(c.cash-upkeep);c.costs=v5gRound(c.costs+upkeep);}if(c.type==='production'&&c.cash>0){const tons=v5gRound(Math.max(0,c.invested)*cfg.rate/365);c.tons=v5gRound(c.tons+tons);/* Produced tons are tracked separately; no sale or invented revenue. */}c.days++;}}}
+function v5gSummary(){const g=v5gInit(),companies=g.companies;return {count:companies.length,subsidiaryCash:v5gRound(companies.reduce((a,c)=>a+(Number(c.cash)||0),0)),tons:v5gRound(companies.reduce((a,c)=>a+(Number(c.tons)||0),0)),costs:v5gRound(companies.reduce((a,c)=>a+(Number(c.costs)||0),0)),parentCash:v5gRound(s.cash),consolidatedCash:v5gRound(s.cash+companies.reduce((a,c)=>a+(Number(c.cash)||0),0))};}
+function v5gView(){const g=v5gInit(),a=v5gSummary(),fmt=n=>Number(n||0).toLocaleString('ru-RU',{maximumFractionDigits:2});let h='<section class="v5-group"><small>ALPHA 14 · НЕФТЯНОЙ ХОЛДИНГ</small><h2>Дочерние предприятия</h2><p>Создавайте отдельные компании, выделяйте капитал и контролируйте их денежные средства. Переводы внутри группы не создают дохода.</p><div class="v5g-grid"><div><small>Компаний</small><b>'+a.count+'</b></div><div><small>Деньги группы</small><b>'+fmt(a.consolidatedCash)+' млн ₸</b></div><div><small>Деньги дочерних</small><b>'+fmt(a.subsidiaryCash)+' млн ₸</b></div><div><small>Добыто дочерними</small><b>'+fmt(a.tons)+' т</b></div></div>';
+ h+='<h3>Создать дочернюю компанию</h3><div class="v5g-form"><input data-v5g-name maxlength="60" placeholder="Название компании"><select data-v5g-type>'+V5G_TYPES.map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join('')+'</select><label>Уставный капитал, млн ₸ <input type="number" data-v5g-capital min="1" step="1" value="50"></label><button class="btn" data-v5g-create>Создать</button></div>';
+ for(const c of g.companies){const t=V5G_TYPES.find(x=>x.id===c.type);h+='<article class="v5g-company"><b>'+esc(c.name)+'</b><small>'+esc(t?t.name:c.type)+' · №'+c.id+'</small><div>Счёт: <strong>'+fmt(c.cash)+' млн ₸</strong> · внесено (нетто): '+fmt(c.invested)+' млн ₸</div><div>Добыча: '+fmt(c.tons)+' т · расходы: '+fmt(c.costs)+' млн ₸</div><div class="v5g-actions"><input aria-label="Сумма перевода" data-v5g-amount="'+c.id+'" type="number" min="0.01" step="0.01" value="10"><button class="btn secondary" data-v5g-id="'+c.id+'" data-v5g-kind="fund">Пополнить</button><button class="btn secondary" data-v5g-id="'+c.id+'" data-v5g-kind="return">Вернуть</button></div></article>';}
+ if(!g.companies.length)h+='<p>Дочерних компаний пока нет.</p>';
+ h+='<h3>Внутригрупповые операции</h3>';for(const t of g.transfers.slice(0,8))h+='<div class="v5g-transfer">День '+t.day+' · №'+t.company+' · '+esc(t.kind)+' · '+fmt(t.amount)+' млн ₸</div>';
+ h+='<p class="muted">Консолидированные деньги = счёт головной компании + счета дочерних. Вложения головной компании не суммируются с активами дочерних повторно. Добыча дочерних пока не поступает в склад или выручку основной производственной системы; сервисные и энергетические компании не продают услуги автоматически. Модель не является бухгалтерской консолидацией.</p></section>';return h;}
+const v5gOldDay=v35day;v35day=function(){v5gOldDay();v5gDay();};
+const v5gOldRender=render;render=function(){v5gOldRender();if(!s?.small||tab!=='finance')return;const host=document.getElementById('body');if(!host)return;host.insertAdjacentHTML('beforeend',v5gView());const root=host.querySelector('.v5-group');if(!root)return;const create=root.querySelector('[data-v5g-create]');if(create)create.onclick=()=>{const r=v5gCreate(root.querySelector('[data-v5g-name]').value,root.querySelector('[data-v5g-type]').value,root.querySelector('[data-v5g-capital]').value);if(!r.ok)return uiAlert(r.error);save();render();};root.querySelectorAll('[data-v5g-kind]').forEach(b=>b.onclick=()=>{const r=v5gTransfer(b.dataset.v5gId,b.dataset.v5gKind,root.querySelector('[data-v5g-amount="'+b.dataset.v5gId+'"]').value);if(!r.ok)return uiAlert(r.error);save();render();});};
+/* Alpha 15 — unified holding economics. All money in million KZT.
+   External subsidiary sales create group revenue. Internal service charges are
+   transfers only and eliminated from consolidated cash/revenue. */
+const V5E_OIL_PRICE=.16; // illustrative mln KZT / ton, NOT a live market price
+function v5eInit(){if(!s.v5economy||typeof s.v5economy!=='object')s.v5economy={version:1,sales:[],services:[],seq:0};const e=s.v5economy;e.sales=Array.isArray(e.sales)?e.sales:[];e.services=Array.isArray(e.services)?e.services:[];e.seq=Number.isSafeInteger(e.seq)?e.seq:0;return e;}
+function v5eSell(id,tons){if(!s?.small)return {ok:false,error:'Только новая карьера'};const g=v5gInit(),e=v5eInit(),c=g.companies.find(x=>x.id===Number(id)),n=Number(tons);if(!c||c.type!=='production')return {ok:false,error:'Выберите добывающее предприятие'};if(!Number.isFinite(n)||n<=0||n>1e9||n>c.tons+1e-8)return {ok:false,error:'Недостаточно добытой нефти'};const volume=v5gRound(n),value=v5gRound(volume*V5E_OIL_PRICE);if(value<=0)return {ok:false,error:'Слишком малый объём'};c.tons=v5gRound(Math.max(0,c.tons-volume));c.cash=v5gRound(c.cash+value);c.revenue=v5gRound((c.revenue||0)+value);const entry={id:++e.seq,company:c.id,tons:volume,amount:value,day:v34date()};e.sales.unshift(entry);e.sales.length=Math.min(300,e.sales.length);return {ok:true,entry};}
+function v5eService(id,amount){if(!s?.small)return {ok:false,error:'Только новая карьера'};const g=v5gInit(),e=v5eInit(),c=g.companies.find(x=>x.id===Number(id)),n=Number(amount);if(!c||!['service','energy'].includes(c.type))return {ok:false,error:'Выберите сервисную или энергетическую компанию'};if(!Number.isFinite(n)||n<=0||n>1e6)return {ok:false,error:'Некорректная сумма'};if(!Number.isFinite(s.cash)||s.cash+1e-8<n)return {ok:false,error:'Недостаточно денег у головной компании'};const sum=v5gRound(n);if(sum<=0)return {ok:false,error:'Сумма слишком мала'};s.cash=v5gRound(s.cash-sum);c.cash=v5gRound(c.cash+sum);c.internalRevenue=v5gRound((c.internalRevenue||0)+sum);const entry={id:++e.seq,company:c.id,amount:sum,day:v34date()};e.services.unshift(entry);e.services.length=Math.min(300,e.services.length);return {ok:true,entry};}
+function v5eCapacity(){const g=v5gInit();return g.companies.filter(c=>c.type==='energy'&&c.cash>0).reduce((a,c)=>a+Math.min(400,Math.floor(Math.max(0,c.invested)*4)),0);}
+// Capacity affects Alpha 10's production factor via its existing v5wPower call.
+const v5eOldPower=v5wPower;v5wPower=function(){const result=v5eOldPower();return {...result,capacityKw:(Number(result.capacityKw)||0)+v5eCapacity()};};
+function v5eSummary(){const g=v5gInit(),e=v5eInit(),base=v5gSummary();return {...base,externalRevenue:v5gRound(g.companies.reduce((a,c)=>a+(Number(c.revenue)||0),0)),internalTransfers:v5gRound(e.services.reduce((a,x)=>a+x.amount,0)),unsoldTons:base.tons,energyKw:v5eCapacity(),groupCash:base.consolidatedCash};}
+function v5eView(){const e=v5eInit(),g=v5gInit(),r=v5eSummary(),fmt=n=>Number(n||0).toLocaleString('ru-RU',{maximumFractionDigits:2});let h='<section class="v5-economy"><small>ALPHA 15 · ЭКОНОМИКА ХОЛДИНГА</small><h2>Единая экономика группы</h2><div class="v5e-grid"><div><small>Деньги группы</small><strong>'+fmt(r.groupCash)+' млн ₸</strong></div><div><small>Внешняя выручка дочерних</small><strong>'+fmt(r.externalRevenue)+' млн ₸</strong></div><div><small>Нереализованная нефть</small><strong>'+fmt(r.unsoldTons)+' т</strong></div><div><small>Мощность дочерних энергетиков</small><strong>'+fmt(r.energyKw)+' кВт</strong></div></div><p class="muted">Продажи дочерних компаний приносят деньги только дочерним предприятиям. Услуги внутри холдинга перераспределяют деньги, но не создают консолидированную выручку.</p>';
+ for(const c of g.companies){h+='<div class="v5e-company"><b>'+esc(c.name)+'</b><small> · '+(c.type==='production'?'Добыча':c.type==='energy'?'Энергетика':'Сервис')+'</small>';if(c.type==='production'){h+='<div>Нефть к продаже: '+fmt(c.tons)+' т · внешняя выручка: '+fmt(c.revenue)+' млн ₸</div><div class="v5e-actions"><input type="number" data-v5e-tons="'+c.id+'" min="0.01" step="0.01" value="1"><button class="btn secondary" data-v5e-sell="'+c.id+'">Продать нефть</button></div>';}else{h+='<div>Внутренние услуги: '+fmt(c.internalRevenue)+' млн ₸'+(c.type==='energy'?' · доступная мощность до 400 кВт':'')+'</div><div class="v5e-actions"><input type="number" data-v5e-fee="'+c.id+'" min="0.01" step="0.01" value="1"><button class="btn secondary" data-v5e-service="'+c.id+'">Оплатить услугу</button></div>';}h+='</div>';}
+ if(!g.companies.length)h+='<p>Создайте дочерние предприятия в панели Alpha 14 выше.</p>';h+='<p class="muted">Игровая цена нефти: '+fmt(V5E_OIL_PRICE)+' млн ₸/т. Это условная цена, не котировка. Нереализованная нефть дочерних не включается в склад головной компании. Энергетическая мощность действует при положительном остатке денег у дочерней компании. Услуги сервисных компаний пока финансовые, без автоматического ремонта. Не является бухгалтерской консолидацией.</p></section>';return h;}
+const v5eOldRender=render;render=function(){v5eOldRender();if(!s?.small||tab!=='finance')return;const host=document.getElementById('body');if(!host)return;host.insertAdjacentHTML('beforeend',v5eView());const root=host.querySelector('.v5-economy');if(!root)return;root.querySelectorAll('[data-v5e-sell]').forEach(b=>b.onclick=()=>{const r=v5eSell(b.dataset.v5eSell,root.querySelector('[data-v5e-tons="'+b.dataset.v5eSell+'"]').value);if(!r.ok)return uiAlert(r.error);save();render();});root.querySelectorAll('[data-v5e-service]').forEach(b=>b.onclick=()=>{const r=v5eService(b.dataset.v5eService,root.querySelector('[data-v5e-fee="'+b.dataset.v5eService+'"]').value);if(!r.ok)return uiAlert(r.error);save();render();});};
+/* Alpha 16: fictional oil market, export contracts and shipping. Monetary units mln KZT. */
+const V5M_ROUTES=[{id:'pipeline',name:'Трубопровод',days:3,cost:.012,capacity:2000},{id:'rail',name:'Железная дорога',days:5,cost:.023,capacity:800},{id:'sea',name:'Морская перевозка',days:8,cost:.034,capacity:1200}];
+function v5mRound(n){return Math.round(n*10000)/10000;}
+function v5mInit(){if(!s.v5market||typeof s.v5market!=='object')s.v5market={version:1,price:.16,history:[],shipments:[],seq:0,lastDay:null};const m=s.v5market;m.history=Array.isArray(m.history)?m.history:[];m.shipments=Array.isArray(m.shipments)?m.shipments:[];if(!Number.isFinite(m.price)||m.price<=0)m.price=.16;if(!Number.isSafeInteger(m.seq))m.seq=0;return m;}
+function v5mQuote(day){const d=Math.max(0,Number(day)||0);return v5mRound(Math.max(.075,Math.min(.31,.16+.028*Math.sin(d/13)+.013*Math.sin(d/5))));}
+function v5mDay(){if(!s?.small)return;const m=v5mInit(),day=v34date();if(!Number.isFinite(day)||day<=m.lastDay)return;m.price=v5mQuote(day);m.history.push({day,price:m.price});if(m.history.length>90)m.history.splice(0,m.history.length-90);m.lastDay=day;for(const x of m.shipments){if(x.status!=='transit'||day<x.arrival)continue;const g=v5gInit(),c=g.companies.find(y=>y.id===x.company);if(!c){x.status='error';continue;}c.cash=v5gRound(c.cash+x.revenue);c.revenue=v5gRound((c.revenue||0)+x.revenue);x.status='delivered';x.completed=day;}}
+function v5mExport(id,tons,routeId){if(!s?.small)return {ok:false,error:'Только новая карьера'};const m=v5mInit(),g=v5gInit(),c=g.companies.find(x=>x.id===Number(id)),route=V5M_ROUTES.find(x=>x.id===routeId),n=Number(tons);if(!c||c.type!=='production')return {ok:false,error:'Выберите добывающее предприятие'};if(!route)return {ok:false,error:'Маршрут не найден'};if(!Number.isFinite(n)||n<=0||n>route.capacity||n>c.tons+1e-8)return {ok:false,error:'Объём превышает остаток нефти или лимит маршрута'};const qty=v5mRound(n),cost=v5mRound(qty*route.cost),revenue=v5mRound(qty*m.price);if(qty<=0||revenue<=0)return {ok:false,error:'Слишком малый объём'};if(c.cash+1e-8<cost)return {ok:false,error:'Недостаточно средств на перевозку'};const today=v34date();c.tons=v5gRound(Math.max(0,c.tons-qty));c.cash=v5gRound(c.cash-cost);c.costs=v5gRound((c.costs||0)+cost);const shipment={id:++m.seq,company:c.id,route:route.id,tons:qty,price:m.price,revenue,cost,created:today,arrival:today+route.days,status:'transit'};m.shipments.unshift(shipment);m.shipments.length=Math.min(250,m.shipments.length);return {ok:true,shipment};}
+function v5mSummary(){const m=v5mInit(),g=v5gInit();return {price:m.price,transit:m.shipments.filter(x=>x.status==='transit').length,exportRevenue:v5mRound(m.shipments.filter(x=>x.status==='delivered').reduce((a,x)=>a+x.revenue,0)),shippingCosts:v5mRound(m.shipments.reduce((a,x)=>a+x.cost,0)),groupCash:v5gSummary().consolidatedCash};}
+function v5mView(){const m=v5mInit(),g=v5gInit(),a=v5mSummary(),fmt=n=>Number(n||0).toLocaleString('ru-RU',{maximumFractionDigits:3});let h='<section class="v5-market"><small>ALPHA 16 · МЕЖДУНАРОДНАЯ ТОРГОВЛЯ</small><h2>Нефтяной рынок и экспорт</h2><div class="v5m-grid"><div><small>Игровая цена, млн ₸/т</small><b>'+fmt(a.price)+'</b></div><div><small>Поставки в пути</small><b>'+a.transit+'</b></div><div><small>Экспортная выручка</small><b>'+fmt(a.exportRevenue)+' млн ₸</b></div><div><small>Затраты на логистику</small><b>'+fmt(a.shippingCosts)+' млн ₸</b></div></div><p class="muted">Цена меняется по условному циклу каждый игровой день. Экспортная выручка зачисляется дочерней компании только после доставки. Цена фиксируется при отправке.</p>';
+ for(const c of g.companies.filter(x=>x.type==='production')){h+='<div class="v5m-company"><b>'+esc(c.name)+'</b><div>Доступно '+fmt(c.tons)+' т · счёт '+fmt(c.cash)+' млн ₸</div><div class="v5m-actions"><input aria-label="Тонн к экспорту" type="number" min="0.01" step="0.01" value="1" data-v5m-tons="'+c.id+'"><select aria-label="Маршрут" data-v5m-route="'+c.id+'">'+V5M_ROUTES.map(r=>'<option value="'+r.id+'">'+r.name+' · '+r.days+' дн. · '+fmt(r.cost)+' млн ₸/т</option>').join('')+'</select><button class="btn secondary" data-v5m-export="'+c.id+'">Оформить экспорт</button></div></div>';}
+ if(!g.companies.some(c=>c.type==='production'))h+='<p>Создайте добывающее дочернее предприятие в Alpha 14.</p>';h+='<h3>Контракты и перевозки</h3>';for(const x of m.shipments.slice(0,12)){const r=V5M_ROUTES.find(y=>y.id===x.route);h+='<div class="v5m-shipment">№'+x.id+' · '+esc(r?r.name:x.route)+' · '+fmt(x.tons)+' т · '+(x.status==='transit'?'В пути до дня '+x.arrival:x.status==='delivered'?'Доставлено':'Ошибка')+' · '+fmt(x.revenue)+' млн ₸</div>';}h+='<p class="muted">Все маршруты, цены, тарифы и сроки вымышлены. Налоговые, таможенные и валютные расчёты не моделируются. Не является реальной котировкой или бухгалтерской отчётностью.</p></section>';return h;}
+const v5mOldDay=v35day;v35day=function(){v5mOldDay();v5mDay();};
+const v5mOldRender=render;render=function(){v5mOldRender();if(!s?.small||tab!=='finance')return;const host=document.getElementById('body');if(!host)return;host.insertAdjacentHTML('beforeend',v5mView());const root=host.querySelector('.v5-market');if(!root)return;root.querySelectorAll('[data-v5m-export]').forEach(b=>b.onclick=()=>{const id=b.dataset.v5mExport,r=v5mExport(id,root.querySelector('[data-v5m-tons="'+id+'"]').value,root.querySelector('[data-v5m-route="'+id+'"]').value);if(!r.ok)return uiAlert(r.error);save();render();});};
+/* Alpha 17. Fictional counterparties, fixed FX at signing, contract lots, penalties. Million KZT. */
+const V5T_BUYERS=[{id:'caspian',name:'Caspian Trading',premium:.012,fee:.008},{id:'atlas',name:'Atlas Energy Trade',premium:.004,fee:.005},{id:'meridian',name:'Meridian Commodities',premium:-.006,fee:.003}];
+const V5T_FX={KZT:1,USD:510,EUR:555}; // fictional KZT per unit, not live rates
+function v5tInit(){if(!s.v5trading||typeof s.v5trading!=='object')s.v5trading={version:1,seq:0,contracts:[],lastDay:null};const t=s.v5trading;t.contracts=Array.isArray(t.contracts)?t.contracts:[];t.seq=Number.isSafeInteger(t.seq)?t.seq:0;return t;}
+function v5tRound(n){return Math.round(n*10000)/10000;}
+function v5tOffer(buyerId,routeId,tons,lots,currency){const b=V5T_BUYERS.find(x=>x.id===buyerId),r=V5M_ROUTES.find(x=>x.id===routeId),q=Number(tons),n=Number(lots);if(!b||!r||!Object.hasOwn(V5T_FX,currency)||!Number.isFinite(q)||q<=0||q>r.capacity||!Number.isSafeInteger(n)||n<1||n>12)return {ok:false,error:'Некорректные условия контракта'};const base=v5mInit().price;const unit=v5tRound(Math.max(.01,base*(1+b.premium))),fx=V5T_FX[currency];return {ok:true,buyer:b,route:r,unit,fx,foreignUnit:v5tRound(unit*1e6/fx),lots:n,tons:v5tRound(q),commission:v5tRound(q*unit*b.fee)};}
+function v5tSign(companyId,buyerId,routeId,tons,lots,currency){if(!s?.small)return {ok:false,error:'Только новая карьера'};const g=v5gInit(),c=g.companies.find(x=>x.id===Number(companyId)),o=v5tOffer(buyerId,routeId,tons,lots,currency),t=v5tInit();if(!c||c.type!=='production')return {ok:false,error:'Требуется добывающая дочерняя компания'};if(!o.ok)return o;if(t.contracts.filter(x=>x.status==='active').length>=20)return {ok:false,error:'Не более 20 активных контрактов'};const today=v34date(),contract={id:++t.seq,company:c.id,buyer:buyerId,route:routeId,currency,fx:o.fx,unit:o.unit,foreignUnit:o.foreignUnit,tons:o.tons,lots:o.lots,created:today,items:Array.from({length:o.lots},(_,i)=>({index:i+1,due:today+7*(i+1),status:'pending',penalized:false,shipment:null})),penalties:0,status:'active'};t.contracts.unshift(contract);t.contracts.length=Math.min(t.contracts.length,120);return {ok:true,contract};}
+function v5tDispatch(contractId,lotIndex){const t=v5tInit(),x=t.contracts.find(c=>c.id===Number(contractId));if(!x||x.status!=='active')return {ok:false,error:'Контракт неактивен'};const item=x.items.find(i=>i.index===Number(lotIndex));if(!item||item.status!=='pending')return {ok:false,error:'Партия уже отправлена или закрыта'};const c=v5gInit().companies.find(y=>y.id===x.company),r=V5M_ROUTES.find(y=>y.id===x.route),b=V5T_BUYERS.find(y=>y.id===x.buyer);if(!c||!r||!b)return {ok:false,error:'Не найдены участники сделки'};const freight=v5tRound(x.tons*r.cost),commission=v5tRound(x.tons*x.unit*b.fee),expense=v5tRound(freight+commission);if(c.tons+1e-8<x.tons)return {ok:false,error:'Недостаточно добытой нефти'};if(c.cash+1e-8<expense)return {ok:false,error:'Недостаточно средств на логистику и комиссию'};const m=v5mInit(),today=v34date(),revenue=v5tRound(x.tons*x.unit);c.tons=v5gRound(Math.max(0,c.tons-x.tons));c.cash=v5gRound(c.cash-expense);c.costs=v5gRound((c.costs||0)+expense);const ship={id:++m.seq,company:c.id,route:x.route,tons:x.tons,price:x.unit,revenue,cost:expense,created:today,arrival:today+r.days,status:'transit',tradeContract:x.id,tradeLot:item.index,buyer:x.buyer,currency:x.currency,fx:x.fx};m.shipments.unshift(ship);m.shipments.length=Math.min(250,m.shipments.length);item.status='transit';item.shipment=ship.id;item.sent=today;return {ok:true,shipment:ship};}
+function v5tDay(){if(!s?.small)return;const t=v5tInit(),today=v34date();if(!Number.isFinite(today)||today<=t.lastDay)return;t.lastDay=today;const m=v5mInit(),g=v5gInit();for(const x of t.contracts){if(x.status!=='active')continue;const c=g.companies.find(y=>y.id===x.company);for(const item of x.items){if(item.status==='transit'){const ship=m.shipments.find(y=>y.id===item.shipment&&y.tradeContract===x.id);if(ship&&ship.status==='delivered'){item.status='delivered';item.completed=ship.completed;}}if(item.status==='pending'&&today>item.due&&!item.penalized){const penalty=v5tRound(x.tons*x.unit*.03);if(c){const paid=v5tRound(Math.min(Math.max(0,c.cash),penalty));c.cash=v5gRound(c.cash-paid);c.costs=v5gRound((c.costs||0)+paid);item.penaltyDue=v5tRound(penalty-paid);item.penaltyPaid=paid;x.penalties=v5tRound(x.penalties+paid);}item.penalized=true;}}if(x.items.every(i=>i.status==='delivered'))x.status='completed';}}
+function v5tSummary(){const t=v5tInit();return {active:t.contracts.filter(x=>x.status==='active').length,completed:t.contracts.filter(x=>x.status==='completed').length,delivered:t.contracts.reduce((a,x)=>a+x.items.filter(i=>i.status==='delivered').length,0),overdue:t.contracts.reduce((a,x)=>a+x.items.filter(i=>i.status==='pending'&&v34date()>i.due).length,0),penalties:v5tRound(t.contracts.reduce((a,x)=>a+x.penalties,0))};}
+function v5tView(){const t=v5tInit(),g=v5gInit(),a=v5tSummary(),fmt=n=>Number(n||0).toLocaleString('ru-RU',{maximumFractionDigits:3});let h='<section class="v5-trading"><small>ALPHA 17 · НЕФТЕТРЕЙДИНГ</small><h2>Международные контракты</h2><div class="v5t-stats"><div>Активные<b>'+a.active+'</b></div><div>Поставлено партий<b>'+a.delivered+'</b></div><div>Просрочено<b>'+a.overdue+'</b></div><div>Уплачено штрафов<b>'+fmt(a.penalties)+' млн ₸</b></div></div><p>Предложение покупателя учитывает условную надбавку или скидку к игровой цене нефти. Цена и валютный курс фиксируются при подписании. Каждая партия должна быть отправлена до установленного игрового дня.</p><div class="v5t-form"><select data-v5t-company>'+g.companies.filter(c=>c.type==='production').map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select><select data-v5t-buyer>'+V5T_BUYERS.map(b=>'<option value="'+b.id+'">'+esc(b.name)+'</option>').join('')+'</select><select data-v5t-route>'+V5M_ROUTES.map(r=>'<option value="'+r.id+'">'+esc(r.name)+'</option>').join('')+'</select><label>Тонн/партия<input data-v5t-tons type="number" min="0.01" step="0.01" value="1"></label><label>Партий<input data-v5t-lots type="number" min="1" max="12" step="1" value="2"></label><select data-v5t-currency><option>KZT</option><option>USD</option><option>EUR</option></select><button class="btn" data-v5t-sign>Подписать контракт</button></div>';
+if(!g.companies.some(c=>c.type==='production'))h+='<p>Сначала создайте добывающее предприятие.</p>';for(const x of t.contracts.slice(0,12)){const c=g.companies.find(y=>y.id===x.company),b=V5T_BUYERS.find(y=>y.id===x.buyer);h+='<article class="v5t-contract"><b>№'+x.id+' · '+esc(b?b.name:x.buyer)+'</b><small>'+esc(c?c.name:'Компания не найдена')+' · '+esc(x.currency)+' · '+fmt(x.foreignUnit)+' за тонну · '+fmt(x.unit)+' млн ₸/т · '+esc(x.status)+'</small>';for(const i of x.items){h+='<div class="v5t-lot"><span>Партия '+i.index+' · '+fmt(x.tons)+' т · срок: день '+i.due+' · '+(i.status==='pending'?'Ожидает отправки':i.status==='transit'?'В пути':'Доставлено')+(i.penalized?' · штраф начислен':'')+'</span>'+(i.status==='pending'&&x.status==='active'?'<button class="btn secondary" data-v5t-dispatch="'+x.id+'" data-v5t-lot="'+i.index+'">Отправить</button>':'')+'</div>';}h+='</article>';}
+h+='<p class="muted">Условные покупатели и валютные курсы (1 USD = 510 ₸, 1 EUR = 555 ₸). Валюта служит отображением фиксированной цены: расчёт и оплата происходят в тенге. Просрочка каждой партии вызывает разовый штраф 3% от её стоимости, ограниченный доступными деньгами; неоплаченный остаток показывается в данных контракта, но пока не взыскивается автоматически. Отправленные партии оплачиваются после доставки через Alpha 16. Не является реальным трейдингом.</p></section>';return h;}
+const v5tOldDay=v35day;v35day=function(){v5tOldDay();v5tDay();};
+const v5tOldRender=render;render=function(){v5tOldRender();if(!s?.small||tab!=='finance')return;const host=document.getElementById('body');if(!host)return;host.insertAdjacentHTML('beforeend',v5tView());const root=host.querySelector('.v5-trading');if(!root)return;const btn=root.querySelector('[data-v5t-sign]');if(btn)btn.onclick=()=>{const get=k=>root.querySelector('[data-v5t-'+k+']').value,r=v5tSign(get('company'),get('buyer'),get('route'),get('tons'),Number(get('lots')),get('currency'));if(!r.ok)return uiAlert(r.error);save();render();};root.querySelectorAll('[data-v5t-dispatch]').forEach(b=>b.onclick=()=>{const r=v5tDispatch(b.dataset.v5tDispatch,b.dataset.v5tLot);if(!r.ok)return uiAlert(r.error);save();render();});};
+/* Alpha 18: fictional refinery and retail chain. Units: million KZT, tonnes.
+   Crude transfers between subsidiary and refinery are physical only; parent owns refinery.
+   Refinery and stations are paid parent assets, no fake internal revenue. */
+const V5R18_REFINERY_COST=160,V5R18_STATION_COST=24;
+function v5r18Round(x){return Math.round(x*10000)/10000;}
+function v5r18Init(){if(!s.v5refinery||typeof s.v5refinery!=='object')s.v5refinery={version:1,built:false,crude:0,petrol:0,diesel:0,stations:[],seq:0,processed:0,soldPetrol:0,soldDiesel:0,revenue:0,costs:0,spentCapex:0,lastDay:null,log:[]};const x=s.v5refinery;x.stations=Array.isArray(x.stations)?x.stations:[];x.log=Array.isArray(x.log)?x.log:[];return x;}
+function v5r18Log(x,message){x.log.unshift({day:v34date(),message});x.log.length=Math.min(x.log.length,60);}
+function v5r18Build(){if(!s?.small)return {ok:false,error:'Только новая карьера'};const x=v5r18Init();if(x.built)return {ok:false,error:'НПЗ уже построен'};if(!Number.isFinite(s.cash)||s.cash<V5R18_REFINERY_COST)return {ok:false,error:'Недостаточно средств на НПЗ'};s.cash=v5r18Round(s.cash-V5R18_REFINERY_COST);x.spentCapex=v5r18Round(x.spentCapex+V5R18_REFINERY_COST);x.built=true;v5r18Log(x,'Введён НПЗ мощностью 20 т/день');return {ok:true};}
+function v5r18Transfer(companyId,amount){const x=v5r18Init(),g=v5gInit(),c=g.companies.find(z=>z.id===Number(companyId)),n=Number(amount);if(!x.built)return {ok:false,error:'Сначала постройте НПЗ'};if(!c||c.type!=='production')return {ok:false,error:'Требуется добывающая компания'};if(!Number.isFinite(n)||n<.01||n>500||n>c.tons+1e-8)return {ok:false,error:'Недостаточный запас нефти или неверный объём'};if(x.crude+n>1000+1e-8)return {ok:false,error:'Резервуар сырья заполнен (1000 т)'};const q=v5r18Round(n);if(q<=0)return {ok:false,error:'Слишком малый объём'};c.tons=v5r18Round(Math.max(0,c.tons-q));x.crude=v5r18Round(x.crude+q);v5r18Log(x,'Передано '+q+' т нефти из '+c.name);return {ok:true};}
+function v5r18Station(name){const x=v5r18Init(),n=String(name||'').trim();if(!x.built)return {ok:false,error:'Сначала постройте НПЗ'};if(!n||n.length>50)return {ok:false,error:'Введите название АЗС (до 50 символов)'};if(x.stations.length>=12)return {ok:false,error:'Максимум 12 АЗС'};if(!Number.isFinite(s.cash)||s.cash<V5R18_STATION_COST)return {ok:false,error:'Недостаточно денег на АЗС'};s.cash=v5r18Round(s.cash-V5R18_STATION_COST);x.spentCapex=v5r18Round(x.spentCapex+V5R18_STATION_COST);const a={id:++x.seq,name:n,petrol:0,diesel:0,revenue:0,sold:0};x.stations.push(a);v5r18Log(x,'Открыта АЗС «'+n+'»');return {ok:true,station:a};}
+function v5r18Supply(){return {ok:false,error:'Мгновенная доставка отключена: используйте бензовозы в разделе «Сеть АЗС»'};}
+function v5r18Day(){if(!s?.small)return;const x=v5r18Init(),day=v34date();if(!Number.isFinite(day)||day<=x.lastDay)return;x.lastDay=day;if(!x.built)return;const q=v5r18Round(Math.min(20,x.crude,(400-x.petrol)/.48,(400-x.diesel)/.42));if(q>0){const fee=v5r18Round(q*.014);if(s.cash+1e-8>=fee){s.cash=v5r18Round(s.cash-fee);x.costs=v5r18Round(x.costs+fee);x.crude=v5r18Round(Math.max(0,x.crude-q));x.petrol=v5r18Round(x.petrol+q*.48);x.diesel=v5r18Round(x.diesel+q*.42);x.processed=v5r18Round(x.processed+q);/* Remaining 10% is modeled as loss/byproducts, not saleable inventory. */}}for(const a of x.stations){for(const k of ['petrol','diesel']){const sold=v5r18Round(Math.min(a[k],(typeof v5r19DailyDemand==='function'?v5r19DailyDemand(a,k):(k==='petrol'?1.2:1.5))));if(sold<=0)continue;const income=v5r18Round(sold*((typeof v5r19UnitPrice==='function'?v5r19UnitPrice(a,k):(k==='petrol'?.24:.22))));a[k]=v5r18Round(Math.max(0,a[k]-sold));a.revenue=v5r18Round(a.revenue+income);a.sold=v5r18Round(a.sold+sold);x.revenue=v5r18Round(x.revenue+income);if(k==='petrol')x.soldPetrol=v5r18Round(x.soldPetrol+sold);else x.soldDiesel=v5r18Round(x.soldDiesel+sold);s.cash=v5r18Round(s.cash+income);}}}
+function v5r18Summary(){const x=v5r18Init();return {built:x.built,stations:x.stations.length,crude:x.crude,petrol:x.petrol,diesel:x.diesel,processed:x.processed,sold:v5r18Round(x.soldPetrol+x.soldDiesel),revenue:x.revenue,costs:x.costs,capex:x.spentCapex,margin:v5r18Round(x.revenue-x.costs)};}
+function v5r18View(){const x=v5r18Init(),g=v5gInit(),a=v5r18Summary(),f=n=>Number(n||0).toLocaleString('ru-RU',{maximumFractionDigits:2});const gauge=(label,value,max,color)=>'<div class="v5r18-gauge"><div class="v5r18-gauge-head"><span>'+label+'</span><b>'+f(value)+' / '+f(max)+' т</b></div><div class="v5r18-track"><div style="width:'+Math.max(0,Math.min(100,value/max*100))+'%;background:'+color+'"></div></div></div>';let h='<section class="v5r18"><small>ALPHA 18 · НЕФТЕПЕРЕРАБОТКА И АЗС</small><h2>НПЗ и розничная сеть</h2><div class="v5r18-kpis"><div><small>НПЗ</small><b>'+(a.built?'Работает':'Не построен')+'</b></div><div><small>Переработано</small><b>'+f(a.processed)+' т</b></div><div><small>АЗС</small><b>'+a.stations+'</b></div><div><small>Розничная выручка</small><b>'+f(a.revenue)+' млн ₸</b></div></div><div class="v5r18-panel"><h3>2D-панель резервуаров</h3>'+gauge('Нефть на НПЗ',x.crude,1000,'#dca35d')+gauge('Бензин',x.petrol,400,'#55c9a1')+gauge('Дизель',x.diesel,400,'#65a8f1')+'<div class="v5r18-pipeline"><span>НЕФТЬ</span><span>→</span><span>НПЗ · 20 т/д</span><span>→</span><span>АЗС</span></div></div>';if(!x.built)h+='<p>Построить НПЗ за '+V5R18_REFINERY_COST+' млн ₸. Мощность 20 т нефти в игровой день.</p><button class="btn" data-v5r18-build>Построить НПЗ</button>';else{h+='<h3>Передать нефть на переработку</h3><div class="v5r18-form"><select data-v5r18-company>'+g.companies.filter(c=>c.type==='production').map(c=>'<option value="'+c.id+'">'+esc(c.name)+' · '+f(c.tons)+' т</option>').join('')+'</select><input type="number" min="0.01" step="0.01" value="10" data-v5r18-amount aria-label="Тонн нефти"><button class="btn" data-v5r18-transfer>Передать нефть</button></div><h3>Новая АЗС</h3><div class="v5r18-form"><input data-v5r18-name maxlength="50" placeholder="Название АЗС"><button class="btn secondary" data-v5r18-station>Открыть за '+V5R18_STATION_COST+' млн ₸</button></div>';for(const st of x.stations)h+='<article class="v5r18-station"><strong>⛽ '+esc(st.name)+'</strong><div>Бензин: '+f(st.petrol)+' т · Дизель: '+f(st.diesel)+' т · Продано: '+f(st.sold)+' т</div></article>';
+h+='<p>Игровая экономика: бензин 48%, дизель 42%, прочие фракции и потери 10%. Переработка 0,014 млн ₸/т, розничные цены 0,24 и 0,22 млн ₸/т. Продажи АЗС происходят автоматически по игровым дням.</p>';}h+='<p class="muted">НПЗ принадлежит головной компании; нефть передаётся физически от добывающей дочерней компании без внутреннего денежного оборота. Строительство и эксплуатация оплачиваются головной компанией, розничная выручка поступает на её счёт. Это условная игровая модель, не реальные технологические нормы или цены.</p></section>';return h;}
+const v5r18OldDay=v35day;v35day=function(){v5r18OldDay();v5r18Day();};
+const v5r18OldRender=render;render=function(){v5r18OldRender();if(!s?.small||tab!=='finance')return;const host=document.getElementById('body');if(!host)return;host.insertAdjacentHTML('beforeend',v5r18View());const root=host.querySelector('.v5r18');if(!root)return;function act(r){if(!r.ok)return uiAlert(r.error);save();render();}const b=root.querySelector('[data-v5r18-build]');if(b)b.onclick=()=>act(v5r18Build());const t=root.querySelector('[data-v5r18-transfer]');if(t)t.onclick=()=>act(v5r18Transfer(root.querySelector('[data-v5r18-company]').value,root.querySelector('[data-v5r18-amount]').value));const st=root.querySelector('[data-v5r18-station]');if(st)st.onclick=()=>act(v5r18Station(root.querySelector('[data-v5r18-name]').value));root.querySelectorAll('[data-v5r18-supply]').forEach(b=>b.onclick=()=>{const id=b.dataset.v5r18Supply;act(v5r18Supply(id,root.querySelector('[data-v5r18-kind="'+id+'"]').value,root.querySelector('[data-v5r18-load="'+id+'"]').value));});};
+/* Alpha 19: regional retail demand, tanker logistics, station pricing, schematic 2D map.
+   Fictional regions and prices. Currency million KZT, volume tonnes. */
+const V5R19_REGIONS=[{id:'coast',name:'Прикаспийский',x:18,y:66,factor:1.3},{id:'steppe',name:'Степной',x:46,y:24,factor:.8},{id:'city',name:'Городской',x:79,y:48,factor:1.55},{id:'south',name:'Южный',x:56,y:81,factor:1.05}];
+function v5r19Round(n){return Math.round(n*10000)/10000;}
+function v5r19Init(){if(!s.v5retail19||typeof s.v5retail19!=='object')s.v5retail19={version:1,truckCount:1,truckCost:8,shipments:[],seq:0,freightSpent:0,delivered:0,history:[],lastDay:null};let x=s.v5retail19;x.shipments=Array.isArray(x.shipments)?x.shipments:[];x.history=Array.isArray(x.history)?x.history:[];return x;}
+function v5r19Station(a){if(!V5R19_REGIONS.some(r=>r.id===a.region))a.region='coast';if(!Number.isFinite(a.petrolPrice)||a.petrolPrice<=0)a.petrolPrice=.24;if(!Number.isFinite(a.dieselPrice)||a.dieselPrice<=0)a.dieselPrice=.22;return a;}
+function v5r19Region(a){return V5R19_REGIONS.find(r=>r.id===v5r19Station(a).region)||V5R19_REGIONS[0];}
+function v5r19DailyDemand(a,k){const r=v5r19Region(a),price=v5r19UnitPrice(a,k),base=k==='petrol'?1.2:1.5,reference=k==='petrol'?.24:.22;return Math.max(.05,v5r19Round(base*r.factor*Math.max(.35,Math.min(1.6,reference/price))));}
+function v5r19UnitPrice(a,k){v5r19Station(a);return k==='petrol'?a.petrolPrice:a.dieselPrice;}
+function v5r19SetStation(id,region,petrol,diesel){const x=v5r18Init(),a=x.stations.find(z=>z.id===Number(id)),p=Number(petrol),d=Number(diesel);if(!a)return {ok:false,error:'АЗС не найдена'};if(!V5R19_REGIONS.some(r=>r.id===region))return {ok:false,error:'Неизвестный регион'};if(!Number.isFinite(p)||p<.1||p>.5||!Number.isFinite(d)||d<.1||d>.5)return {ok:false,error:'Цена должна быть от 0,10 до 0,50 млн ₸/т'};a.region=region;a.petrolPrice=v5r19Round(p);a.dieselPrice=v5r19Round(d);return {ok:true};}
+function v5r19BuyTruck(){const x=v5r19Init();if(!s?.small||!v5r18Init().built)return {ok:false,error:'Сначала постройте НПЗ'};if(x.truckCount>=10)return {ok:false,error:'Максимум 10 бензовозов'};if(!Number.isFinite(s.cash)||s.cash<x.truckCost)return {ok:false,error:'Недостаточно средств'};s.cash=v5r19Round(s.cash-x.truckCost);x.truckCount++;return {ok:true};}
+function v5r19Active(x){return x.shipments.filter(q=>q.status==='В пути').length;}
+function v5r19Dispatch(id,kind,amount){const x=v5r19Init(),ref=v5r18Init(),a=ref.stations.find(z=>z.id===Number(id)),n=Number(amount);if(!ref.built||!a)return {ok:false,error:'НПЗ или АЗС отсутствует'};if(!['petrol','diesel'].includes(kind))return {ok:false,error:'Неизвестный вид топлива'};if(!Number.isFinite(n)||n<.01||n>20)return {ok:false,error:'Бензовоз перевозит от 0,01 до 20 тонн'};const q=v5r19Round(n);if(q>ref[kind]+1e-8)return {ok:false,error:'Недостаточно топлива на НПЗ'};const reserved=x.shipments.filter(z=>z.status==='В пути'&&z.stationId===a.id&&z.kind===kind).reduce((v,z)=>v+z.tons,0);if(a[kind]+reserved+q>100+1e-8)return {ok:false,error:'Недостаточная ёмкость АЗС с учётом ожидаемых рейсов'};if(v5r19Active(x)>=x.truckCount)return {ok:false,error:'Все бензовозы заняты'};const r=v5r19Region(a),days=r.id==='city'?2:r.id==='coast'?1:r.id==='steppe'?3:4,freight=v5r19Round(q*(.003+days*.001));if(!Number.isFinite(s.cash)||s.cash+1e-8<freight)return {ok:false,error:'Недостаточно средств на перевозку'};ref[kind]=v5r19Round(ref[kind]-q);s.cash=v5r19Round(s.cash-freight);x.freightSpent=v5r19Round(x.freightSpent+freight);const shipment={id:++x.seq,stationId:a.id,kind,tons:q,fee:freight,start:v34date(),arrival:v34date()+days,status:'В пути',region:r.id};x.shipments.push(shipment);return {ok:true,shipment};}
+function v5r19Day(){if(!s?.small)return;const x=v5r19Init(),day=v34date();if(!Number.isFinite(day)||day<=x.lastDay)return;x.lastDay=day;const ref=v5r18Init();for(const q of x.shipments){if(q.status!=='В пути'||q.arrival>day)continue;const a=ref.stations.find(z=>z.id===q.stationId);if(!a){q.status='Отменена';ref[q.kind]=v5r19Round(ref[q.kind]+q.tons);continue;}const room=Math.max(0,100-a[q.kind]);const delivered=v5r19Round(Math.min(q.tons,room));a[q.kind]=v5r19Round(a[q.kind]+delivered);if(delivered<q.tons)ref[q.kind]=v5r19Round(ref[q.kind]+q.tons-delivered);q.status='Доставлено';q.delivered=delivered;x.delivered=v5r19Round(x.delivered+delivered);x.history.unshift({day,stationId:a.id,kind:q.kind,tons:delivered});x.history.length=Math.min(50,x.history.length);}}
+function v5r19View(){const x=v5r19Init(),ref=v5r18Init(),f=n=>Number(n||0).toLocaleString('ru-RU',{maximumFractionDigits:2});const stations=ref.stations;let h='<section class="v5r19"><small>ALPHA 19 · РОЗНИЧНАЯ СЕТЬ</small><h2>Карта АЗС и логистика</h2><div class="v5r19-kpis"><div><small>АЗС</small><b>'+stations.length+'</b></div><div><small>Бензовозы</small><b>'+x.truckCount+'</b></div><div><small>В пути</small><b>'+v5r19Active(x)+'</b></div><div><small>Доставлено</small><b>'+f(x.delivered)+' т</b></div></div><div class="v5r19-map"><div class="v5r19-map-title">2D · Условная карта регионов</div><svg viewBox="0 0 360 220" role="img" aria-label="Схема размещения АЗС по четырём вымышленным регионам"><path d="M24 134 L64 56 L171 17 L290 45 L338 116 L267 199 L121 194 Z" fill="#16374c" stroke="#487f96" stroke-width="2"/><path d="M64 56 L121 194 M171 17 L267 199 M24 134 L338 116" stroke="#376479" stroke-dasharray="4 6" fill="none"/>'+V5R19_REGIONS.map(r=>{const count=stations.filter(a=>v5r19Region(a).id===r.id).length;return '<circle cx="'+r.x*3.6+'" cy="'+r.y*2.2+'" r="'+(count?15:10)+'" fill="'+(count?'#35d3a1':'#5e8799')+'"/><text x="'+r.x*3.6+'" y="'+(r.y*2.2+4)+'" fill="#092336" font-size="12" text-anchor="middle" font-weight="bold">'+count+'</text><text x="'+r.x*3.6+'" y="'+(r.y*2.2+28)+'" fill="#e1f2fa" font-size="10" text-anchor="middle">'+r.name+'</text>';}).join('')+'</svg><small>Число в кружке — количество АЗС. Регионы вымышленные.</small></div>';if(ref.built){h+='<div class="v5r19-row"><span>Бензовоз: 20 т за рейс · 8 млн ₸ за единицу</span><button class="btn secondary" data-v5r19-truck>Купить бензовоз</button></div>';for(const a of stations){v5r19Station(a);const r=v5r19Region(a);h+='<article class="v5r19-station"><h3>⛽ '+esc(a.name)+'</h3><div class="v5r19-fields"><label>Регион<select data-v5r19-region="'+a.id+'">'+V5R19_REGIONS.map(z=>'<option value="'+z.id+'" '+(z.id===r.id?'selected':'')+'>'+z.name+'</option>').join('')+'</select></label><label>Бензин · млн ₸/т<input type="number" min="0.1" max="0.5" step="0.01" value="'+a.petrolPrice+'" data-v5r19-petrol="'+a.id+'"></label><label>Дизель · млн ₸/т<input type="number" min="0.1" max="0.5" step="0.01" value="'+a.dieselPrice+'" data-v5r19-diesel="'+a.id+'"></label><button class="btn secondary" data-v5r19-save="'+a.id+'">Сохранить</button></div><p>Спрос: бензин '+f(v5r19DailyDemand(a,'petrol'))+' т/д · дизель '+f(v5r19DailyDemand(a,'diesel'))+' т/д</p><div class="v5r19-fields"><select data-v5r19-kind="'+a.id+'"><option value="petrol">Бензин</option><option value="diesel">Дизель</option></select><input type="number" min="0.01" max="20" step="0.01" value="5" data-v5r19-amount="'+a.id+'"><button class="btn" data-v5r19-dispatch="'+a.id+'">Отправить бензовоз</button></div></article>';}h+='<h3>Рейсы бензовозов</h3><div class="v5r19-ships">'+(x.shipments.slice(-12).reverse().map(q=>'<div>№'+q.id+' · АЗС '+q.stationId+' · '+(q.kind==='petrol'?'Бензин':'Дизель')+' '+f(q.tons)+' т · '+q.status+' · день '+q.arrival+'</div>').join('')||'<p>Рейсов пока нет.</p>')+'</div>';}h+='<p class="muted">Спрос и цены — условные игровые параметры. Логистика бензовозами учитывает время, стоимость рейса, ёмкость АЗС и занятость транспорта. Для поставок через этот модуль используйте «Отправить бензовоз».</p></section>';return h;}
+const v5r19OldDay=v35day;v35day=function(){v5r19OldDay();v5r19Day();};
+const v5r19OldRender=render;render=function(){v5r19OldRender();if(!s?.small||tab!=='finance')return;const host=document.getElementById('body');if(!host)return;host.insertAdjacentHTML('beforeend',v5r19View());const root=host.querySelector('.v5r19');if(!root)return;function act(r){if(!r.ok)return uiAlert(r.error);save();render();}const truck=root.querySelector('[data-v5r19-truck]');if(truck)truck.onclick=()=>act(v5r19BuyTruck());root.querySelectorAll('[data-v5r19-save]').forEach(b=>b.onclick=()=>{const id=b.dataset.v5r19Save;act(v5r19SetStation(id,root.querySelector('[data-v5r19-region="'+id+'"]').value,root.querySelector('[data-v5r19-petrol="'+id+'"]').value,root.querySelector('[data-v5r19-diesel="'+id+'"]').value));});root.querySelectorAll('[data-v5r19-dispatch]').forEach(b=>b.onclick=()=>{const id=b.dataset.v5r19Dispatch;act(v5r19Dispatch(id,root.querySelector('[data-v5r19-kind="'+id+'"]').value,root.querySelector('[data-v5r19-amount="'+id+'"]').value));});};
+/* Alpha 20 — fleet dispatch and depots; fictional logistics simulation. */
+const V5L20_REPAIR_COST=1.2,V5L20_DRIVER_COST=1.5,V5L20_DEPOT_COST=12;
+function v5l20R(n){return Math.round(n*10000)/10000;}
+function v5l20Init(){const x=v5r19Init();if(!s.v5logistics20||typeof s.v5logistics20!=='object')s.v5logistics20={version:1,vehicles:[],drivers:[],depots:[],seq:0,driverSeq:0,depotSeq:0,maintenanceSpent:0,staffSpent:0,depotSpent:0,lastDay:null};const z=s.v5logistics20;for(const key of ['vehicles','drivers','depots'])if(!Array.isArray(z[key]))z[key]=[];if(!Number.isFinite(z.seq))z.seq=0;if(!Number.isFinite(z.driverSeq))z.driverSeq=0;if(!Number.isFinite(z.depotSeq))z.depotSeq=0;while(z.vehicles.length<x.truckCount){z.vehicles.push({id:++z.seq,condition:100,repairUntil:0,driverId:null});}if(!z.drivers.length&&z.driverSeq===0)z.drivers.push({id:++z.driverSeq,name:'Водитель №1',active:true});if(!z.depots.length&&z.depotSeq===0)z.depots.push({id:++z.depotSeq,region:'coast',name:'Прикаспийская база'});return z;}
+function v5l20Busy(vehicleId){return v5r19Init().shipments.some(q=>q.status==='В пути'&&q.vehicleId===vehicleId);}
+function v5l20DriverBusy(driverId){return v5r19Init().shipments.some(q=>q.status==='В пути'&&q.driverId===driverId);}
+function v5l20ReadyVehicles(){const z=v5l20Init(),day=v34date();return z.vehicles.filter(v=>v.condition>=30&&v.repairUntil<=day&&!v5l20Busy(v.id));}
+function v5l20AvailableDrivers(){return v5l20Init().drivers.filter(d=>d.active&&!v5l20DriverBusy(d.id));}
+function v5l20HireDriver(name){const z=v5l20Init(),n=String(name||'').trim();if(!v5r18Init().built)return {ok:false,error:'Сначала постройте НПЗ'};if(!n||n.length>48)return {ok:false,error:'Имя водителя: 1–48 символов'};if(z.drivers.length>=20)return {ok:false,error:'Максимум 20 водителей'};if(!Number.isFinite(s.cash)||s.cash<V5L20_DRIVER_COST)return {ok:false,error:'Недостаточно денег'};s.cash=v5l20R(s.cash-V5L20_DRIVER_COST);z.staffSpent=v5l20R(z.staffSpent+V5L20_DRIVER_COST);const d={id:++z.driverSeq,name:n,active:true};z.drivers.push(d);return {ok:true,driver:d};}
+function v5l20Depot(region){const z=v5l20Init(),r=V5R19_REGIONS.find(q=>q.id===region);if(!v5r18Init().built)return {ok:false,error:'Сначала постройте НПЗ'};if(!r)return {ok:false,error:'Регион не найден'};if(z.depots.some(q=>q.region===region))return {ok:false,error:'В регионе уже есть база'};if(!Number.isFinite(s.cash)||s.cash<V5L20_DEPOT_COST)return {ok:false,error:'Недостаточно денег'};s.cash=v5l20R(s.cash-V5L20_DEPOT_COST);z.depotSpent=v5l20R(z.depotSpent+V5L20_DEPOT_COST);const d={id:++z.depotSeq,region,name:r.name+' — логистический центр'};z.depots.push(d);return {ok:true,depot:d};}
+function v5l20Repair(vehicleId){const z=v5l20Init(),v=z.vehicles.find(q=>q.id===Number(vehicleId));if(!v)return {ok:false,error:'Бензовоз не найден'};if(v5l20Busy(v.id))return {ok:false,error:'Бензовоз выполняет рейс'};if(v.repairUntil>v34date())return {ok:false,error:'Ремонт уже выполняется'};if(v.condition>=100)return {ok:false,error:'Техника исправна'};if(!Number.isFinite(s.cash)||s.cash<V5L20_REPAIR_COST)return {ok:false,error:'Недостаточно денег на ремонт'};s.cash=v5l20R(s.cash-V5L20_REPAIR_COST);z.maintenanceSpent=v5l20R(z.maintenanceSpent+V5L20_REPAIR_COST);v.repairUntil=v34date()+2;return {ok:true};}
+const v5l20PreviousBuyTruck=v5r19BuyTruck;
+v5r19BuyTruck=function(){const r=v5l20PreviousBuyTruck();if(r.ok)v5l20Init();return r;};
+const v5l20PreviousDispatch=v5r19Dispatch;
+v5r19Dispatch=function(id,kind,amount){const z=v5l20Init(),ready=v5l20ReadyVehicles(),drivers=v5l20AvailableDrivers();if(!ready.length)return {ok:false,error:'Нет исправного свободного бензовоза (состояние от 30%)'};if(!drivers.length)return {ok:false,error:'Нет свободного водителя. Наймите водителя'};const vehicle=ready[0],driver=drivers[0],r=v5l20PreviousDispatch(id,kind,amount);if(!r.ok)return r;const sh=r.shipment,station=v5r18Init().stations.find(a=>a.id===Number(id)),region=v5r19Region(station).id;sh.vehicleId=vehicle.id;sh.driverId=driver.id;sh.baseRegion=z.depots.some(d=>d.region===region)?region:'coast';const discount=z.depots.some(d=>d.region===region)&&region!=='coast'?1:0;/* regional depot shortens delivery by one game day; freight remains as charged */
+if(discount)sh.arrival=Math.max(sh.start+1,sh.arrival-1);vehicle.condition=v5l20R(Math.max(0,vehicle.condition-(4+Number(amount)*.15)));return r;};
+function v5l20Day(){if(!s?.small)return;const z=v5l20Init(),day=v34date();if(!Number.isFinite(day)||day<=z.lastDay)return;z.lastDay=day;for(const v of z.vehicles){if(v.repairUntil>0&&v.repairUntil<=day){v.condition=100;v.repairUntil=0;}}}
+function v5l20View(){const z=v5l20Init(),x=v5r19Init(),f=n=>Number(n||0).toLocaleString('ru-RU',{maximumFractionDigits:1}),day=v34date(),ready=v5l20ReadyVehicles().length;let h='<section class="v5l20"><small>ALPHA 20 · АВТОПАРК И ЛОГИСТИКА</small><h2>2D-диспетчерская</h2><div class="v5l20-kpis"><div><small>Бензовозы</small><b>'+z.vehicles.length+'</b></div><div><small>Готовы</small><b>'+ready+'</b></div><div><small>Водители</small><b>'+z.drivers.length+'</b></div><div><small>Логистические базы</small><b>'+z.depots.length+'</b></div></div><div class="v5l20-panel"><h3>Состояние автопарка</h3>'+z.vehicles.map(v=>{const busy=v5l20Busy(v.id),repair=v.repairUntil>day,status=busy?'В рейсе':repair?'Ремонт до дня '+v.repairUntil:v.condition<30?'Требуется ремонт':'Готов';return '<div class="v5l20-unit"><div><b>🚛 №'+v.id+'</b><span>'+status+' · '+f(v.condition)+'%</span></div><div class="v5l20-track"><i style="width:'+Math.max(0,Math.min(100,v.condition))+'%;background:'+(v.condition<30?'#f59e72':v.condition<60?'#f3c46c':'#49d3a2')+'"></i></div><button class="btn secondary" data-v5l20-repair="'+v.id+'" '+(busy||repair||v.condition>=100?'disabled':'')+'>Ремонт · '+V5L20_REPAIR_COST+' млн ₸ / 2 дня</button></div>';}).join('')+'</div><div class="v5l20-panel"><h3>Маршруты · диспетчерская</h3><svg viewBox="0 0 360 170" role="img" aria-label="Условная схема логистических баз и маршрутов"><path d="M40 125 L100 45 L275 65 L315 140 L40 125" stroke="#4b839d" stroke-width="3" fill="none" stroke-dasharray="7 5"/>'+V5R19_REGIONS.map(r=>{const base=z.depots.some(d=>d.region===r.id),cx=r.x*3.4,cy=r.y*1.55;return '<circle cx="'+cx+'" cy="'+cy+'" r="'+(base?12:7)+'" fill="'+(base?'#45d6b1':'#708fa5')+'"/><text x="'+cx+'" y="'+(cy+23)+'" fill="#d5e8f4" font-size="10" text-anchor="middle">'+r.name+'</text>';}).join('')+'</svg><small>Зелёные точки — логистические базы. Схема условная, не географическая карта.</small><p>Рейсов в пути: '+v5r19Active(x)+' · свободных водителей: '+v5l20AvailableDrivers().length+'</p>'+x.shipments.filter(q=>q.status==='В пути').slice(-8).map(q=>'<p>🚚 Рейс №'+q.id+' · бензовоз '+(q.vehicleId||'старый рейс')+' · прибытие: день '+q.arrival+'</p>').join('')+'</div>';if(v5r18Init().built){h+='<div class="v5l20-panel"><h3>Персонал и базы</h3><div class="v5l20-controls"><input data-v5l20-name placeholder="Имя водителя" maxlength="48"><button class="btn secondary" data-v5l20-hire>Нанять · '+V5L20_DRIVER_COST+' млн ₸</button><select data-v5l20-region>'+V5R19_REGIONS.filter(r=>!z.depots.some(d=>d.region===r.id)).map(r=>'<option value="'+r.id+'">'+r.name+'</option>').join('')+'</select><button class="btn secondary" data-v5l20-depot '+(z.depots.length>=4?'disabled':'')+'>Построить базу · '+V5L20_DEPOT_COST+' млн ₸</button></div><p>Водители: '+z.drivers.map(d=>esc(d.name)).join(', ')+'</p><p>Базы: '+z.depots.map(d=>esc(d.name)).join(', ')+'</p></div>';}h+='<p class="muted">Рейсы отправляются из блока «Карта АЗС и логистика» выше. База в регионе АЗС сокращает срок доставки на один день. Износ бензовоза учитывается при отправке; ремонт восстанавливает состояние через два дня. Параметры вымышленные.</p></section>';return h;}
+const v5l20PreviousDay=v35day;v35day=function(){v5l20PreviousDay();v5l20Day();};
+const v5l20PreviousRender=render;render=function(){v5l20PreviousRender();if(!s?.small||tab!=='finance')return;const host=document.getElementById('body');if(!host)return;host.insertAdjacentHTML('beforeend',v5l20View());const root=host.querySelector('.v5l20');if(!root)return;function act(r){if(!r.ok)return uiAlert(r.error);save();render();}root.querySelectorAll('[data-v5l20-repair]').forEach(b=>b.onclick=()=>act(v5l20Repair(b.dataset.v5l20Repair)));const hire=root.querySelector('[data-v5l20-hire]');if(hire)hire.onclick=()=>act(v5l20HireDriver(root.querySelector('[data-v5l20-name]').value));const depot=root.querySelector('[data-v5l20-depot]');if(depot)depot.onclick=()=>act(v5l20Depot(root.querySelector('[data-v5l20-region]').value));};
+/* Alpha 20.1 stabilization: consolidated management reporting, navigation and integrity checks.
+   This is NOT GAAP/IFRS accounting. All money mln KZT; all oil quantities tonnes. */
+function v5a201Round(n){return Math.round(n*10000)/10000;}
+function v5a201Report(){
+ const g=v5gInit(),r=v5r18Init(),l=v5r19Init(),t=v5tInit(),companies=g.companies||[];
+ const sum=(arr,fn)=>v5a201Round(arr.reduce((a,x)=>a+Number(fn(x)||0),0));
+ const parent=Number(s.cash)||0,subs=sum(companies,c=>c.cash),cash=v5a201Round(parent+subs);
+ const revenueSubs=sum(companies,c=>c.revenue),externalRetail=Number(r.revenue)||0;
+ const costsSubs=sum(companies,c=>c.costs),processing=Number(r.costs)||0,freight=Number(l.freightSpent)||0;
+ const cashCosts=v5a201Round(costsSubs+processing+freight+Number(s.v5logistics20?.maintenanceSpent||0)+Number(s.v5logistics20?.staffSpent||0));
+ const crudeSubs=sum(companies,c=>c.type==='production'?c.tons:0);
+ const transitOil=sum(v5mInit().shipments.filter(x=>x.status==='transit'),x=>x.tons);
+ const fuelTransit=sum(l.shipments.filter(x=>x.status==='В пути'),x=>x.tons);
+ const petrolStations=sum(r.stations,a=>a.petrol),dieselStations=sum(r.stations,a=>a.diesel);
+ const overdue=sum(t.contracts||[],c=>sum(c.items||[],i=>i.penaltyDue||0));
+ return {parent,subs,cash,externalRevenue:v5a201Round(revenueSubs+externalRetail),externalCosts:cashCosts,
+   operatingDifference:v5a201Round(revenueSubs+externalRetail-cashCosts),
+   crudeSubs,crudeRefinery:r.crude,crudeTransit:transitOil,
+   petrol:v5a201Round(r.petrol+petrolStations),diesel:v5a201Round(r.diesel+dieselStations),fuelTransit,
+   obligations:overdue,stationCount:r.stations.length,truckCount:l.truckCount};
+}
+function v5a201Check(){const x=v5a201Report(),issues=[];
+ for(const k of ['parent','subs','cash','crudeSubs','crudeRefinery','petrol','diesel','fuelTransit'])if(!Number.isFinite(x[k])||x[k]<-0.0001)issues.push('Некорректное значение: '+k);
+ const r=v5r18Init(),l=v5r19Init();for(const a of r.stations){for(const k of ['petrol','diesel']){const pending=l.shipments.filter(q=>q.status==='В пути'&&q.stationId===a.id&&q.kind===k).reduce((n,q)=>n+q.tons,0);if(a[k]+pending>100.0001)issues.push('Переполнение резервуара АЗС '+a.id+': '+k);}}
+ return {ok:!issues.length,issues};}
+function v5a201ReportView(){const a=v5a201Report(),c=v5a201Check(),fmt=n=>Number(n||0).toLocaleString('ru-RU',{maximumFractionDigits:2});return '<section class="v5a201-report"><h2>Консолидированная управленческая панель</h2><div class="v5a201-kpis">'+[['Деньги группы',a.cash+' млн ₸'],['Внешняя выручка',a.externalRevenue+' млн ₸'],['Учтённые расходы',a.externalCosts+' млн ₸'],['Операционная разница',a.operatingDifference+' млн ₸']].map(([k,v])=>'<div><small>'+k+'</small><b>'+fmt(parseFloat(v))+' млн ₸</b></div>').join('')+'</div><h3>Ресурсный баланс · 2D</h3>'+[['Нефть дочерних',a.crudeSubs,1000],['Нефть на НПЗ',a.crudeRefinery,1000],['Бензин в системе',a.petrol,400+a.stationCount*100],['Дизель в системе',a.diesel,400+a.stationCount*100],['Топливо в пути',a.fuelTransit,Math.max(20,a.truckCount*20)]].map(([label,value,max])=>'<div class="v5a201-meter"><div><span>'+label+'</span><b>'+fmt(value)+' т</b></div><i><em style="width:'+Math.min(100,Math.max(0,value/max*100))+'%"></em></i></div>').join('')+'<p>Нефть в экспортных перевозках: '+fmt(a.crudeTransit)+' т · неоплаченные контрактные штрафы: '+fmt(a.obligations)+' млн ₸</p><p class="'+(c.ok?'good':'bad')+'">Контроль остатков: '+(c.ok?'ошибок не обнаружено':esc(c.issues.join('; ')))+'</p><p class="muted">Отчёт — управленческий, не бухгалтерский: исторические показатели накопительные, расходы головной компании и себестоимость запасов пока не консолидированы полностью. Внутригрупповые перечисления не считаются внешней выручкой.</p></section>';}
+let v5a201Section='finance';
+const V5A201_SECTIONS=[['finance','Финансы'],['group','Холдинг'],['refinery','НПЗ'],['retail','АЗС'],['fleet','Логистика']];
+const v5a201OldRender=render;
+render=function(){v5a201OldRender();if(!s?.small||tab!=='finance')return;const host=document.getElementById('body');if(!host)return;
+ const nodes=Array.from(host.childNodes);const panels={};for(const [id] of V5A201_SECTIONS){const el=document.createElement('div');el.className='v5a201-content';el.dataset.v5a201Content=id;panels[id]=el;}
+ for(const node of nodes){let id='finance';if(node.nodeType===1){if(node.matches('.v5-group'))id='group';else if(node.matches('.v5r18'))id='refinery';else if(node.matches('.v5r19'))id='retail';else if(node.matches('.v5l20'))id='fleet';}panels[id].appendChild(node);}
+ const nav=document.createElement('nav');nav.className='v5a201-nav';nav.setAttribute('aria-label','Разделы управления');for(const [id,label] of V5A201_SECTIONS){const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.v5a201Tab=id;b.onclick=()=>{v5a201Section=id;v5a201Select(host)};nav.appendChild(b);}host.appendChild(nav);
+ panels.finance.insertAdjacentHTML('afterbegin',v5a201ReportView());for(const [id] of V5A201_SECTIONS)host.appendChild(panels[id]);v5a201Select(host);
+};
+function v5a201Select(host){for(const b of host.querySelectorAll('[data-v5a201-tab]')){const selected=b.dataset.v5a201Tab===v5a201Section;b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected));}for(const el of host.querySelectorAll('[data-v5a201-content]'))el.hidden=el.dataset.v5a201Content!==v5a201Section;}
+/* Alpha 20.2: incremental, auditable operations, slot saves, launch menu.
+   Values are fictional, mln KZT and tonnes. Existing histories are not rewritten. */
+function v5a202Init(){if(!s.v5audit202||typeof s.v5audit202!=='object')s.v5audit202={version:1,startDay:v34date(),lastProcessed:+v5r18Init().processed||0,lastPetrolSold:+v5r18Init().soldPetrol||0,lastDieselSold:+v5r18Init().soldDiesel||0,days:0,produced:0,transferred:0,exported:0,spotSold:0,processed:0,petrolMade:0,dieselMade:0,petrolSold:0,dieselSold:0,retailRevenue:0,externalRevenue:0,productionCosts:0,refiningCosts:0,logisticsCosts:0,otherCosts:0,lastDay:null,events:[]};return s.v5audit202;}
+function v5a202Round(n){return Math.round(n*10000)/10000;}
+function v5a202Stock(){const g=v5gInit(),r=v5r18Init(),l=v5r19Init(),m=v5mInit();return {crudeSubs:v5a202Round(g.companies.filter(c=>c.type==='production').reduce((v,c)=>v+(+c.tons||0),0)),crudeRefinery:+r.crude||0,crudeTransit:v5a202Round(m.shipments.filter(q=>q.status==='transit').reduce((v,q)=>v+(+q.tons||0),0)),petrol:v5a202Round((+r.petrol||0)+r.stations.reduce((v,a)=>v+(+a.petrol||0),0)+l.shipments.filter(q=>q.status==='В пути'&&q.kind==='petrol').reduce((v,q)=>v+(+q.tons||0),0)),diesel:v5a202Round((+r.diesel||0)+r.stations.reduce((v,a)=>v+(+a.diesel||0),0)+l.shipments.filter(q=>q.status==='В пути'&&q.kind==='diesel').reduce((v,q)=>v+(+q.tons||0),0))};}
+function v5a202Money(){const g=v5gInit(),r=v5r18Init(),l=v5r19Init(),f=s.v5logistics20||{};return {revenue:g.companies.reduce((v,c)=>v+(+c.revenue||0),0)+(+r.revenue||0),upstream:g.companies.reduce((v,c)=>v+(+c.costs||0),0),refining:+r.costs||0,logistics:(+l.freightSpent||0)+(+f.maintenanceSpent||0)+(+f.staffSpent||0)};}
+function v5a202Capture(before,after,fields){const a=v5a202Init();for(const [key,delta] of Object.entries(fields)){if(Number.isFinite(delta)&&delta>0)a[key]=v5a202Round((+a[key]||0)+delta);}a.events.unshift({day:v34date(),kind:'day',revenue:v5a202Round(Math.max(0,after.money.revenue-before.money.revenue))});a.events.length=Math.min(60,a.events.length);}
+const v5a202OldDay=v35day;v35day=function(){if(!s?.small)return v5a202OldDay();const a=v5a202Init(),before={stock:v5a202Stock(),money:v5a202Money()},d=v34date();v5a202OldDay();if(a.lastDay===d)return;const after={stock:v5a202Stock(),money:v5a202Money()},r=v5r18Init();const processed=v5a202Round((+r.processed||0)-(+a.lastProcessed||0));const soldPetrol=v5a202Round((+r.soldPetrol||0)-(+a.lastPetrolSold||0));const soldDiesel=v5a202Round((+r.soldDiesel||0)-(+a.lastDieselSold||0));
+// Baselines are set on first audit day, so old saves do not create invented history.
+const rev=Math.max(0,after.money.revenue-before.money.revenue),up=Math.max(0,after.money.upstream-before.money.upstream),ref=Math.max(0,after.money.refining-before.money.refining),log=Math.max(0,after.money.logistics-before.money.logistics);
+v5a202Capture(before,after,{externalRevenue:rev,productionCosts:up,refiningCosts:ref,logisticsCosts:log,processed:Math.max(0,processed),petrolMade:Math.max(0,processed*.48),dieselMade:Math.max(0,processed*.42),petrolSold:Math.max(0,soldPetrol),dieselSold:Math.max(0,soldDiesel)});
+a.lastProcessed=+r.processed||0;a.lastPetrolSold=+r.soldPetrol||0;a.lastDieselSold=+r.soldDiesel||0;a.lastDay=d;a.days++;};
+// Record newly produced crude; subsidiary oil stock is the single source for export and refining.
+const v5a202OldGroupDay=v5gDay;v5gDay=function(){if(!s?.small)return v5a202OldGroupDay();const a=v5a202Init(),before=v5gInit().companies.filter(c=>c.type==='production').reduce((v,c)=>v+(+c.tons||0),0);v5a202OldGroupDay();const after=v5gInit().companies.filter(c=>c.type==='production').reduce((v,c)=>v+(+c.tons||0),0);if(after>before)a.produced=v5a202Round(a.produced+after-before);};
+// Explicit operations track physical flows without duplicating cash or production.
+function v5a202Wrap(name,field,qtyIndex){const old=({v5r18Transfer,v5mExport,v5eSell,v5tDispatch})[name];if(typeof old!=='function')return;const wrapped=function(...args){const result=old(...args);if(result?.ok&&s?.small){const a=v5a202Init(),qty=field==='exported'&&name==='v5tDispatch'?Number(result.shipment?.tons||0):Number(args[qtyIndex]||0);if(Number.isFinite(qty)&&qty>0)a[field]=v5a202Round((+a[field]||0)+qty);}return result;};if(name==='v5r18Transfer')v5r18Transfer=wrapped;else if(name==='v5mExport')v5mExport=wrapped;else if(name==='v5eSell')v5eSell=wrapped;else if(name==='v5tDispatch')v5tDispatch=wrapped;}
+v5a202Wrap('v5r18Transfer','transferred',1);v5a202Wrap('v5mExport','exported',1);v5a202Wrap('v5eSell','spotSold',1);
+function v5a202Report(){const a=v5a202Init(),g=v5gInit(),r=v5r18Init(),l=v5r19Init(),m=v5mInit(),supply=v5a202Stock(),money=v5a202Money();const revenue=v5a202Round(a.externalRevenue),production=v5a202Round(a.productionCosts),refining=v5a202Round(a.refiningCosts),logistics=v5a202Round(a.logisticsCosts),total=v5a202Round(production+refining+logistics);return {startDay:a.startDay,days:a.days,revenue,production,refining,logistics,total,profit:v5a202Round(revenue-total),margin:revenue>0?v5a202Round((revenue-total)/revenue*100):0,consolidatedCash:v5a202Round((+s.cash||0)+g.companies.reduce((v,c)=>v+(+c.cash||0),0)),supply,produced:a.produced,processed:a.processed,petrolSold:a.petrolSold,dieselSold:a.dieselSold,transfer:a.transferred,exported:a.exported,spotSold:a.spotSold,refineryBuilt:r.built,stations:r.stations.length,unitCrude:a.produced>0?v5a202Round(production/a.produced):null,unitProcessing:a.processed>0?v5a202Round(refining/a.processed):null,retailPetrolPrice:r.stations.length?v5a202Round(r.stations.reduce((v,x)=>v+(+x.petrolPrice||.24),0)/r.stations.length):null,oilMarketPrice:m.price};}
+function v5a202ReportView(){const a=v5a202Report(),f=n=>Number(n||0).toLocaleString('ru-RU',{maximumFractionDigits:2});return '<section class="v5a202-account"><h2>Единый операционный баланс · Alpha 20.2</h2><p>Данные учтены с момента включения нового учёта (день '+a.startDay+'). Старые сохранения не пересчитываются задним числом.</p><div class="v5a202-kpis">'+[['Деньги холдинга',a.consolidatedCash],['Внешняя выручка за период',a.revenue],['Производственные затраты',a.production],['Затраты НПЗ',a.refining],['Логистика и транспорт',a.logistics],['Операционная прибыль',a.profit]].map(([n,v])=>'<div><small>'+n+'</small><strong>'+f(v)+' млн ₸</strong></div>').join('')+'</div><h3>2D · Материальные потоки</h3><div class="v5a202-flow"><span>Добывающие компании<br><b>'+f(a.supply.crudeSubs)+' т</b></span><span>→</span><span>НПЗ<br><b>'+f(a.supply.crudeRefinery)+' т</b></span><span>→</span><span>Бензин / дизель<br><b>'+f(a.supply.petrol)+' / '+f(a.supply.diesel)+' т</b></span></div><p>Добыто дочерними за период: '+f(a.produced)+' т · нефть передана на НПЗ: '+f(a.transfer)+' т · экспортировано: '+f(a.exported)+' т · реализовано на спотовом рынке: '+f(a.spotSold)+' т.</p><p>Оценочная себестоимость добычи: '+(a.unitCrude===null?'нет данных':f(a.unitCrude)+' млн ₸/т')+' · переработка: '+(a.unitProcessing===null?'нет данных':f(a.unitProcessing)+' млн ₸/т')+' · рыночная цена нефти: '+f(a.oilMarketPrice)+' млн ₸/т.</p><p>Операционная маржа: '+f(a.margin)+'% · переработано: '+f(a.processed)+' т · продано бензина / дизеля: '+f(a.petrolSold)+' / '+f(a.dieselSold)+' т.</p><p class="muted">Затраты добывающих предприятий относятся к периоду, переработка учитывается как производственный расход, внутригрупповые переводы исключены из выручки. Показатель является операционной прибылью периода, не чистой прибылью по МСФО. Себестоимость запасов, налоги, амортизация и операции головной компании вне модулей Alpha 14–20 требуют дальнейшей интеграции.</p></section>';}
+const v5a202OldRender=render;render=function(){v5a202OldRender();if(!s?.small||tab!=='finance')return;const p=document.querySelector('[data-v5a201-content="finance"]');if(p)p.insertAdjacentHTML('afterbegin',v5a202ReportView());};
+
+/* Launch menu and independent named save slots; autosave key stays compatible. */
+const V5A202_SLOTS='oil-management-named-saves-v1';
+function v5a202Slots(){try{const x=JSON.parse(localStorage.getItem(V5A202_SLOTS)||'[]');return Array.isArray(x)?x.filter(y=>y&&typeof y.id==='string'&&typeof y.title==='string'&&validSave(y.game)).slice(0,25):[]}catch(e){return [];}}
+function v5a202Store(slots){localStorage.setItem(V5A202_SLOTS,JSON.stringify(slots));}
+function v5a202NamedSave(title){if(!s||!validSave(s))return {ok:false,error:'Нет корректной активной игры'};const t=String(title||'').trim().slice(0,60);if(!t)return {ok:false,error:'Введите название сохранения'};try{const slots=v5a202Slots();if(slots.length>=25)return {ok:false,error:'Максимум 25 сохранений'};const id='slot-'+Date.now()+'-'+Math.floor(Math.random()*1000000);slots.unshift({id,title:t,at:new Date().toISOString(),game:JSON.parse(JSON.stringify(s))});v5a202Store(slots);s.v5currentSlot=id;save();return {ok:true,id};}catch(e){return {ok:false,error:'Не удалось сохранить: '+e.message};}}
+function v5a202SaveCurrent(){if(!s||!validSave(s))return {ok:false,error:'Нет активной игры'};try{const slots=v5a202Slots(),idx=slots.findIndex(x=>x.id===s.v5currentSlot);if(idx<0){save();return {ok:true,autosave:true};}const game=JSON.parse(JSON.stringify(s));slots[idx]={...slots[idx],at:new Date().toISOString(),game};v5a202Store(slots);save();return {ok:true};}catch(e){return {ok:false,error:'Ошибка сохранения: '+e.message};}}
+function v5a202LoadSlot(id){const item=v5a202Slots().find(x=>x.id===id);if(!item)return {ok:false,error:'Сохранение не найдено'};try{const old=localStorage.getItem(KEY);if(old)localStorage.setItem(BACKUP_KEY,old);s=JSON.parse(JSON.stringify(item.game));s.v5currentSlot=id;save();tab='overview';show();return {ok:true};}catch(e){return {ok:false,error:'Не удалось загрузить: '+e.message};}}
+function v5a202Main(){const root=document.getElementById('v5a202-home');if(!root)return;const slots=v5a202Slots();root.innerHTML='<div class="v5a202-home-inner"><img src="oil-management-logo.png" alt="Oil Management Simulator" class="v5a202-logo"><h1>OIL MANAGEMENT</h1><p>SIMULATOR</p><div class="v5a202-home-actions"><button data-a202="new">Начать новую игру</button><button data-a202="load">Загрузить</button><button data-a202="share">Предложить игру</button><button data-a202="about">Описание</button></div><div class="v5a202-home-detail" id="v5a202-detail"></div><footer>Автор игры: Kuanysh Mukhanov</footer></div>';root.classList.remove('hide');const detail=root.querySelector('#v5a202-detail');root.querySelector('[data-a202="new"]').onclick=()=>{root.classList.add('hide');$('game').classList.add('hide');$('setup').classList.remove('hide');};root.querySelector('[data-a202="share"]').onclick=async()=>{const url=location.href.split('#')[0];try{if(navigator.share)await navigator.share({title:'Oil Management Simulator',url});else if(navigator.clipboard){await navigator.clipboard.writeText(url);detail.textContent='Ссылка скопирована';}else detail.textContent=url;}catch(e){detail.textContent=url;}};root.querySelector('[data-a202="about"]').onclick=()=>{detail.textContent='Управляйте нефтяной компанией: добыча, дочерние предприятия, НПЗ, АЗС, логистика, финансы и HSE. Экономика и география условные.';};root.querySelector('[data-a202="load"]').onclick=()=>{detail.innerHTML='<h3>Сохранённые карьеры</h3>'+ (localStorage.getItem(KEY)?'<button data-a202-autosave>Продолжить автосохранение</button>':'')+slots.map(x=>'<div class="v5a202-slot"><span><b>'+esc(x.title)+'</b><small>'+esc(x.game.name)+' · '+esc(x.at.slice(0,16).replace('T',' '))+'</small></span><button data-a202-slot="'+esc(x.id)+'">Загрузить</button><button data-a202-delete="'+esc(x.id)+'" aria-label="Удалить">×</button></div>').join('')+(slots.length?'':'<p>Именных сохранений пока нет.</p>');const auto=detail.querySelector('[data-a202-autosave]');if(auto)auto.onclick=()=>{try{const game=JSON.parse(localStorage.getItem(KEY));if(!validSave(game))throw Error('Файл повреждён');s=game;tab='overview';show();root.classList.add('hide');}catch(e){uiAlert('Не удалось загрузить автосохранение');}};detail.querySelectorAll('[data-a202-slot]').forEach(b=>b.onclick=()=>{const r=v5a202LoadSlot(b.dataset.a202Slot);if(!r.ok)return uiAlert(r.error);root.classList.add('hide');});detail.querySelectorAll('[data-a202-delete]').forEach(b=>b.onclick=async()=>{if(!await uiConfirm('Удалить это сохранение?'))return;v5a202Store(v5a202Slots().filter(x=>x.id!==b.dataset.a202Delete));root.querySelector('[data-a202="load"]').click();});};}
+function v5a202SaveAsUI(){if(!s)return uiAlert('Сначала начните игру');const title=prompt('Название нового сохранения:',s.name+' — день '+v34date());if(title===null)return;const r=v5a202NamedSave(title);if(!r.ok)return uiAlert(r.error);saveStatus('Создано сохранение: '+title);}
+const a202Home=document.createElement('section');a202Home.id='v5a202-home';document.body.appendChild(a202Home);
+const a202Menu=document.getElementById('game-settings-menu');if(a202Menu){const as=document.createElement('button');as.id='save-as';as.textContent='💾 Сохранить как';a202Menu.insertBefore(as,document.getElementById('save-import'));as.onclick=()=>{closeSettings();v5a202SaveAsUI();};const now=document.getElementById('save-now');now.onclick=()=>{closeSettings();const r=v5a202SaveCurrent();if(!r.ok)return uiAlert(r.error);saveStatus(r.autosave?'Автосохранение обновлено':'Слот сохранён');};const menu=document.createElement('button');menu.textContent='⌂ Главное меню';a202Menu.insertBefore(menu,document.getElementById('game-new-career'));menu.onclick=()=>{closeSettings();v5a202Main();};}
+const a202New=$('new');a202New.addEventListener('click',()=>{if(s){s.v5currentSlot=null;}a202Home.classList.add('hide');});
+// The legacy setup is hidden behind the main menu, without touching the existing career data.
+$('setup').classList.add('hide');v5a202Main();
